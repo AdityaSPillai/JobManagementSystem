@@ -1,0 +1,144 @@
+.qa-dashboard {
+  min-height: 100vh;
+  background-color: #f7fafc;
+}
+
+.qa-banner {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.status-review {
+  background: #d6bcfa;
+  color: #553c9a;
+}
+
+.qa-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 12px;
+}
+
+.update-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.update-status span {
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.status-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-in-progress {
+  padding: 6px 16px;
+  background: #bee3f8;
+  border: 2px solid #3182ce;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2c5282;
+  transition: all 0.2s;
+}
+
+.btn-in-progress:hover {
+  background: #90cdf4;
+}
+
+.btn-completed {
+  padding: 6px 16px;
+  background: #c6f6d5;
+  border: 2px solid #48bb78;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #22543d;
+  transition: all 0.2s;
+}
+
+.btn-completed:hover {
+  background: #9ae6b4;
+}
+
+.quality-assessment {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.quality-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-good {
+  padding: 6px 16px;
+  background: #c6f6d5;
+  border: 2px solid #48bb78;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #22543d;
+  transition: all 0.2s;
+}
+
+.btn-good:hover {
+  background: #9ae6b4;
+}
+
+.btn-needs-work {
+  padding: 6px 16px;
+  background: #fed7d7;
+  border: 2px solid #fc8181;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #c53030;
+  transition: all 0.2s;
+}
+
+.btn-needs-work:hover {
+  background: #fc8181;
+  color: white;
+}
+
+.reviewed-by {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.reviewer-input {
+  padding: 6px 12px;
+  border: 2px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 200px;
+}
+
+.reviewer-input:focus {
+  outline: none;
+  border-color: #48bb78;
+}

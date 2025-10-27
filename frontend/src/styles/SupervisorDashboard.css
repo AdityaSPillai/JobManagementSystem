@@ -1,0 +1,168 @@
+.supervisor-dashboard {
+  min-height: 100vh;
+  background-color: #f7fafc;
+}
+
+.supervisor-banner {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+}
+
+.job-details-panel {
+  width: 100%;
+  text-align: left;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.panel-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 22px;
+  color: #2d3748;
+}
+
+.panel-header p {
+  margin: 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.job-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #718096;
+  font-weight: 500;
+}
+
+.job-timestamp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f7fafc;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.job-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.panel-header h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #2d3748;
+}
+
+.job-item-card {
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.job-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.job-item-header span:first-child {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 15px;
+}
+
+.status-completed {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.job-item-description {
+  margin: 0 0 16px 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.job-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.employee-select {
+  padding: 6px 12px;
+  border: 2px solid #cbd5e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.job-item-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-status {
+  padding: 6px 16px;
+  border: 2px solid #cbd5e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+
+.btn-status:hover {
+  border-color: #3182ce;
+  color: #3182ce;
+}
+
+.btn-status.completed {
+  background: #c6f6d5;
+  border-color: #48bb78;
+  color: #22543d;
+}
+
+.status-not-assigned {
+  background: #e2e8f0;
+  color: #4a5568;
+}

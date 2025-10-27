@@ -1,0 +1,474 @@
+.owner-dashboard {
+  min-height: 100vh;
+  background-color: #f7fafc;
+}
+
+/* --- Banner & Stats (No Changes) --- */
+.dashboard-banner {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  color: white;
+  padding: 32px;
+  margin: 24px 32px;
+  border-radius: 12px;
+}
+.banner-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.banner-content {
+  flex-grow: 1;
+}
+.banner-content h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+}
+.banner-content p {
+  margin: 0;
+  opacity: 0.95;
+}
+.btn-create-shop {
+  padding: 12px 24px;
+  background: white;
+  color: #dd6b20;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  align-self: flex-start;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.btn-create-shop:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.stat-label {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.stat-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 24px;
+  opacity: 0.7;
+}
+
+/* --- Dashboard Content & Tabs (Updated) --- */
+.dashboard-content {
+  padding: 0 32px 24px 32px; /* Removed top padding */
+}
+
+.tabs-section {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky; /* Makes tabs sticky on scroll */
+  top: 0;
+  z-index: 10;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: #fed7d7;
+  color: #c53030;
+  font-weight: 600;
+}
+
+.tab-btn:hover:not(.active) {
+  background: #f7fafc;
+}
+
+.tab-content {
+  padding-top: 16px;
+}
+
+.placeholder-content {
+  font-size: 18px;
+  color: #718096;
+  text-align: center;
+  padding: 40px;
+}
+
+/* --- Section Title (No Changes) --- */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 20px 0;
+}
+
+/* --- Overview Grid (No Changes) --- */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.overview-card {
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.overview-card h4 { margin: 0 0 20px 0; font-size: 16px; font-weight: 600; }
+.blue-card { background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); color: #2c5282; }
+.green-card { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); color: #22543d; }
+.purple-card { background: linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%); color: #553c9a; }
+.peach-card { background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%); color: #7c2d12; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0, 0, 0, 0.1); font-size: 14px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-number { font-weight: 700; font-size: 16px; }
+.green-text { color: #22543d; }
+.blue-text { color: #2c5282; }
+.orange-text { color: #c05621; }
+
+/* --- NEW: Tab Header (for Employees/Machines) --- */
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-add-new {
+  padding: 10px 20px;
+  background: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.btn-add-new:hover {
+  background: #2c5282;
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+}
+
+/* --- NEW: Data Grid & Cards (for Employees/Machines) --- */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.data-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.data-card-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #2d3748;
+}
+
+.data-card-role {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #e9d8fd;
+  color: #553c9a;
+}
+
+.data-card-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+.status-available { background: #c6f6d5; color: #22543d; }
+.status-in-use { background: #bee3f8; color: #2c5282; }
+.status-maintenance { background: #feebc8; color: #7c2d12; }
+.status-offline { background: #fed7d7; color: #c53030; }
+
+
+.data-card-body {
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.data-card-body p {
+  margin: 0;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.data-card-body p strong {
+  color: #2d3748;
+  width: 120px;
+  display: inline-block;
+}
+
+.data-card-footer {
+  padding: 12px 20px;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-card-action {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #cbd5e0;
+  background: white;
+  color: #4a5568;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-card-action:hover {
+  background: #edf2f7;
+}
+
+.btn-card-action.btn-danger {
+  border-color: #fed7d7;
+  color: #c53030;
+}
+
+.btn-card-action.btn-danger:hover {
+  background: #fed7d7;
+}
+
+
+/* --- MODAL STYLES (Updated) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content.modal-large {
+  max-width: 800px; /* Wider modal for complex forms */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.modal-header h3 { margin: 0; font-size: 22px; color: #2d3748; }
+.modal-close-btn {
+  background: #fed7d7;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #c53030;
+  transition: background 0.2s;
+}
+.modal-close-btn:hover { background: #fc8181; color: white; }
+
+/* --- NEW: Generic Modal Form Styles --- */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-form .form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-form .form-group label,
+.modal-form .form-label-group {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.modal-form .form-label-group {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-form input[type="text"],
+.modal-form input[type="tel"],
+.modal-form input[type="email"],
+.modal-form input[type="password"],
+.modal-form input[type="number"],
+.modal-form input[type="date"],
+.modal-form select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.modal-form select {
+  background: white; /* for dark mode consistency */
+}
+
+.modal-form input:focus,
+.modal-form select:focus {
+  outline: none;
+  border-color: #ed8936;
+}
+
+.modal-form .form-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.modal-form .form-grid.cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.modal-form .form-grid.cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.form-group-checkbox input {
+  width: auto;
+}
+.form-group-checkbox label {
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+
+.btn-submit {
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 20px;
+  background: #ed8936;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.btn-submit:hover {
+  background: #dd6b20;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-form .form-grid.cols-2,
+  .modal-form .form-grid.cols-3 {
+    grid-template-columns: 1fr;
+  }
+  .tabs-section {
+    overflow-x: auto; /* Allow tabs to scroll horizontally on small screens */
+    white-space: nowrap;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+  .banner-top-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .btn-create-shop {
+    width: 100%;
+  }
+}
