@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
-import '../styles/EstimatorDashboard.css';
+import playIcon from '../assets/play.svg';
+import pauseIcon from '../assets/pause.svg';
+import tickIcon from '../assets/tick.svg';
 
-// Helper to calculate the total elapsed time for a single job item
-const calculateItemElapsedTime = (item) => {
-  // 1. Sum up all completed time entries
-  const completedTime = item.timeEntries.reduce((sum, entry) => sum + entry.duration, 0);
-  
-  // 2. Add the time for the currently running segment, if any
-  let runningTime = 0;
-  if (item.timerState === 'running' && item.currentTimer.startTime) {
-    runningTime = Math.floor((Date.now() - item.currentTimer.startTime) / 1000);
-  }
-  
-  return completedTime + runningTime;
-};
+// --- NEW ICON IMPORTS ---
+import clipboardIcon from '../assets/clipboard.svg';
+import workerIcon from '../assets/worker.svg';
+import userIcon from '../assets/user.svg';
+import calendarIcon from '../assets/calendar.svg';
+// --- END NEW ICON IMPORTS ---
+
+import '../styles/EstimatorDashboard.css';
 
 function EstimatorDashboard({ onLoginClick }) {
   const [showJobDetails, setShowJobDetails] = useState(false);
@@ -32,131 +29,59 @@ function EstimatorDashboard({ onLoginClick }) {
     { id: 'EMP005', name: 'David Brown' }
   ];
 
-  // Jobs array with NEW timer states for each item to support multi-employee tracking
+  // Jobs array with new structure
   const [jobs, setJobs] = useState([
     {
       id: 'JOB-20251004-0001',
-      owner: 'Devanath DR',
-      vehicle: 'ABC-123',
-      engineNumber: '',
+      customer_name: 'Devanath DR',
+      vehicle_number: 'ABC-123',
+      engine_number: 'EN12345',
+      vehicle_model: 'Toyota Camry 2018',
+      contact_number: '555-1234',
       date: 'Oct 5, 2025, 08:30 AM',
       status: 'In Progress',
-      jobCount: 2,
-      assignedEmployee: { id: 'EMP001', name: 'John Doe' }, // Initial assigned employee for example
+      assignedEmployee: { id: 'EMP001', name: 'John Doe' },
       items: [
-        { 
-          jobType: 'Oil Change', 
-          description: 'Change engine oil', 
-          estimatedPrice: 50,
-          timeEntries: [
-            { employeeId: 'EMP001', employeeName: 'John Doe', duration: 300, startTime: 0, endTime: 0 }, // Example completed entry (5 mins)
-          ], 
-          currentTimer: { // Tracks who is currently running the timer
-            employeeId: 'EMP001',
-            employeeName: 'John Doe',
-            startTime: Date.now() - 60000, // Example of a running timer (1 minute elapsed)
-          },
-          timerState: 'running', // Overall item state
-          totalElapsedTime: 360, // 300 (completed) + 60 (running)
-        },
-        { 
-          jobType: 'Brake Check', 
-          description: 'Inspect brake pads', 
-          estimatedPrice: 75,
-          timeEntries: [], 
-          currentTimer: { employeeId: null, employeeName: null, startTime: null },
-          timerState: 'stopped',
-          totalElapsedTime: 0
-        }
+        { jobType: 'Oil Change', description: 'Change engine oil', estimatedPrice: 50, itemStatus: 'running' },
+        { jobType: 'Brake Check', description: 'Inspect brake pads', estimatedPrice: 75, itemStatus: 'stopped' }
+      ],
+      machines: [
+        { machineType: '2-Post Lift', description: 'Vehicle Lift', estimatedPrice: 20 }
+      ],
+      consumables: [
+        { name: 'Engine Oil', quantity: 5, perPiecePrice: 8 },
+        { name: 'Oil Filter', quantity: 1, perPiecePrice: 15 }
       ]
     },
     {
       id: 'JOB-20251004-0002',
-      owner: 'Aljo KJ',
-      vehicle: 'XYZ-789',
-      engineNumber: '',
+      customer_name: 'Aljo KJ',
+      vehicle_number: 'XYZ-789',
+      engine_number: 'EN67890',
+      vehicle_model: 'Honda Civic 2020',
+      contact_number: '555-5678',
       date: 'Oct 5, 2025, 08:30 AM',
       status: 'Not Assigned',
-      jobCount: 2,
       assignedEmployee: null,
       items: [
-        { 
-          jobType: 'Tire Rotation', 
-          description: 'Rotate all 4 tires', 
-          estimatedPrice: 40,
-          timeEntries: [], 
-          currentTimer: { employeeId: null, employeeName: null, startTime: null },
-          timerState: 'stopped',
-          totalElapsedTime: 0
-        },
-        { 
-          jobType: 'AC Service', 
-          description: 'AC gas refill', 
-          estimatedPrice: 100,
-          timeEntries: [], 
-          currentTimer: { employeeId: null, employeeName: null, startTime: null },
-          timerState: 'stopped',
-          totalElapsedTime: 0
-        }
-      ]
-    },
-    {
-      id: 'JOB-20251004-0003',
-      owner: 'Adith KP',
-      vehicle: 'CBA-321',
-      engineNumber: '',
-      date: 'Oct 17, 2025, 08:30 AM',
-      status: 'Not Assigned',
-      jobCount: 2,
-      assignedEmployee: null,
-      items: [
-        { 
-          jobType: 'Tire Rotation', 
-          description: 'Rotate all 4 tires', 
-          estimatedPrice: 40,
-          timeEntries: [], 
-          currentTimer: { employeeId: null, employeeName: null, startTime: null },
-          timerState: 'stopped',
-          totalElapsedTime: 0
-        },
-        { 
-          jobType: 'AC Service', 
-          description: 'AC gas refill', 
-          estimatedPrice: 100,
-          timeEntries: [], 
-          currentTimer: { employeeId: null, employeeName: null, startTime: null },
-          timerState: 'stopped',
-          totalElapsedTime: 0
-        }
-      ]
+        { jobType: 'Tire Rotation', description: 'Rotate all 4 tires', estimatedPrice: 40, itemStatus: 'stopped' },
+      ],
+      machines: [],
+      consumables: []
     }
   ]);
 
   // Form state for creating new job
   const [formData, setFormData] = useState({
-    owner: '',
-    vehicle: '',
-    engineNumber: '',
-    items: [{ jobType: '', description: '', estimatedPrice: 0 }]
+    customer_name: '',
+    vehicle_number: '',
+    engine_number: '',
+    vehicle_model: '',
+    contact_number: '',
+    items: [{ jobType: '', description: '', estimatedPrice: 0 }],
+    machines: [],
+    consumables: []
   });
-
-  // Timer effect - updates totalElapsedTime for running timers
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setJobs(prevJobs => prevJobs.map(job => ({
-        ...job,
-        items: job.items.map(item => {
-          if (item.timerState === 'running' && item.currentTimer.startTime) {
-            const newTotalTime = calculateItemElapsedTime(item);
-            return { ...item, totalElapsedTime: newTotalTime };
-          }
-          return item;
-        })
-      })));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Update selected job when jobs change
   useEffect(() => {
@@ -166,29 +91,19 @@ function EstimatorDashboard({ onLoginClick }) {
         setSelectedJob(updatedJob);
       }
     }
-  }, [jobs]);
+  }, [jobs, selectedJob]);
 
-  // Format elapsed time
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   // Handle employee selection
   const handleEmployeeSelect = (jobId, employeeId) => {
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
         const employee = employees.find(e => e.id === employeeId);
-        
-        // Prevent changing employee while a timer is running
-        const hasRunningTimer = job.items.some(item => item.timerState === 'running');
-        if (hasRunningTimer) {
-             alert('Cannot change assigned employee while a job timer is running.');
+        const hasRunningTask = job.items.some(item => item.itemStatus === 'running');
+        if (hasRunningTask) {
+             alert('Cannot change assigned employee while a job task is running.');
              return job;
         }
-
         return { 
           ...job, 
           assignedEmployee: employee,
@@ -199,154 +114,56 @@ function EstimatorDashboard({ onLoginClick }) {
     }));
   };
 
-  // Handle item timer start
+  // --- SIMPLIFIED BUTTON HANDLERS ---
   const handleStartItemTimer = (jobId, itemIndex) => {
+    console.log(`API CALL: Start timer for job ${jobId}, item ${itemIndex}`);
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
-        // Ensure an employee is assigned to the job before starting
         if (!job.assignedEmployee) {
-          alert('Please assign an employee to the job card before starting any task timer.');
+          alert('Please assign an employee to the job card before starting any task.');
           return job;
         }
-
         const newItems = [...job.items];
-        const currentItem = newItems[itemIndex];
-        
-        // Prevent starting if another employee's timer is already running
-        if (currentItem.timerState === 'running' && currentItem.currentTimer.employeeId !== job.assignedEmployee.id) {
-           alert(`Timer is currently running by ${currentItem.currentTimer.employeeName}. You must pause or end their timer before starting your own.`);
-           return job;
-        }
-
-        // Start a new timer segment
-        newItems[itemIndex] = {
-          ...currentItem,
-          timerState: 'running',
-          currentTimer: {
-            employeeId: job.assignedEmployee.id,
-            employeeName: job.assignedEmployee.name,
-            startTime: Date.now()
-          },
-          // totalElapsedTime will be updated by the useEffect interval
-        };
-        
-        // Update job status
-        const hasRunningTimer = newItems.some(item => item.timerState === 'running');
-        const allCompleted = newItems.every(item => item.timerState === 'completed');
-        
-        return {
-          ...job,
-          items: newItems,
-          status: allCompleted ? 'Completed' : hasRunningTimer ? 'In Progress' : job.status
-        };
+        newItems[itemIndex].itemStatus = 'running';
+        const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
+        return { ...job, items: newItems, status: hasRunningTask ? 'In Progress' : job.status };
       }
       return job;
     }));
   };
 
-  // Handle item timer pause
   const handlePauseItemTimer = (jobId, itemIndex) => {
+    console.log(`API CALL: Pause timer for job ${jobId}, item ${itemIndex}`);
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
-        const currentItem = job.items[itemIndex];
-        
-        // Only pause if the timer is running
-        if (currentItem.timerState !== 'running' || !currentItem.currentTimer.startTime) {
-          return job;
-        }
-
-        // Finalize the running segment
-        const duration = Math.floor((Date.now() - currentItem.currentTimer.startTime) / 1000);
-        
-        const newTimeEntry = {
-          employeeId: currentItem.currentTimer.employeeId,
-          employeeName: currentItem.currentTimer.employeeName,
-          startTime: currentItem.currentTimer.startTime,
-          endTime: Date.now(),
-          duration: duration
-        };
-
         const newItems = [...job.items];
-        newItems[itemIndex] = {
-          ...currentItem,
-          timerState: 'paused',
-          timeEntries: [...currentItem.timeEntries, newTimeEntry], // Save time segment
-          currentTimer: { employeeId: null, employeeName: null, startTime: null }, // Reset current timer
-          totalElapsedTime: currentItem.totalElapsedTime + duration // Update total
-        };
-        
-        // Update job status
-        const hasRunningTimer = newItems.some(item => item.timerState === 'running');
-        
-        return {
-          ...job,
-          items: newItems,
-          status: hasRunningTimer ? 'In Progress' : 'Assigned' // Status goes back to Assigned if no other timers are running
-        };
+        newItems[itemIndex].itemStatus = 'paused';
+        const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
+        return { ...job, items: newItems, status: hasRunningTask ? 'In Progress' : 'Assigned' };
       }
       return job;
     }));
   };
 
-  // Handle item timer end
   const handleEndItemTimer = (jobId, itemIndex) => {
+    console.log(`API CALL: End timer for job ${jobId}, item ${itemIndex}`);
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
-        const currentItem = job.items[itemIndex];
-        
-        let duration = 0;
-        let newEntries = [...currentItem.timeEntries];
-        let newTotalElapsedTime = currentItem.totalElapsedTime;
-
-        // If running, finalize the current segment and save it
-        if (currentItem.timerState === 'running' && currentItem.currentTimer.startTime) {
-          duration = Math.floor((Date.now() - currentItem.currentTimer.startTime) / 1000);
-          
-          const newTimeEntry = {
-            employeeId: currentItem.currentTimer.employeeId,
-            employeeName: currentItem.currentTimer.employeeName,
-            startTime: currentItem.currentTimer.startTime,
-            endTime: Date.now(),
-            duration: duration
-          };
-          newEntries = [...newEntries, newTimeEntry];
-          newTotalElapsedTime += duration;
-        }
-        // If paused, the last segment was already saved on pause.
-
         const newItems = [...job.items];
-        newItems[itemIndex] = {
-          ...currentItem,
-          timerState: 'completed',
-          timeEntries: newEntries,
-          currentTimer: { employeeId: null, employeeName: null, startTime: null },
-          totalElapsedTime: newTotalElapsedTime
-        };
-        
-        // Check if all items are completed
-        const allCompleted = newItems.every(item => item.timerState === 'completed');
-        const hasRunningTimer = newItems.some(item => item.timerState === 'running');
-        
-        return {
-          ...job,
-          items: newItems,
-          status: allCompleted ? 'Completed' : hasRunningTimer ? 'In Progress' : 'Assigned'
-        };
+        newItems[itemIndex].itemStatus = 'completed';
+        const allCompleted = newItems.every(item => item.itemStatus === 'completed');
+        const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
+        return { ...job, items: newItems, status: allCompleted ? 'Completed' : (hasRunningTask ? 'In Progress' : 'Assigned') };
       }
       return job;
     }));
-  };
-
-  // Calculate total time for a job
-  const calculateTotalTime = (items) => {
-    return items.reduce((total, item) => total + item.totalElapsedTime, 0);
   };
 
   // Filter jobs based on search query
   const filteredJobs = jobs.filter(job => 
     job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    job.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    job.vehicle.toLowerCase().includes(searchQuery.toLowerCase())
+    job.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.vehicle_number.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Generate new job ID
@@ -357,27 +174,23 @@ function EstimatorDashboard({ onLoginClick }) {
     return `JOB-${dateStr}-${jobNumber}`;
   };
 
-  // Handle form input changes
+  // --- Form Handlers ---
   const handleFormChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Handle job item changes
+  // Job Item Handlers
   const handleJobItemChange = (index, field, value) => {
     const newItems = [...formData.items];
     newItems[index][field] = field === 'estimatedPrice' ? parseFloat(value) || 0 : value;
     setFormData(prev => ({ ...prev, items: newItems }));
   };
-
-  // Add new job item
   const addJobItem = () => {
     setFormData(prev => ({
       ...prev,
       items: [...prev.items, { jobType: '', description: '', estimatedPrice: 0 }]
     }));
   };
-
-  // Remove job item
   const removeJobItem = (index) => {
     if (formData.items.length > 1) {
       const newItems = formData.items.filter((_, i) => i !== index);
@@ -385,18 +198,63 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
-  // Calculate total estimated price
-  const calculateTotal = () => {
-    return formData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+  // Machine Handlers
+  const handleMachineChange = (index, field, value) => {
+    const newMachines = [...formData.machines];
+    newMachines[index][field] = field === 'estimatedPrice' ? parseFloat(value) || 0 : value;
+    setFormData(prev => ({ ...prev, machines: newMachines }));
+  };
+  const addMachine = () => {
+    setFormData(prev => ({
+      ...prev,
+      machines: [...prev.machines, { machineType: '', description: '', estimatedPrice: 0 }]
+    }));
+  };
+  const removeMachine = (index) => {
+    const newMachines = formData.machines.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, machines: newMachines }));
+  };
+
+  // Consumable Handlers
+  const handleConsumableChange = (index, field, value) => {
+    const newConsumables = [...formData.consumables];
+    newConsumables[index][field] = (field === 'quantity' || field === 'perPiecePrice') ? parseFloat(value) || 0 : value;
+    setFormData(prev => ({ ...prev, consumables: newConsumables }));
+  };
+  const addConsumable = () => {
+    setFormData(prev => ({
+      ...prev,
+      consumables: [...prev.consumables, { name: '', quantity: 1, perPiecePrice: 0 }]
+    }));
+  };
+  const removeConsumable = (index) => {
+    const newConsumables = formData.consumables.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, consumables: newConsumables }));
+  };
+
+  // Calculate total estimated price for the form
+  const calculateFormTotal = () => {
+    const itemsTotal = formData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+    const machinesTotal = formData.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+    const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
+    return itemsTotal + machinesTotal + consumablesTotal;
+  };
+
+  // Calculate total for a displayed job
+  const calculateJobTotal = (job) => {
+    if (!job) return 0;
+    const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+    const machinesTotal = job.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+    const consumablesTotal = job.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
+    return itemsTotal + machinesTotal + consumablesTotal;
   };
 
   // Save new job
   const handleSaveJob = () => {
-    if (!formData.owner || !formData.vehicle) {
-      alert('Please fill in required fields: Vehicle Owner Name and Vehicle Number');
+    if (!formData.customer_name || !formData.vehicle_number || !formData.contact_number) {
+      alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
       return;
     }
-
     const hasInvalidItems = formData.items.some(item => !item.description || !item.estimatedPrice);
     if (hasInvalidItems) {
       alert('Please fill in all job item descriptions and prices');
@@ -405,36 +263,29 @@ function EstimatorDashboard({ onLoginClick }) {
 
     const newJob = {
       id: generateJobId(),
-      owner: formData.owner,
-      vehicle: formData.vehicle,
-      engineNumber: formData.engineNumber,
+      customer_name: formData.customer_name,
+      vehicle_number: formData.vehicle_number,
+      engine_number: formData.engine_number,
+      vehicle_model: formData.vehicle_model,
+      contact_number: formData.contact_number,
       date: new Date().toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
       }),
       status: 'Not Assigned',
-      jobCount: formData.items.length,
       assignedEmployee: null,
-      items: formData.items.map(item => ({
-        ...item,
-        timeEntries: [], 
-        currentTimer: { employeeId: null, employeeName: null, startTime: null },
-        timerState: 'stopped',
-        totalElapsedTime: 0
-      }))
+      items: formData.items.map(item => ({ ...item, itemStatus: 'stopped' })),
+      machines: formData.machines,
+      consumables: formData.consumables
     };
 
     setJobs(prev => [newJob, ...prev]);
     
     // Reset form
     setFormData({
-      owner: '',
-      vehicle: '',
-      engineNumber: '',
-      items: [{ jobType: '', description: '', estimatedPrice: 0 }]
+      customer_name: '', vehicle_number: '', engine_number: '', vehicle_model: '', contact_number: '',
+      items: [{ jobType: '', description: '', estimatedPrice: 0 }],
+      machines: [],
+      consumables: []
     });
     
     setShowCreateJob(false);
@@ -457,7 +308,7 @@ function EstimatorDashboard({ onLoginClick }) {
                 setShowCreateJob(false);
                 setShowJobDetails(false);
               }}>
-                📋 View Order History
+                <img src={clipboardIcon} alt="History" className="btn-icon-left" /> View Order History
               </button>
               <button className="btn-action-primary" onClick={() => {
                 setShowCreateJob(!showCreateJob);
@@ -473,12 +324,12 @@ function EstimatorDashboard({ onLoginClick }) {
         <div className="dashboard-grid">
           <div className="job-list-section">
             <div className="section-header">
-              <h3>📋 Job Cards</h3>
+              <h3><img src={clipboardIcon} alt="Jobs" className="inline-icon" /> Job Cards</h3>
             </div>
             <input
               type="text"
               className="search-input"
-              placeholder="Search by job number, owner or vehicle number..."
+              placeholder="Search by job number, customer or vehicle..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -510,18 +361,15 @@ function EstimatorDashboard({ onLoginClick }) {
                       {job.status}
                     </span>
                   </div>
-                  <p className="job-owner">{job.owner}</p>
+                  <p className="job-owner">{job.customer_name}</p>
                   <div className="job-details">
-                    <span>🚗 {job.vehicle}</span>
-                    <span>📅 {job.date}</span>
+                    <span><img src={userIcon} alt="Vehicle" className="inline-icon" /> {job.vehicle_number}</span>
+                    <span><img src={calendarIcon} alt="Date" className="inline-icon" /> {job.date}</span>
                   </div>
                   {job.assignedEmployee && (
-                    <p className="job-employee">👤 {job.assignedEmployee.name}</p>
+                    <p className="job-employee"><img src={workerIcon} alt="Worker" className="inline-icon" /> {job.assignedEmployee.name}</p>
                   )}
-                  {calculateTotalTime(job.items) > 0 && (
-                    <p className="job-timer">⏱️ {formatTime(calculateTotalTime(job.items))}</p>
-                  )}
-                  <p className="job-items">{job.jobCount} jobs</p>
+                  <p className="job-items">{job.items.length} tasks</p>
                 </div>
               ))
             )}
@@ -530,7 +378,9 @@ function EstimatorDashboard({ onLoginClick }) {
           <div className="details-section">
             {!showJobDetails && !showCreateJob && !showOrderHistory && (
               <div className="no-selection">
-                <div className="no-selection-icon">📋</div>
+                <div className="no-selection-icon">
+                  <img src={clipboardIcon} alt="No selection" />
+                </div>
                 <p>No Selection</p>
                 <p className="no-selection-hint">Click on a job card from the list to view its details here</p>
               </div>
@@ -539,30 +389,22 @@ function EstimatorDashboard({ onLoginClick }) {
             {showJobDetails && selectedJob && (
               <div className="job-details-view">
                 <div className="form-header">
-                  <h3>📋 Job Details</h3>
+                  <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
                   <button className="close-btn" onClick={() => {
                     setShowJobDetails(false);
                     setSelectedJob(null);
                   }}>✕</button>
                 </div>
                 <div className="job-detail-content">
+                  {/* --- CUSTOMER INFO --- */}
                   <div className="job-info-grid">
-                    <div>
-                      <strong>Job Number:</strong>
-                      <span>{selectedJob.id}</span>
-                    </div>
-                    <div>
-                      <strong>Owner:</strong>
-                      <span>{selectedJob.owner}</span>
-                    </div>
-                    <div>
-                      <strong>Vehicle:</strong>
-                      <span>{selectedJob.vehicle}</span>
-                    </div>
-                    <div>
-                      <strong>Date:</strong>
-                      <span>{selectedJob.date}</span>
-                    </div>
+                    <div><strong>Job Number:</strong> <span>{selectedJob.id}</span></div>
+                    <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div>
+                    <div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div>
+                    <div><strong>Model:</strong> <span>{selectedJob.vehicle_model || 'N/A'}</span></div>
+                    <div><strong>Engine:</strong> <span>{selectedJob.engine_number || 'N/A'}</span></div>
+                    <div><strong>Contact:</strong> <span>{selectedJob.contact_number}</span></div>
+                    <div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
                     <div>
                       <strong>Status:</strong>
                       <span className={`status-badge ${
@@ -574,7 +416,7 @@ function EstimatorDashboard({ onLoginClick }) {
                         {selectedJob.status}
                       </span>
                     </div>
-                    <div>
+                    <div className="full-width">
                       <strong>Assign Employee:</strong>
                       <select 
                         className="employee-select"
@@ -584,22 +426,15 @@ function EstimatorDashboard({ onLoginClick }) {
                       >
                         <option value="">Select Employee</option>
                         {employees.map(emp => (
-                          <option key={emp.id} value={emp.id}>
-                            {emp.name} ({emp.id})
-                          </option>
+                          <option key={emp.id} value={emp.id}>{emp.name} ({emp.id})</option>
                         ))}
                       </select>
                     </div>
-                    {selectedJob.engineNumber && (
-                      <div className="full-width">
-                        <strong>Engine Number:</strong>
-                        <span>{selectedJob.engineNumber}</span>
-                      </div>
-                    )}
                   </div>
                   
+                  {/* --- JOB TASKS --- */}
                   <div className="job-items-container">
-                    <strong className="job-items-title">Job Items:</strong>
+                    <strong className="job-items-title">Job Tasks:</strong>
                     {selectedJob.items.map((item, index) => (
                       <div key={index} className="job-detail-item">
                         <div className="item-header-row">
@@ -611,98 +446,89 @@ function EstimatorDashboard({ onLoginClick }) {
                             <div className="item-description">{item.description}</div>
                             <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
                           </div>
-                          
                           {selectedJob.assignedEmployee && (
                             <div className="item-timer-section">
-                              <div className="item-timer-display">
-                                <span className="timer-label">⏱️</span>
-                                <span className="timer-time">{formatTime(item.totalElapsedTime)}</span>
-                              </div>
                               <div className="item-timer-controls">
-                                {(item.timerState === 'stopped' || item.timerState === 'paused') && (
-                                  <button 
-                                    className="btn-timer-small btn-start"
-                                    onClick={() => handleStartItemTimer(selectedJob.id, index)}
-                                  >
-                                    ▶️ 
-                                    {item.timerState === 'paused' ? ' Resume' : ' Start'}
+                                {(item.itemStatus === 'stopped' || item.itemStatus === 'paused') && (
+                                  <button title={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-timer-small btn-start" onClick={() => handleStartItemTimer(selectedJob.id, index)}>
+                                    <img src={playIcon} alt={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-icon" />
                                   </button>
                                 )}
-                                {item.timerState === 'running' && (
-                                  <>
-                                    <button 
-                                      className="btn-timer-small btn-pause"
-                                      onClick={() => handlePauseItemTimer(selectedJob.id, index)}
-                                    >
-                                      ⏸️ Pause
-                                    </button>
-                                    <button 
-                                      className="btn-timer-small btn-end"
-                                      onClick={() => handleEndItemTimer(selectedJob.id, index)}
-                                    >
-                                      ⏹️ End
-                                    </button>
-                                  </>
-                                )}
-                                {item.timerState === 'paused' && (
-                                   <button 
-                                    className="btn-timer-small btn-end"
-                                    onClick={() => handleEndItemTimer(selectedJob.id, index)}
-                                  >
-                                    ⏹️ End
+                                {item.itemStatus === 'running' && (
+                                  <button title="Pause" className="btn-timer-small btn-pause" onClick={() => handlePauseItemTimer(selectedJob.id, index)}>
+                                    <img src={pauseIcon} alt="Pause" className="btn-icon" />
                                   </button>
                                 )}
-                                {item.timerState === 'completed' && (
+                                {item.itemStatus !== 'completed' && (
+                                   <button title="End" className="btn-timer-small btn-end" onClick={() => handleEndItemTimer(selectedJob.id, index)}>
+                                    <img src={tickIcon} alt="End" className="btn-icon" />
+                                   </button>
+                                )}
+                                {item.itemStatus === 'completed' && (
                                   <div className="completed-badge-small">
-                                    ✅ Completed
+                                    <img src={tickIcon} alt="Completed" className="btn-icon" />
                                   </div>
                                 )}
                               </div>
                             </div>
                           )}
                         </div>
-                        
-                        {/* --- NEW SECTION: Display Time Entries by Employee --- */}
-                        {item.timeEntries.length > 0 && (
-                           <div className="time-entries-summary">
-                              <strong className="time-history-title">Time History:</strong>
-                              {item.timeEntries.map((entry, entryIndex) => (
-                                <div key={entryIndex} className="time-entry-row">
-                                  <span className="time-entry-employee">👤 {entry.employeeName}</span>
-                                  <span className="time-entry-duration">⏱️ {formatTime(entry.duration)}</span>
-                                </div>
-                              ))}
-                           </div>
-                        )}
-                        {/* Currently Running Timer Employee */}
-                        {item.timerState === 'running' && item.currentTimer.employeeName && (
-                          <div className="current-timer-employee">
-                            Current Timer by: 👤 **{item.currentTimer.employeeName}**
-                          </div>
-                        )}
-                        {/* --- END NEW SECTION --- */}
-                        
                       </div>
                     ))}
-                    <div className="job-detail-total">
-                      <strong className="total-label">Total Estimated Amount:</strong>
-                      <strong className="total-amount">
-                        ${selectedJob.items.reduce((sum, item) => sum + item.estimatedPrice, 0).toFixed(2)}
-                      </strong>
+                  </div>
+
+                  {/* --- MACHINE DETAILS --- */}
+                  {selectedJob.machines.length > 0 && (
+                    <div className="job-items-container">
+                      <strong className="job-items-title">Machines Used:</strong>
+                      {selectedJob.machines.map((machine, index) => (
+                        <div key={index} className="job-detail-item simple-item-row">
+                          <div className="item-info">
+                            <div className="item-title">
+                              <strong>{machine.machineType}</strong>
+                            </div>
+                            <div className="item-description">{machine.description}</div>
+                          </div>
+                          <div className="item-price">${machine.estimatedPrice.toFixed(2)}</div>
+                        </div>
+                      ))}
                     </div>
-                    {selectedJob.assignedEmployee && calculateTotalTime(selectedJob.items) > 0 && (
-                      <div className="job-total-time">
-                        <strong className="total-label">Total Time Spent:</strong>
-                        <strong className="total-time">
-                          ⏱️ {formatTime(calculateTotalTime(selectedJob.items))}
-                        </strong>
-                      </div>
-                    )}
+                  )}
+
+                  {/* --- CONSUMABLE DETAILS --- */}
+                  {selectedJob.consumables.length > 0 && (
+                    <div className="job-items-container">
+                      <strong className="job-items-title">Consumables Used:</strong>
+                      {selectedJob.consumables.map((item, index) => (
+                        <div key={index} className="job-detail-item simple-item-row">
+                          <div className="item-info">
+                            <div className="item-title">
+                              <strong>{item.name}</strong>
+                            </div>
+                            <div className="item-description">
+                              {item.quantity} x ${item.perPiecePrice.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="item-price">
+                            ${(item.quantity * item.perPiecePrice).toFixed(2)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* --- TOTAL --- */}
+                  <div className="job-detail-total">
+                    <strong className="total-label">Total Estimated Amount:</strong>
+                    <strong className="total-amount">
+                      ${calculateJobTotal(selectedJob).toFixed(2)}
+                    </strong>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* --- CREATE JOB FORM --- */}
             {showCreateJob && (
               <div className="create-job-form">
                 <div className="form-header">
@@ -711,97 +537,124 @@ function EstimatorDashboard({ onLoginClick }) {
                 </div>
                 <p className="form-subtitle">Fill in the details to create a new job order</p>
 
+                {/* --- Customer Fields --- */}
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Vehicle Owner Name *</label>
-                    <input 
-                      type="text" 
-                      placeholder="Enter owner's full name"
-                      value={formData.owner}
-                      onChange={(e) => handleFormChange('owner', e.target.value)}
-                    />
+                    <label>Customer Name *</label>
+                    <input type="text" placeholder="Enter customer's full name" value={formData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label>Vehicle Number *</label>
-                    <input 
-                      type="text" 
-                      placeholder="ABC-123"
-                      value={formData.vehicle}
-                      onChange={(e) => handleFormChange('vehicle', e.target.value)}
-                    />
+                    <label>Contact Number *</label>
+                    <input type="tel" placeholder="555-123-4567" value={formData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} />
                   </div>
                 </div>
-
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Vehicle Number *</label>
+                    <input type="text" placeholder="ABC-123" value={formData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>Vehicle Model</label>
+                    <input type="text" placeholder="e.g., Toyota Camry 2018" value={formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
+                  </div>
+                </div>
                 <div className="form-group">
                   <label>Engine Number</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter engine identification number"
-                    value={formData.engineNumber}
-                    onChange={(e) => handleFormChange('engineNumber', e.target.value)}
-                  />
+                  <input type="text" placeholder="Enter engine identification number" value={formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
                 </div>
 
+                {/* --- Job Items (Tasks) --- */}
                 <div className="job-items-section">
                   <div className="section-title">
-                    <h4>Job Items</h4>
-                    <button className="btn-add-job" onClick={addJobItem}>+ Add More Job</button>
+                    <h4>Job Tasks</h4>
+                    <button className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
                   </div>
-
                   {formData.items.map((item, index) => (
-                    <div key={index} className="job-item-row">
+                    <div key={index} className="job-item-row job-item-row-tasks">
                       <div className="job-item-field">
-                        <label>Job #{index + 1}</label>
+                        <label>Task #{index + 1}</label>
                       </div>
                       <div className="job-item-field">
                         <label>Job Type</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g., Oil Change"
-                          value={item.jobType}
-                          onChange={(e) => handleJobItemChange(index, 'jobType', e.target.value)}
-                        />
+                        <input type="text" placeholder="e.g., Oil Change" value={item.jobType} onChange={(e) => handleJobItemChange(index, 'jobType', e.target.value)} />
                       </div>
                       <div className="job-item-field">
                         <label>Description *</label>
-                        <input 
-                          type="text" 
-                          placeholder="Describe this job"
-                          value={item.description}
-                          onChange={(e) => handleJobItemChange(index, 'description', e.target.value)}
-                        />
+                        <input type="text" placeholder="Describe this job" value={item.description} onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} />
                       </div>
                       <div className="job-item-field">
-                        <label>Estimated Price ($)*</label>
-                        <input 
-                          type="number" 
-                          placeholder="0"
-                          value={item.estimatedPrice || ''}
-                          onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)}
-                        />
+                        <label>Est. Price ($)*</label>
+                        <input type="number" placeholder="0" value={item.estimatedPrice || ''} onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)} />
                       </div>
-                      <button 
-                        className="btn-remove" 
-                        onClick={() => removeJobItem(index)}
-                        disabled={formData.items.length === 1}
-                      >
-                        🗑
-                      </button>
+                      <button className="btn-remove" onClick={() => removeJobItem(index)} disabled={formData.items.length === 1}>🗑</button>
                     </div>
                   ))}
                 </div>
 
+                {/* --- Machine Items --- */}
+                <div className="job-items-section">
+                  <div className="section-title">
+                    <h4>Machine Usage (Optional)</h4>
+                    <button className="btn-add-job" onClick={addMachine}>+ Add Machine</button>
+                  </div>
+                  {formData.machines.map((item, index) => (
+                    <div key={index} className="job-item-row job-item-row-machines">
+                      <div className="job-item-field">
+                        <label>Machine #{index + 1}</label>
+                      </div>
+                      <div className="job-item-field">
+                        <label>Machine Type</label>
+                        <input type="text" placeholder="e.g., 2-Post Lift" value={item.machineType} onChange={(e) => handleMachineChange(index, 'machineType', e.target.value)} />
+                      </div>
+                      <div className="job-item-field">
+                        <label>Description</label>
+                        <input type="text" placeholder="Describe usage" value={item.description} onChange={(e) => handleMachineChange(index, 'description', e.target.value)} />
+                      </div>
+                      <div className="job-item-field">
+                        <label>Est. Price ($)</label>
+                        <input type="number" placeholder="0" value={item.estimatedPrice || ''} onChange={(e) => handleMachineChange(index, 'estimatedPrice', e.target.value)} />
+                      </div>
+                      <button className="btn-remove" onClick={() => removeMachine(index)}>🗑</button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* --- Consumable Items --- */}
+                <div className="job-items-section">
+                  <div className="section-title">
+                    <h4>Consumables (Optional)</h4>
+                    <button className="btn-add-job" onClick={addConsumable}>+ Add Consumable</button>
+                  </div>
+                  {formData.consumables.map((item, index) => (
+                    <div key={index} className="job-item-row job-item-row-consumables">
+                      <div className="job-item-field">
+                        <label>Item #{index + 1}</label>
+                      </div>
+                      <div className="job-item-field">
+                        <label>Name of Consumable</label>
+                        <input type="text" placeholder="e.g., Engine Oil" value={item.name} onChange={(e) => handleConsumableChange(index, 'name', e.target.value)} />
+                      </div>
+                      <div className="job-item-field">
+                        <label>Quantity</label>
+                        <input type="number" placeholder="1" value={item.quantity || ''} onChange={(e) => handleConsumableChange(index, 'quantity', e.target.value)} />
+                      </div>
+                      <div className="job-item-field">
+                        <label>Price Per Piece ($)</label>
+                        <input type="number" placeholder="0" value={item.perPiecePrice || ''} onChange={(e) => handleConsumableChange(index, 'perPiecePrice', e.target.value)} />
+                      </div>
+                      <button className="btn-remove" onClick={() => removeConsumable(index)}>🗑</button>
+                    </div>
+                  ))}
+                </div>
+
+
+                {/* --- Form Footer --- */}
                 <div className="form-footer">
                   <div className="total-amount">
                     <span>Total Estimated Amount:</span>
-                    <span className="amount">${calculateTotal().toFixed(2)}</span>
+                    <span className="amount">${calculateFormTotal().toFixed(2)}</span>
                   </div>
-                  <button 
-                    className="btn-save-job" 
-                    onClick={handleSaveJob}
-                  >
-                    Save Job Card
-                  </button>
+                  <button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button>
                 </div>
               </div>
             )}
@@ -809,7 +662,7 @@ function EstimatorDashboard({ onLoginClick }) {
             {showOrderHistory && (
               <div className="order-history-view">
                 <div className="form-header">
-                  <h3>📋 Order History</h3>
+                  <h3><img src={clipboardIcon} alt="History" className="inline-icon" /> Order History</h3>
                   <button className="close-btn" onClick={() => setShowOrderHistory(false)}>✕</button>
                 </div>
                 <div className="order-history-content">

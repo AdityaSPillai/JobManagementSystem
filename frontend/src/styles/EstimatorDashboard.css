@@ -124,6 +124,9 @@
   font-weight: 500;
   max-height: fit-content;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-action:hover {
@@ -167,11 +170,15 @@
   margin: 0 0 16px 0;
   font-size: 18px;
   color: #2d3748;
+  display: flex;
+  align-items: center;
 }
 
 .search-input {
   width: 100%;
   padding: 10px 16px;
+  background: #F7FAFC;
+  color: #757B8B;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   margin-bottom: 16px;
@@ -180,6 +187,7 @@
 
 .search-input:focus {
   outline: none;
+  color: black;
   border-color: #3182ce;
 }
 
@@ -257,18 +265,18 @@
   color: #718096;
 }
 
+.job-details span {
+  display: flex;
+  align-items: center;
+}
+
 .job-employee {
   margin: 8px 0;
   font-size: 13px;
   color: #38a169;
   font-weight: 600;
-}
-
-.job-timer {
-  margin: 4px 0;
-  font-size: 13px;
-  color: #3182ce;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
 }
 
 .job-items {
@@ -304,8 +312,13 @@
 }
 
 .no-selection-icon {
-  font-size: 64px;
   margin-bottom: 16px;
+}
+
+.no-selection-icon img {
+  width: 64px;
+  height: 64px;
+  opacity: 0.6;
 }
 
 .no-selection p {
@@ -316,7 +329,6 @@
   font-size: 14px;
 }
 
-/* Job Details View Styles */
 .job-details-view {
   width: 100%;
   text-align: left;
@@ -335,6 +347,8 @@
   margin: 0;
   font-size: 22px;
   color: #2d3748;
+  display: flex;
+  align-items: center;
 }
 
 .job-detail-content {
@@ -378,12 +392,14 @@
   font-size: 14px;
   font-family: inherit;
   background: white;
+  color: #757B8B;
   cursor: pointer;
   transition: border-color 0.2s;
 }
 
 .employee-select:focus {
   outline: none;
+  color: black;
   border-color: #3182ce;
 }
 
@@ -429,6 +445,14 @@
   gap: 20px;
 }
 
+.simple-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 15px 20px;
+}
+
 .item-info {
   flex: 1;
 }
@@ -454,58 +478,67 @@
   line-height: 1.6;
 }
 
+.simple-item-row .item-description {
+  margin-bottom: 0;
+}
+
 .item-price {
   font-weight: 700;
   color: #2c5aa0;
   font-size: 18px;
 }
 
-/* Item Timer Section */
 .item-timer-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-width: 200px;
-}
-
-.item-timer-display {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.item-timer-display .timer-label {
-  font-size: 20px;
-}
-
-.item-timer-display .timer-time {
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
+  min-width: fit-content;
 }
 
 .item-timer-controls {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
+  justify-content: flex-end;
 }
 
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.btn-icon-left {
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.inline-icon {
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: 0.4em;
+  vertical-align: -0.12em;
+  display: inline-block;
+}
+
+
 .btn-timer-small {
-  padding: 8px 16px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: none;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-timer-small:hover {
@@ -523,25 +556,25 @@
   color: white;
 }
 
-.btn-timer-small.btn-resume {
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-  color: white;
-}
-
 .btn-timer-small.btn-end {
   background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
   color: white;
 }
 
 .completed-badge-small {
-  padding: 8px 16px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
   color: white;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 600;
   text-align: center;
   box-shadow: 0 2px 6px rgba(72, 187, 120, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .job-detail-total {
@@ -567,81 +600,6 @@
   color: #2c5aa0;
 }
 
-.job-total-time {
-  margin-top: 16px;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.job-total-time .total-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-}
-
-.job-total-time .total-time {
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
-}
-
-/* --- NEW STYLES FOR MULTI-EMPLOYEE TIME TRACKING --- */
-
-.time-entries-summary {
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.time-history-title {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: #4a5568;
-  font-weight: 600;
-}
-
-.time-entry-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #718096;
-  margin-bottom: 4px;
-  padding: 4px 0;
-  border-bottom: 1px dashed #e2e8f0;
-}
-
-.time-entry-row:last-child {
-  border-bottom: none;
-}
-
-.time-entry-employee {
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.time-entry-duration {
-  font-weight: 600;
-  color: #3182ce;
-}
-
-.current-timer-employee {
-  margin-top: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #48bb78; /* Green to indicate active user */
-  padding: 5px 0;
-}
-
-/* --- END NEW STYLES --- */
-
 /* Order History View */
 .order-history-view {
   width: 100%;
@@ -655,6 +613,12 @@
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 2px solid #e2e8f0;
+}
+
+/* Added for icon alignment */
+.order-history-view .form-header h3 {
+  display: flex;
+  align-items: center;
 }
 
 .order-history-content {
@@ -728,6 +692,8 @@
 .form-group input {
   width: 100%;
   padding: 10px 14px;
+  background: #F7FAFC;
+  color: #757587;
   border: 2px solid #e2e8f0;
   border-radius: 6px;
   font-size: 14px;
@@ -741,6 +707,8 @@
 
 .job-items-section {
   margin: 24px 0;
+  padding-top: 24px;
+  border-top: 2px solid #f0f4f8;
 }
 
 .section-title {
@@ -774,11 +742,30 @@
 
 .job-item-row {
   display: grid;
-  grid-template-columns: 60px 1fr 2fr 120px 40px;
   gap: 12px;
   align-items: end;
   margin-bottom: 12px;
+  padding: 12px;
+  background: #fdfdfd;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
+
+/* Grid layout for Task items */
+.job-item-row-tasks {
+  grid-template-columns: 60px 1fr 2fr 120px 40px;
+}
+
+/* Grid layout for Machine items */
+.job-item-row-machines {
+  grid-template-columns: 60px 1fr 2fr 120px 40px;
+}
+
+/* Grid layout for Consumable items */
+.job-item-row-consumables {
+  grid-template-columns: 60px 2fr 1fr 120px 40px;
+}
+
 
 .job-item-field label {
   display: block;
@@ -791,6 +778,8 @@
 .job-item-field input {
   width: 100%;
   padding: 8px 12px;
+  background: #F7FAFC;
+  color: #757587;
   border: 2px solid #e2e8f0;
   border-radius: 6px;
   font-size: 14px;
@@ -911,6 +900,7 @@
   
   .item-timer-controls {
     flex-direction: row;
+    justify-content: flex-start;
   }
 }
 
@@ -938,7 +928,14 @@
     grid-template-columns: 1fr;
   }
   
-  .job-item-row {
+  .job-item-row,
+  .job-item-row-tasks,
+  .job-item-row-machines,
+  .job-item-row-consumables {
     grid-template-columns: 1fr;
+  }
+
+  .btn-remove {
+    width: 100%;
   }
 }
