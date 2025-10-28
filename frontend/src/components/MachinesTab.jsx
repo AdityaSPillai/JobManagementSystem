@@ -78,10 +78,6 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
               <input type="date" id="nextMaintenanceDate" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} />
             </div>
           </div>
-          <div className="form-group-checkbox">
-            <input type="checkbox" id="isActive" name="isActive" checked={formData.isActive} onChange={handleChange} />
-            <label htmlFor="isActive">Machine is Active</label>
-          </div>
           <button type="submit" className="btn-submit">Add Machine</button>
         </form>
       </div>
