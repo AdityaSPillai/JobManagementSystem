@@ -168,11 +168,20 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         {!isRegisterMode ? (
           // In Login Mode
           <>
-            <p className="demo-hint">Use username: <strong>demo</strong> and password: <strong>demo</strong></p>
             {selectedRole === 'owner' && (
               <p className="toggle-mode-hint">
                 Don't have an account?{' '}
                 <span onClick={() => setIsRegisterMode(true)}>Register as Owner</span>
+              </p>
+            )}
+            {selectedRole === 'supervisor' && (
+              <p className="toggle-mode-hint">
+                Don't have an account? Ask Admin to register.
+              </p>
+            )}
+            {selectedRole === 'qaqc' && (
+              <p className="toggle-mode-hint">
+                Don't have an account? Ask Admin to register.
               </p>
             )}
           </>
