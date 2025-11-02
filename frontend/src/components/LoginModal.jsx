@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import '../styles/LoginModal.css';
+import axios from "../utils/axios.js";
+import useAuth from '../context/context.js';
 
 function LoginModal({ isOpen, onClose, onLogin }) {
   // --- New State ---
@@ -10,6 +12,9 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  
+  // --- useAuth Hook ---
+  const { login } = useAuth();
 
   // --- New State for Registration Form ---
   const [regFormData, setRegFormData] = useState({
@@ -21,7 +26,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   });
 
   // --- Login Submit Handler ---
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -30,37 +35,101 @@ function LoginModal({ isOpen, onClose, onLogin }) {
       return;
     }
 
-    if (username === 'demo' && password === 'demo') {
-      onLogin(selectedRole);
-      handleClose();
-    } else {
-      setError('Invalid credentials. Use demo/demo');
+    try {
+      const response = await axios.post('/auth/login', {
+        email: username,
+        password: password,
+      });
+
+              console.log(response.data)
+
+      if (!response.data.success) {
+        setError(response.data.message || 'Login failed. Please try again.');
+        console.log('Login Error:', response.data.message);
+      } else {
+        // Use the useAuth login function to set user info and token
+        
+        login({
+          id: response.data.user._id || response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          phone: response.data.user.phone,
+          shopname: response.data.user.shopname,
+          
+           ...(response.data.user?.shopId && { shopId: response.data.user.shopId }),
+
+          token: response.data.token
+        });
+
+        console.log('Logged in User:', response.data.user);
+        window.location.reload();
+
+        // Call parent callback with user role
+        if (onLogin) {
+          onLogin(response.data.user.role);
+        }
+
+        handleClose();
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
+      setError(error.response?.data?.message || 'An error occurred during login. Please try again.');
     }
   };
 
   // --- New: Registration Submit Handler ---
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    const { name, email, password, phone, shopname } = regFormData;
+    try {
+      setError('');
+      const { name, email, password, phone, shopname } = regFormData;
 
-    if (!name || !email || !password || !phone || !shopname) {
-      setError('Please fill in all registration fields');
-      return;
+      if (!name || !email || !password || !phone || !shopname) {
+        setError('Please fill in all registration fields');
+        return;
+      }
+
+      const ownerData = {
+        name,
+        email,
+        password,
+        role: "owner",
+        phone,
+        shopname
+      };
+
+      const response = await axios.post('/auth/signup', ownerData);
+      
+      if (!response.data.success) {
+        setError(response.data.message || 'Registration failed. Please try again.');
+        console.log('Registration Error:', response.data.message);
+      } else {
+        // Auto-login after successful registration
+        login({
+          id: response.data.user._id || response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          phone: response.data.user.phone,
+          shopname: response.data.user.shopname,
+          token: response.data.token
+        });
+
+        console.log('Registered and logged in:', response.data.user);
+        
+        if (onLogin) {
+          onLogin(response.data.user.role);
+        }
+
+        // Reset and close
+        setIsRegisterMode(false);
+        handleClose();
+      }
+    } catch (error) {
+      console.error('Registration Error:', error);
+      setError(error.response?.data?.message || 'An error occurred during registration. Please try again.');
     }
-
-    // In a real app, you would make an API call here.
-    // For this demo, we'll just log it and show an alert.
-    console.log('Registering New Owner:', {
-      ...regFormData,
-      role: 'owner' // Role is fixed for registration
-    });
-
-    alert('Registration successful! You can now log in using the demo credentials.');
-    
-    // Reset and go back to login mode
-    setIsRegisterMode(false);
-    handleClose();
   };
 
   // --- New: Registration Form Change Handler ---
@@ -168,20 +237,11 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         {!isRegisterMode ? (
           // In Login Mode
           <>
+            <p className="demo-hint">Use username: <strong>demo</strong> and password: <strong>demo</strong></p>
             {selectedRole === 'owner' && (
               <p className="toggle-mode-hint">
                 Don't have an account?{' '}
                 <span onClick={() => setIsRegisterMode(true)}>Register as Owner</span>
-              </p>
-            )}
-            {selectedRole === 'supervisor' && (
-              <p className="toggle-mode-hint">
-                Don't have an account? Ask Admin to register.
-              </p>
-            )}
-            {selectedRole === 'qaqc' && (
-              <p className="toggle-mode-hint">
-                Don't have an account? Ask Admin to register.
               </p>
             )}
           </>

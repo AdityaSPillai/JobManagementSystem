@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import '../styles/OwnerDashboard.css';
 import Header from './Header';
-import OverviewTab from './OverviewTab'; // Import new tab
-import EmployeesTab from './EmployeesTab'; // Import new tab
-import MachinesTab from './MachinesTab'; // Import new tab
+import OverviewTab from './OverviewTab';
+import EmployeesTab from './EmployeesTab';
+import MachinesTab from './MachinesTab';
+import useAuth from "../context/context.js";
+import axios from "../utils/axios.js"
+import JobTypeTab from './JobTypeTab.jsx';
 
-// --- Shop Creation Modal Component (No Changes) ---
+// --- Shop Creation Modal Component ---
 function ShopCreationModal({ isVisible, onClose, onSubmit }) {
+  const {userInfo}=useAuth();
   const [formData, setFormData] = useState({
     shopName: '',
     phone: '',
@@ -15,6 +19,11 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     city: '',
     state: '',
     pincode: '',
+    services:[{
+      name:'',
+      price:'',
+      description:''
+    }]
   });
 
   const handleChange = (e) => {
@@ -22,19 +31,106 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleServiceChange = (index, field, value) => {
+    const updatedServices = [...formData.services];
+    updatedServices[index][field] = value;
+    setFormData(prev => ({ ...prev, services: updatedServices }));
+  };
+
+  const addService = () => {
+    setFormData(prev => ({
+      ...prev,
+      services: [...prev.services, { name: '', price: '', description: '' }]
+    }));
+  };
+
+  const removeService = (index) => {
+    if (formData.services.length === 1) {
+      alert("At least one service is required");
+      return;
+    }
+    const updatedServices = formData.services.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, services: updatedServices }));
+  };
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
     if (!formData.shopName || !formData.phone || !formData.email || !formData.street || !formData.city || !formData.state || !formData.pincode) {
         alert("Please fill in all fields.");
         return;
     }
-    onSubmit(formData);
-    onClose();
+    
+    // Validate services
+    const hasEmptyService = formData.services.some(service => 
+      !service.name || !service.price || !service.description
+    );
+    if (hasEmptyService) {
+      alert("Please fill in all service fields.");
+      return;
+    }
+
+    // Format data to match your API structure
+    const shopData = {
+      shopName: formData.shopName,
+      ownerId: userInfo.id,
+      contactInfo: {
+        phone: formData.phone,
+        email: formData.email
+      },
+      services: formData.services.map(service => ({
+        name: service.name,
+        price: Number(service.price),
+        description: service.description
+      })),
+      address: {
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode
+      }
+    };
+
+  
+  try {
+
+    // ✅ FIXED: Pass shopData as a single object
+    const response = await axios.post('/shop/create', shopData);
+    
+    if (!response.data.success) {
+     console.log("Error while adding new shop");
+      return;
+    }
+      const existingUserInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+
+  const shopId = response.data.shop?._id || response.data.shopId;
+  const updatedUserInfo = { ...existingUserInfo, shopId };
+  localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
+  
+    alert("Shop added successfully!");
+    
+    if (onSubmit) {
+      onSubmit(response.data.shop || formData);
+    }
+    
+
     // Reset form
     setFormData({
-      shopName: '', phone: '', email: '', street: '', city: '', state: '', pincode: '',
+      shopName: '', 
+      phone: '', 
+      email: '', 
+      street: '', 
+      city: '', 
+      state: '', 
+      pincode: '',
+      services: [{ name: '', price: '', description: '' }]
     });
-  };
+  onClose();
+    
+  } catch (error) {
+    console.error('Shop Creation Error:', error);
+  } 
+};
+
 
   if (!isVisible) return null;
 
@@ -82,6 +178,60 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
               <input type="text" id="pincode" name="pincode" value={formData.pincode} onChange={handleChange} placeholder="Pincode" required />
             </div>
           </div>
+
+          <label className="form-label-group">Services</label>
+          {formData.services.map((service, index) => (
+            <div key={index} className="service-item">
+              <div className="form-grid cols-3">
+                <div className="form-group">
+                  <label htmlFor={`service-name-${index}`}>Name</label>
+                  <input 
+                    type="text" 
+                    id={`service-name-${index}`}
+                    value={service.name} 
+                    onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
+                    placeholder="e.g., Oil Change" 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor={`service-price-${index}`}>Price</label>
+                  <input 
+                    type="number" 
+                    id={`service-price-${index}`}
+                    value={service.price} 
+                    onChange={(e) => handleServiceChange(index, 'price', e.target.value)}
+                    placeholder="0" 
+                    min="0"
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor={`service-desc-${index}`}>Description</label>
+                  <input 
+                    type="text" 
+                    id={`service-desc-${index}`}
+                    value={service.description} 
+                    onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
+                    placeholder="Job description" 
+                    required 
+                  />
+                </div>
+              </div>
+              {formData.services.length > 1 && (
+                <button 
+                  type="button" 
+                  className="btn-remove-service" 
+                  onClick={() => removeService(index)}
+                >
+                  ✕ Remove Service
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" className="btn-add-service" onClick={addService}>
+            + Add Another Service
+          </button>
           
           <button type="submit" className="btn-submit">Submit</button>
         </form>
@@ -94,12 +244,47 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
 
 function OwnerDashboard({ onLogout }) {
   const [isShopModalOpen, setIsShopModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // State for active tab
+  const [activeTab, setActiveTab] = useState('overview');
+  const [empCount,setEmpCount]=useState(0)
+  const[machineCount,setMchineCount]=useState(0)
+    const{userInfo}=useAuth()
 
-  const handleShopSubmit = (shopData) => {
-      console.log('New Shop Data Submitted:', shopData);
-      alert(`Shop "${shopData.shopName}" created successfully! (See console for data)`);
+
+  const getEmployeeeCount=async()=>{
+    try {
+      const allEmp= await axios.get(`/shop/getAllEmployees/${userInfo.shopId}`)
+      console.log(allEmp.data.users.length)
+     setEmpCount(allEmp.data.users.length)
+      
+    } catch (error) {
+      console.log(error)
+    }
   }
+
+
+ const getMachinesCount=async()=>{
+    try {
+      const allMachines= await axios.get(`/shop/getAllMachines/${userInfo.shopId}`)
+      console.log(allMachines.data.machines.length)
+     setMchineCount(allMachines.data.machines.length)
+      
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  
+  
+  useEffect(()=>{
+    if (userInfo?.shopId) {
+    getEmployeeeCount();
+    getMachinesCount();
+  }
+  },[userInfo?.shopId])
+  const handleShopSubmit = (shopData) => {
+    console.log('New Shop Data Submitted:', shopData);
+    // You can refresh the shop list here or update state
+
+  };
 
   return (
     <div className="owner-dashboard">
@@ -110,9 +295,9 @@ function OwnerDashboard({ onLogout }) {
             <h2>Owner Dashboard</h2>
             <p>Manage jobs, assign employees, and track progress</p>
           </div>
-          <button className="btn-create-shop" onClick={() => setIsShopModalOpen(true)}>
+          {!userInfo?.shopId &&<button className="btn-create-shop" onClick={() => setIsShopModalOpen(true)}>
             + Create New Shop
-          </button>
+          </button> }
         </div>
         
         <div className="stats-cards">
@@ -127,13 +312,13 @@ function OwnerDashboard({ onLogout }) {
             <span className="stat-icon">📈</span>
           </div>
           <div className="stat-card">
-            <span className="stat-label">Active Employees</span>
-            <span className="stat-value">4</span>
+            <span className="stat-label">All Employees</span>
+            <span className="stat-value">{empCount}</span>
             <span className="stat-icon">👥</span>
           </div>
           <div className="stat-card">
             <span className="stat-label">Available Machines</span>
-            <span className="stat-value">4</span>
+            <span className="stat-value">{machineCount}</span>
             <span className="stat-icon">🔧</span>
           </div>
         </div>
@@ -148,16 +333,13 @@ function OwnerDashboard({ onLogout }) {
           <button className={`tab-btn ${activeTab === 'financial' ? 'active' : ''}`} onClick={() => setActiveTab('financial')}>💰 Financial</button>
         </div>
 
-        {/* --- Conditionally Rendered Tab Content --- */}
         <div className="tab-content">
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
-          {activeTab === 'jobTypes' && <div className="placeholder-content">Job Types Management Coming Soon...</div>}
+          {activeTab === 'jobTypes' && <JobTypeTab/> }
           {activeTab === 'financial' && <div className="placeholder-content">Financial Dashboard Coming Soon...</div>}
         </div>
-        {/* --- End Tab Content --- */}
-
       </div>
       
       <ShopCreationModal 

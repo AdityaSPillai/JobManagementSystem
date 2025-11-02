@@ -12,7 +12,7 @@ const machineSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        enum: ['diagnostic', 'repair', 'cleaning', 'painting', 'welding', 'other'] 
+        enum: ['diagnostic', 'repair','lift', 'cleaning', 'painting', 'welding', 'other'] 
     },
     status: {
         type: Boolean,

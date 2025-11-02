@@ -14,22 +14,49 @@ import machineRouets from './routes/machineRouets.js'
 dotenv.config();
 const app= express();
 
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-	standardHeaders: 'draft-8', // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-	ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
-	// store: ... , // Redis, Memcached, etc. See below.
-})
+// const limiter = rateLimit({
+// 	windowMs: 15 * 60 * 1000, // 15 minutes
+// 	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+// 	standardHeaders: 'draft-8', // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
+// 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+// 	ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
+// 	// store: ... , // Redis, Memcached, etc. See below.
+// })
 
-app.use(limiter)
+// app.use(limiter)
 app.use(express.json());
+
 app.use(morgan('dev'))
 app.use(cors({
-  origin: ['https://your-frontend.com', 'http://localhost:3000'],
-  credentials: true
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'https://your-frontend.com'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// app.use(cors({
+//       origin: 'http://localhost:5173' // Allow requests from this origin
+//     }));
+
+// app.use(cors({
+//   origin: [
+//     'http://localhost:5173',
+//     'http://localhost:5174',
+//     'http://127.0.0.1:5173',
+//     'http://127.0.0.1:5174',
+//     'https://your-frontend.com'
+//   ],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
+
 
 
 connectDB();

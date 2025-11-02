@@ -4,17 +4,40 @@ import JWT from "jsonwebtoken"
 
 export const SignupController = async(req, res) => {
     try {
-        const {name, email, password, role, shopname,phone} = req.body;
+        const {
+            name, 
+            email, 
+            password, 
+            role, 
+            shopId,  
+            phone,
+            specialization,
+            hourlyRate,
+            experience,
+        } = req.body;
 
+        // Basic validations
         if(!name) return res.status(400).send({success: false, message: "Name is Required"});
         if(!email) return res.status(400).send({success: false, message: "Email is Required"});
         if(!password) return res.status(400).send({success: false, message: "Password is Required"});
         if(!role) return res.status(400).send({success: false, message: "Role is Required"});
-        if(!phone) return res.status(400).send({success: false, message: "Role is Required"});
+        if(!phone) return res.status(400).send({success: false, message: "Phone is Required"});  // ✅ Fixed error message
 
+        // Role-specific validations for workers, qa_qc, supervisor
+        if(['worker', 'qa_qc', 'supervisor'].includes(role)) {
+            if(!shopId) return res.status(400).send({success: false, message: "Shop ID is Required"});
+            if(!specialization) return res.status(400).send({success: false, message: "Specialization is Required"});
+            if(!hourlyRate) return res.status(400).send({success: false, message: "Hourly Rate is Required"});
+            if(!experience) return res.status(400).send({success: false, message: "Experience is Required"});
+        }
 
-        if(role!=="admin" && !shopname) return res.status(400).send({success: false, message: "Shopname is Required"});
+        // Desk employee validation
+        if(role === 'desk_employee') {
+            if(!shopId) return res.status(400).send({success: false, message: "Shop ID is Required"});
+            if(!hourlyRate) return res.status(400).send({success: false, message: "Hourly Rate is Required"});
+        }
 
+        // Check if user already exists
         const existingUser = await UserModel.findOne({email: email});
         if(existingUser) {
             return res.status(400).send({ 
@@ -23,17 +46,33 @@ export const SignupController = async(req, res) => {
             });
         }
 
+        // Hash password
         const hashedPassword = await hashPassword(password);
         
-        const user = new UserModel({ 
+        // Create user object with only relevant fields
+        const userData = { 
             name,
             email,
             password: hashedPassword,
             role,
-            shopname,
-            phone
-        });
+            phone,
+        };
 
+        // Add role-specific fields
+        if(['worker', 'qa_qc', 'supervisor', 'desk_employee'].includes(role)) {
+            userData.shopId = shopId;
+        }
+
+        if(['worker', 'qa_qc', 'supervisor'].includes(role)) {
+            userData.specialization = specialization;
+            userData.experience = experience;
+        }
+
+        if(['worker', 'qa_qc', 'supervisor', 'desk_employee'].includes(role)) {
+            userData.hourlyRate = hourlyRate;
+        }
+
+        const user = new UserModel(userData);
         await user.save();  
 
         res.status(201).send({  
@@ -47,7 +86,7 @@ export const SignupController = async(req, res) => {
         res.status(500).send({  
             success: false,
             message: "Unable to add new User",
-            error,
+            error: error.message,
         });
     }
 }
@@ -103,10 +142,13 @@ export const loginController= async(req,res)=>{
             name:user.name,
             email:user.email,
             role:user.role,
-            shopname:user.shopname
-            },
-            token,
-        })
+             shopname: user.shopname ,
+           ...(user?.shopId && { 
+                    shopId: user.shopId, 
+                }),
+        },
+          token
+    })
      } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({

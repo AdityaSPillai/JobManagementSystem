@@ -3,7 +3,7 @@ import { getSingleUserController, loginController, SignupController } from "../c
 
 const router=express.Router();
 
-router.post('/singup',SignupController);
+router.post('/signup',SignupController);
 
 
 router.post('/login',loginController)

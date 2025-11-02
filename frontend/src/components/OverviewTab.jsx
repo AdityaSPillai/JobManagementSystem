@@ -1,6 +1,48 @@
 import React from 'react';
+import axios from "../utils/axios.js"
+import { useState,useEffect } from 'react';
+import useAuth from '../context/context';
 
 function OverviewTab() {
+
+   const [empCount,setEmpCount]=useState(0)
+  const[machineCount,setMchineCount]=useState(0)
+    const{userInfo}=useAuth()
+
+
+  const getEmployeeeCount=async()=>{
+    try {
+      const allEmp= await axios.get(`/shop/getAllEmployees/${userInfo.shopId}`)
+      console.log(allEmp.data.users.length)
+     setEmpCount(allEmp.data.users.length)
+      
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
+ const getMachinesCount=async()=>{
+    try {
+      const allMachines= await axios.get(`/shop/getAllMachines/${userInfo.shopId}`)
+      console.log(allMachines.data.machines.length)
+     setMchineCount(allMachines.data.machines.length)
+      
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  
+  
+  useEffect(()=>{
+    if (userInfo?.shopId) {
+    getEmployeeeCount();
+    getMachinesCount();
+  }
+  },[userInfo?.shopId])
+
+
+
   return (
     <>
       <h3 className="section-title">System Overview</h3>
@@ -29,11 +71,11 @@ function OverviewTab() {
           <h4>👥 Workforce</h4>
           <div className="stat-row">
             <span>Total Employees:</span>
-            <span className="stat-number">4</span>
+            <span className="stat-number">{empCount}</span>
           </div>
           <div className="stat-row">
             <span>Active:</span>
-            <span className="stat-number">4</span>
+            <span className="stat-number">{empCount}</span>
           </div>
           <div className="stat-row">
             <span>Inactive:</span>
@@ -45,11 +87,11 @@ function OverviewTab() {
           <h4>🔧 Equipment Status</h4>
           <div className="stat-row">
             <span>Total Machines:</span>
-            <span className="stat-number">4</span>
+            <span className="stat-number">{machineCount}</span>
           </div>
           <div className="stat-row">
             <span>Available:</span>
-            <span className="stat-number">4</span>
+            <span className="stat-number">{machineCount}</span>
           </div>
           <div className="stat-row">
             <span>In Use:</span>

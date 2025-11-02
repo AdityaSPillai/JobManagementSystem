@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from '../utils/axios.js';
+import useAuth from '../context/context.js';
 
 // --- Add Machine Modal ---
 function AddMachineModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
-    type: 'Lift',
-    status: 'Available',
+    type: '',
+    status: 'true',  // Fixed: matches dropdown options
     purchaseDate: '',
     lastMaintenanceDate: '',
     nextMaintenanceDate: '',
@@ -14,9 +16,9 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -26,8 +28,13 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
     onClose();
     // Reset form
     setFormData({
-      name: '', type: 'Lift', status: 'Available', purchaseDate: '',
-      lastMaintenanceDate: '', nextMaintenanceDate: '', isActive: true,
+      name: '',
+      type: '',
+      status: 'true',
+      purchaseDate: '',
+      lastMaintenanceDate: '',
+      nextMaintenanceDate: '',
+      isActive: true,
     });
   };
 
@@ -48,21 +55,23 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
             </div>
             <div className="form-group">
               <label htmlFor="type">Machine Type</label>
-              <select id="type" name="type" value={formData.type} onChange={handleChange}>
-                <option value="Lift">Lift</option>
-                <option value="Diagnostic Tool">Diagnostic Tool</option>
-                <option value="Tire Changer">Tire Changer</option>
-                <option value="Wheel Balancer">Wheel Balancer</option>
-                <option value="Other">Other</option>
+             <select id="type" name="type" value={formData.type} onChange={handleChange} required>
+                <option value="">-- Select Type --</option>
+                <option value="lift">Lift</option>
+                <option value="diagnostic">Diagnostic Tool</option>
+                <option value="repair">Repair</option>
+                <option value="cleaning">Cleaning</option>
+                <option value="painting">Painting</option>
+                <option value="welding">Welding</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div className="form-group">
               <label htmlFor="status">Current Status</label>
               <select id="status" name="status" value={formData.status} onChange={handleChange}>
-                <option value="Available">Available</option>
-                <option value="In Use">In Use</option>
-                <option value="Maintenance">Maintenance</option>
-                <option value="Offline">Offline</option>
+                <option value={true}>Available</option>
+                <option value={false}>Offline</option>
+               
               </select>
             </div>
             <div className="form-group">
@@ -78,6 +87,10 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
               <input type="date" id="nextMaintenanceDate" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} />
             </div>
           </div>
+          <div className="form-group-checkbox">
+            <input type="checkbox" id="isActive" name="isActive" checked={formData.isActive} onChange={handleChange} />
+            <label htmlFor="isActive">Machine is Active</label>
+          </div>
           <button type="submit" className="btn-submit">Add Machine</button>
         </form>
       </div>
@@ -88,30 +101,85 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
 
 // --- Main Machines Tab Component ---
 function MachinesTab() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [machines, setMachines] = useState([
-    {
-      id: 1, name: 'Main Lift 1', type: 'Lift', status: 'Available',
-      purchaseDate: '2022-01-15', lastMaintenanceDate: '2025-10-01', nextMaintenanceDate: '2026-04-01', isActive: true
-    },
-    {
-      id: 2, name: 'OBD-II Scanner', type: 'Diagnostic Tool', status: 'In Use',
-      purchaseDate: '2023-05-20', lastMaintenanceDate: '2025-09-15', nextMaintenanceDate: '2026-03-15', isActive: true
-    },
-  ]);
+  const { userInfo } = useAuth();
 
-  const handleAddMachine = (machineData) => {
-    const newMachine = { ...machineData, id: machines.length + 1 };
-    setMachines(prev => [...prev, newMachine]);
-    console.log("New Machine:", newMachine);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [machines, setMachines] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const shopId = userInfo?.shopId;
+  const userId = userInfo?._id;
+
+
+  // Fetch all machines
+  const fetchMachines = async () => {
+    if (!shopId) {
+      console.log('⚠️ No shopId available');
+      setError('Shop ID not found.');
+      return;
+    }
+    
+    try {
+      console.log('🔄 Fetching machines for shopId:', shopId);
+      setLoading(true);
+      setError('');
+      
+      const res = await axios.get(`/shop/getAllMachines/${shopId}`);
+      
+      // Debug logging
+    
+      
+      if (res.data.success && Array.isArray(res.data.machines)) {
+        setMachines(res.data.machines);
+        
+        if (res.data.machines.length === 0) {
+          setError('No machines found. Add your first machine!');
+        }
+      } else {
+        setError('Unexpected response format from server.');
+      }
+    } catch (err) {
+
+      setError(err.response?.data?.message || 'Failed to fetch machines.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Add new machine
+  const handleAddMachine = async (machineData) => {
+    try {
+      const payload = { ...machineData, userId };
+      const res = await axios.post('/machine/create-machiene', payload);
+      
+      
+      if (res.data.success) {
+        console.log('✅ Machine added successfully');
+        await fetchMachines(); // refresh list
+      } else {
+        alert(res.data.message || 'Failed to add machine.');
+      }
+    } catch (err) {
+      console.error('❌ Error adding machine:', err);
+      alert(err.response?.data?.message || 'Failed to add machine.');
+    }
+  };
+
+  // Fetch machines when shopId is available
+  useEffect(() => {
+ 
+    if (shopId) {
+      fetchMachines();
+    }
+  }, [shopId]); // Fixed: use shopId instead of userInfo.shopId
 
   const getStatusClass = (status) => {
     if (status === 'Available') return 'status-available';
     if (status === 'In Use') return 'status-in-use';
     if (status === 'Maintenance') return 'status-maintenance';
     return 'status-offline';
-  }
+  };
 
   return (
     <div>
@@ -122,29 +190,37 @@ function MachinesTab() {
         </button>
       </div>
 
-      <div className="data-grid">
-        {machines.map(machine => (
-          <div key={machine.id} className="data-card">
-            <div className="data-card-header">
-              <h4>{machine.name}</h4>
-              <span className={`data-card-status ${getStatusClass(machine.status)}`}>
-                {machine.status}
-              </span>
+      {loading ? (
+        <p>Loading machines...</p>
+      ) : error ? (
+        <p className="error-text">{error}</p>
+      ) : machines.length === 0 ? (
+        <p>No machines found. Click "Add New Machine" to get started!</p>
+      ) : (
+        <div className="data-grid">
+          {machines.map(machine => (
+            <div key={machine._id} className="data-card">
+              <div className="data-card-header">
+                <h4>{machine.name}</h4>
+                <span className={`data-card-status ${getStatusClass(machine.status)}`}>
+                  {machine.status}
+                </span>
+              </div>
+              <div className="data-card-body">
+                <p><strong>Type:</strong> {machine.type}</p>
+                <p><strong>Purchased:</strong> {machine.purchaseDate?.split('T')[0] || 'N/A'}</p>
+                <p><strong>Last Maintenance:</strong> {machine.lastMaintenanceDate?.split('T')[0] || 'N/A'}</p>
+                <p><strong>Next Maintenance:</strong> {machine.nextMaintenanceDate?.split('T')[0] || 'N/A'}</p>
+                <p><strong>Active:</strong> {machine.isActive ? 'Yes' : 'No'}</p>
+              </div>
+              <div className="data-card-footer">
+                <button className="btn-card-action">Edit</button>
+                <button className="btn-card-action btn-danger">Remove</button>
+              </div>
             </div>
-            <div className="data-card-body">
-              <p><strong>Type:</strong> {machine.type}</p>
-              <p><strong>Purchased:</strong> {machine.purchaseDate}</p>
-              <p><strong>Last Maintenance:</strong> {machine.lastMaintenanceDate}</p>
-              <p><strong>Next Maintenance:</strong> {machine.nextMaintenanceDate}</p>
-              <p><strong>Active:</strong> {machine.isActive ? 'Yes' : 'No'}</p>
-            </div>
-            <div className="data-card-footer">
-              <button className="btn-card-action">Edit</button>
-              <button className="btn-card-action btn-danger">Remove</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <AddMachineModal
         isVisible={isModalOpen}

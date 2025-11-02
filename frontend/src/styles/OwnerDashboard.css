@@ -437,6 +437,24 @@
   transition: background 0.2s;
 }
 
+.btn-add-service{
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 20px;
+  background: #7a6853;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: background 0.2s;
+
+}
+.btn-add-service:hover {
+  background: #dd6b20;
+}s
+
 .btn-submit:hover {
   background: #dd6b20;
 }

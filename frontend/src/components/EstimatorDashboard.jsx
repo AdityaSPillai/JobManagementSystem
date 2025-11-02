@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import Header from './Header';
 import playIcon from '../assets/play.svg';
 import pauseIcon from '../assets/pause.svg';
+import useAuth from '../context/context.js';
 import tickIcon from '../assets/tick.svg';
+import axios from '../utils/axios.js'
 
 // --- NEW ICON IMPORTS ---
 import clipboardIcon from '../assets/clipboard.svg';
@@ -19,7 +21,12 @@ function EstimatorDashboard({ onLoginClick }) {
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
-  
+  const [services, setServices] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const { userInfo } = useAuth();
+
+  const shopId = userInfo?.shopId;
+
   // Employee list
   const employees = [
     { id: 'EMP001', name: 'John Doe' },
@@ -28,6 +35,51 @@ function EstimatorDashboard({ onLoginClick }) {
     { id: 'EMP004', name: 'Sarah Williams' },
     { id: 'EMP005', name: 'David Brown' }
   ];
+
+  const getAllServices = async () => {
+    if (!shopId) return console.log("No shopId found");
+    try {
+      const res = await axios.get(`/shop/allServices/${userInfo?.shopId}`);
+      if (res.data?.shop?.services?.length > 0) {
+        setServices(res.data.shop.services);
+      } else {
+        console.log("No services found for this shop");
+        setServices([]);
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  };
+
+  const getAllMachines = async () => {
+    try {
+      const res = await axios.get(`/shop/getAllMachines/${userInfo.shopId}`);
+      if (res.data?.machines?.length > 0) {
+        console.log(res.data.machines);
+        setMachines(res.data.machines);
+      } else {
+        console.log("No machines found for this shop");
+        setMachines([]);
+      }
+    } catch (error) {
+      console.error("Error fetching machines:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!userInfo) return;
+    if (!userInfo.shopId) {
+      console.log("⚠️ User info loaded but no shopId found");
+      return;
+    }
+
+    getAllServices();
+    getAllMachines();
+  }, [userInfo]);
+
+  useEffect(() => {
+    console.log(machines);
+  }, [machines.length > 0]);
 
   // Jobs array with new structure
   const [jobs, setJobs] = useState([
@@ -71,14 +123,44 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   ]);
 
-  // Form state for creating new job
+  // UPDATED: Form state following nested structure pattern
   const [formData, setFormData] = useState({
-    customer_name: '',
-    vehicle_number: '',
-    engine_number: '',
-    vehicle_model: '',
-    contact_number: '',
-    items: [{ jobType: '', description: '', estimatedPrice: 0 }],
+    templateId: '68f50077a6d75c0ab83cd019',
+    isVerifiedByUser: true,
+    shopId: userInfo?.shopId || '',
+    formData: {
+      customer_name: '',
+      vehicle_number: '',
+      engine_number: '',
+      vehicle_model: '',
+      contact_number: '',
+    },
+    jobItems: [
+      {
+        itemData: {
+          job_type: '',
+          description: '',
+          priority: '',
+        },
+        estimatedPrice: 0,
+        machine: {
+          machineRequired: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        worker: {
+          workerAssigned: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        material: {
+          materialsRequired: [],
+          estimatedPrice: 0,
+        },
+      },
+    ],
     machines: [],
     consumables: []
   });
@@ -93,7 +175,6 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   }, [jobs, selectedJob]);
 
-
   // Handle employee selection
   const handleEmployeeSelect = (jobId, employeeId) => {
     setJobs(prevJobs => prevJobs.map(job => {
@@ -101,11 +182,11 @@ function EstimatorDashboard({ onLoginClick }) {
         const employee = employees.find(e => e.id === employeeId);
         const hasRunningTask = job.items.some(item => item.itemStatus === 'running');
         if (hasRunningTask) {
-             alert('Cannot change assigned employee while a job task is running.');
-             return job;
+          alert('Cannot change assigned employee while a job task is running.');
+          return job;
         }
-        return { 
-          ...job, 
+        return {
+          ...job,
           assignedEmployee: employee,
           status: employee ? 'Assigned' : 'Not Assigned'
         };
@@ -160,7 +241,7 @@ function EstimatorDashboard({ onLoginClick }) {
   };
 
   // Filter jobs based on search query
-  const filteredJobs = jobs.filter(job => 
+  const filteredJobs = jobs.filter(job =>
     job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     job.vehicle_number.toLowerCase().includes(searchQuery.toLowerCase())
@@ -174,67 +255,224 @@ function EstimatorDashboard({ onLoginClick }) {
     return `JOB-${dateStr}-${jobNumber}`;
   };
 
-  // --- Form Handlers ---
-  const handleFormChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  // ============================================================================
+  // UPDATED: Form Handlers following the nested structure pattern
+  // ============================================================================
 
-  // Job Item Handlers
-  const handleJobItemChange = (index, field, value) => {
-    const newItems = [...formData.items];
-    newItems[index][field] = field === 'estimatedPrice' ? parseFloat(value) || 0 : value;
-    setFormData(prev => ({ ...prev, items: newItems }));
-  };
-  const addJobItem = () => {
+  // Handle customer info changes (formData.formData.*)
+  const handleFormChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { jobType: '', description: '', estimatedPrice: 0 }]
+      formData: {
+        ...prev.formData,
+        [field]: value
+      }
     }));
   };
-  const removeJobItem = (index) => {
-    if (formData.items.length > 1) {
-      const newItems = formData.items.filter((_, i) => i !== index);
-      setFormData(prev => ({ ...prev, items: newItems }));
+
+  // Universal update function for job items (supports nested objects)
+  const updateJobItemField = (itemIndex, key, value, subObject = null) => {
+    setFormData(prev => {
+      const newJobItems = [...prev.jobItems];
+      let itemToUpdate = { ...newJobItems[itemIndex] };
+
+      if (subObject) {
+        // For nested objects like itemData, machine, worker, material
+        itemToUpdate = {
+          ...itemToUpdate,
+          [subObject]: {
+            ...itemToUpdate[subObject],
+            [key]: value
+          }
+        };
+      } else {
+        // For root properties like estimatedPrice
+        itemToUpdate = {
+          ...itemToUpdate,
+          [key]: key === 'estimatedPrice' ? parseFloat(value) || 0 : value
+        };
+      }
+
+      newJobItems[itemIndex] = itemToUpdate;
+      return { ...prev, jobItems: newJobItems };
+    });
+  };
+
+  // Job Item handler - routes to appropriate nested object
+  const handleJobItemChange = (index, field, value) => {
+    if (field === 'job_type' || field === 'description' || field === 'priority') {
+      updateJobItemField(index, field, value, 'itemData');
+    } else if (field === 'estimatedPrice') {
+      updateJobItemField(index, field, value);
     }
   };
 
-  // Machine Handlers
+  // Add new job item with full nested structure
+  const addJobItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      jobItems: [
+        ...prev.jobItems,
+        {
+          itemData: {
+            job_type: '',
+            description: '',
+            priority: '',
+          },
+          estimatedPrice: 0,
+          machine: {
+            machineRequired: null,
+            startTime: null,
+            endTime: null,
+            actualDuration: null,
+          },
+          worker: {
+            workerAssigned: null,
+            startTime: null,
+            endTime: null,
+            actualDuration: null,
+          },
+          material: {
+            materialsRequired: [],
+            estimatedPrice: 0,
+          },
+        },
+      ]
+    }));
+  };
+
+
+
+  // Remove job item
+  const removeJobItem = (index) => {
+    if (formData.jobItems.length > 1) {
+      const newItems = formData.jobItems.filter((_, i) => i !== index);
+      setFormData(prev => ({ ...prev, jobItems: newItems }));
+    }
+  };
+
+
+
+
+
+const handleMachineRequiredChange = (itemIndex, machineId) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    newJobItems[itemIndex] = {
+      ...newJobItems[itemIndex],
+      machine: {
+        ...newJobItems[itemIndex].machine,
+        machineRequired: machineId || null
+      }
+    };
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+// ADD THIS NEW HANDLER for materials
+const handleMaterialsChange = (itemIndex, materials, estimatedPrice) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    newJobItems[itemIndex] = {
+      ...newJobItems[itemIndex],
+      material: {
+        materialsRequired: materials,
+        estimatedPrice: parseFloat(estimatedPrice) || 0
+      }
+    };
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+// ADD THIS NEW HANDLER for adding a material to a specific job item
+const handleAddMaterialToJobItem = (itemIndex, materialName) => {
+  if (!materialName.trim()) return;
+  
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const currentMaterials = newJobItems[itemIndex].material.materialsRequired || [];
+    
+    newJobItems[itemIndex] = {
+      ...newJobItems[itemIndex],
+      material: {
+        ...newJobItems[itemIndex].material,
+        materialsRequired: [...currentMaterials, materialName.trim()]
+      }
+    };
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+// ADD THIS NEW HANDLER for removing a material from a specific job item
+const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const currentMaterials = [...newJobItems[itemIndex].material.materialsRequired];
+    currentMaterials.splice(materialIndex, 1);
+    
+    newJobItems[itemIndex] = {
+      ...newJobItems[itemIndex],
+      material: {
+        ...newJobItems[itemIndex].material,
+        materialsRequired: currentMaterials
+      }
+    };
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+  // Machine Handlers (flat structure maintained)
   const handleMachineChange = (index, field, value) => {
     const newMachines = [...formData.machines];
     newMachines[index][field] = field === 'estimatedPrice' ? parseFloat(value) || 0 : value;
     setFormData(prev => ({ ...prev, machines: newMachines }));
   };
+
   const addMachine = () => {
     setFormData(prev => ({
       ...prev,
       machines: [...prev.machines, { machineType: '', description: '', estimatedPrice: 0 }]
     }));
   };
+
   const removeMachine = (index) => {
     const newMachines = formData.machines.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, machines: newMachines }));
   };
 
-  // Consumable Handlers
+  // Consumable Handlers (flat structure maintained)
   const handleConsumableChange = (index, field, value) => {
     const newConsumables = [...formData.consumables];
     newConsumables[index][field] = (field === 'quantity' || field === 'perPiecePrice') ? parseFloat(value) || 0 : value;
     setFormData(prev => ({ ...prev, consumables: newConsumables }));
   };
+
   const addConsumable = () => {
     setFormData(prev => ({
       ...prev,
       consumables: [...prev.consumables, { name: '', quantity: 1, perPiecePrice: 0 }]
     }));
   };
+
   const removeConsumable = (index) => {
     const newConsumables = formData.consumables.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, consumables: newConsumables }));
   };
 
-  // Calculate total estimated price for the form
+  // Calculate total estimated price (using nested jobItems structure)
   const calculateFormTotal = () => {
-    const itemsTotal = formData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+    const itemsTotal = formData.jobItems.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
     const machinesTotal = formData.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
     const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
     return itemsTotal + machinesTotal + consumablesTotal;
@@ -249,48 +487,167 @@ function EstimatorDashboard({ onLoginClick }) {
     return itemsTotal + machinesTotal + consumablesTotal;
   };
 
-  // Save new job
-  const handleSaveJob = () => {
-    if (!formData.customer_name || !formData.vehicle_number || !formData.contact_number) {
-      alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
-      return;
-    }
-    const hasInvalidItems = formData.items.some(item => !item.description || !item.estimatedPrice);
-    if (hasInvalidItems) {
-      alert('Please fill in all job item descriptions and prices');
-      return;
-    }
+  // UPDATED: Save job with nested structure
+  // UPDATED handleSaveJob function to match backend structure
+const handleSaveJob = async () => {
+  const { formData: customerData, jobItems } = formData;
 
-    const newJob = {
-      id: generateJobId(),
-      customer_name: formData.customer_name,
-      vehicle_number: formData.vehicle_number,
-      engine_number: formData.engine_number,
-      vehicle_model: formData.vehicle_model,
-      contact_number: formData.contact_number,
-      date: new Date().toLocaleString('en-US', { 
-        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-      }),
-      status: 'Not Assigned',
-      assignedEmployee: null,
-      items: formData.items.map(item => ({ ...item, itemStatus: 'stopped' })),
-      machines: formData.machines,
-      consumables: formData.consumables
+  // Validation
+  if (!customerData.customer_name || !customerData.vehicle_number || !customerData.contact_number) {
+    alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
+    return;
+  }
+
+  const hasInvalidItems = jobItems.some(item => 
+    !item.itemData.description || item.estimatedPrice <= 0
+  );
+  if (hasInvalidItems) {
+    alert('Please fill in all job item descriptions and a valid estimated price');
+    return;
+  }
+
+  // Transform to backend structure
+  const backendPayload = {
+    templateId: formData.templateId,
+    isVerifiedByUser: formData.isVerifiedByUser,
+    shopId: userInfo?.shopId,
+    formData: {
+      customer_name: customerData.customer_name,
+      vehicle_number: customerData.vehicle_number,
+      engine_number: customerData.engine_number || '',
+      vehicle_model: customerData.vehicle_model || '',
+      contact_number: customerData.contact_number
+    },
+    jobItems: jobItems.map(item => ({
+      itemData: {
+        job_type: item.itemData.job_type || '',
+        description: item.itemData.description,
+        priority: item.itemData.priority || 'Medium'
+      },
+      estimatedPrice: item.estimatedPrice,
+      machine: {
+        machineRequired: item.machine.machineRequired || null,
+        startTime: item.machine.startTime || null,
+        endTime: item.machine.endTime || null,
+        actualDuration: item.machine.actualDuration || null
+      },
+      worker: {
+        workerAssigned: item.worker.workerAssigned || null,
+        startTime: item.worker.startTime || null,
+        endTime: item.worker.endTime || null,
+        actualDuration: item.worker.actualDuration || null
+      },
+      material: {
+        materialsRequired: item.material.materialsRequired || [],
+        estimatedPrice: item.material.estimatedPrice || 0
+      }
+    }))
+  };
+
+  console.log('Backend Payload:', JSON.stringify(backendPayload, null, 2));
+
+  try {
+    // Make API call
+    const response = await axios.post('/jobs/new-job', backendPayload);
+    
+    if (response.data) {
+      // Create display job (for UI)
+      const newJob = {
+        id: response.data.jobId || generateJobId(),
+        customer_name: customerData.customer_name,
+        vehicle_number: customerData.vehicle_number,
+        engine_number: customerData.engine_number,
+        vehicle_model: customerData.vehicle_model,
+        contact_number: customerData.contact_number,
+        date: new Date().toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric', 
+          hour: '2-digit', minute: '2-digit'
+        }),
+        status: 'Not Assigned',
+        assignedEmployee: null,
+        items: jobItems.map(item => ({
+          jobType: item.itemData.job_type || '',
+          description: item.itemData.description,
+          estimatedPrice: item.estimatedPrice,
+          itemStatus: 'stopped'
+        })),
+        machines: [], // Legacy support if needed
+        consumables: [] // Legacy support if needed
+      };
+
+      setJobs(prev => [newJob, ...prev]);
+      
+      // Reset form
+      setFormData({
+        templateId: '68f50077a6d75c0ab83cd019',
+        isVerifiedByUser: true,
+        shopId: userInfo?.shopId || '',
+        formData: {
+          customer_name: '',
+          vehicle_number: '',
+          engine_number: '',
+          vehicle_model: '',
+          contact_number: '',
+        },
+        jobItems: [
+          {
+            itemData: {
+              job_type: '',
+              description: '',
+              priority: '',
+            },
+            estimatedPrice: 0,
+            machine: {
+              machineRequired: null,
+              startTime: null,
+              endTime: null,
+              actualDuration: null,
+            },
+            worker: {
+              workerAssigned: null,
+              startTime: null,
+              endTime: null,
+              actualDuration: null,
+            },
+            material: {
+              materialsRequired: [],
+              estimatedPrice: 0,
+            },
+          },
+        ]
+      });
+
+      setShowCreateJob(false);
+      alert('Job card created successfully!');
+    }
+  } catch (error) {
+    console.error('Error creating job:', error);
+    alert('Failed to create job card. Please try again.');
+  }
+};
+
+  // UPDATED: Handle job type selection with nested structure
+ const handleJobTypeSelect = (index, serviceId) => {
+  const selectedService = services.find(service => service._id === serviceId);
+
+  if (selectedService) {
+    const updatedJobItems = [...formData.jobItems];
+    updatedJobItems[index] = {
+      ...updatedJobItems[index],
+      itemData: {
+        ...updatedJobItems[index].itemData,
+        job_type: selectedService.name,  // ✅ Store service name
+        description: updatedJobItems[index].itemData.description || selectedService.description
+      },
+      estimatedPrice: selectedService.price
     };
 
-    setJobs(prev => [newJob, ...prev]);
-    
-    // Reset form
-    setFormData({
-      customer_name: '', vehicle_number: '', engine_number: '', vehicle_model: '', contact_number: '',
-      items: [{ jobType: '', description: '', estimatedPrice: 0 }],
-      machines: [],
-      consumables: []
-    });
-    
-    setShowCreateJob(false);
-    alert('Job card created successfully!');
-  };
+    setFormData(prev => ({
+      ...prev,
+      jobItems: updatedJobItems
+    }));
+  }
+};
 
   return (
     <div className="estimator-dashboard">
@@ -541,58 +898,88 @@ function EstimatorDashboard({ onLoginClick }) {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Customer Name *</label>
-                    <input type="text" placeholder="Enter customer's full name" value={formData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} />
+                    <input type="text" placeholder="Enter customer's full name" value={formData.formData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} />
                   </div>
                   <div className="form-group">
                     <label>Contact Number *</label>
-                    <input type="tel" placeholder="555-123-4567" value={formData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} />
+                    <input type="tel" placeholder="555-123-4567" value={formData.formData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label>Vehicle Number *</label>
-                    <input type="text" placeholder="ABC-123" value={formData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} />
+                    <input type="text" placeholder="ABC-123" value={formData.formData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} />
                   </div>
                   <div className="form-group">
                     <label>Vehicle Model</label>
-                    <input type="text" placeholder="e.g., Toyota Camry 2018" value={formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
+                    <input type="text" placeholder="e.g., Toyota Camry 2018" value={formData.formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-group">
                   <label>Engine Number</label>
-                  <input type="text" placeholder="Enter engine identification number" value={formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
+                  <input type="text" placeholder="Enter engine identification number" value={formData.formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
                 </div>
 
                 {/* --- Job Items (Tasks) --- */}
-                <div className="job-items-section">
-                  <div className="section-title">
-                    <h4>Job Tasks</h4>
-                    <button className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
-                  </div>
-                  {formData.items.map((item, index) => (
-                    <div key={index} className="job-item-row job-item-row-tasks">
-                      <div className="job-item-field">
-                        <label>Task #{index + 1}</label>
-                      </div>
-                      <div className="job-item-field">
-                        <label>Job Type</label>
-                        <input type="text" placeholder="e.g., Oil Change" value={item.jobType} onChange={(e) => handleJobItemChange(index, 'jobType', e.target.value)} />
-                      </div>
-                      <div className="job-item-field">
-                        <label>Description *</label>
-                        <input type="text" placeholder="Describe this job" value={item.description} onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} />
-                      </div>
-                      <div className="job-item-field">
-                        <label>Est. Price ($)*</label>
-                        <input type="number" placeholder="0" value={item.estimatedPrice || ''} onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)} />
-                      </div>
-                      <button className="btn-remove" onClick={() => removeJobItem(index)} disabled={formData.items.length === 1}>🗑</button>
-                    </div>
-                  ))}
-                </div>
+               {/* <div className="job-items-section">
+  <div className="section-title">
+    <h4>Job Tasks</h4>
+    <button className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
+  </div>
+  {formData.jobItems.map((item, index) => (
+    <div key={index} className="job-item-row job-item-row-tasks">
+      <div className="job-item-field">
+        <label>Task #{index + 1}</label>
+      </div>
+      <div className="job-item-field">
+        <label>Job Type *</label>
+        <select 
+          value={item.name} 
+          onChange={(e) => handleJobTypeSelect(index, e.target.value)}
+          required
+        >
+          <option> --Select job -- </option>
+          {services.map((service) => (
+            <option key={service._id} value={service._id}>
+              {service.name} - ₹{service.price}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="job-item-field">
+        <label>Description *</label>
+        <input 
+          type="text" 
+          placeholder="Describe this job" 
+          value={item.description} 
+          onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
+          required
+        />
+      </div>
+      <div className="job-item-field">
+        <label>Est. Price (₹) *</label>
+        <input 
+          type="number" 
+          placeholder="0" 
+          value={item.estimatedPrice || ''} 
+          onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)}
+          required
+        />
+      </div>
+      <button 
+        className="btn-remove" 
+        onClick={() => removeJobItem(index)} 
+        disabled={formData.jobItems.length === 1}
+        type="button"
+      >
+        🗑
+      </button>
+    </div>
+  ))}
+</div> */}
 
                 {/* --- Machine Items --- */}
-                <div className="job-items-section">
+                {/* <div className="job-items-section">
                   <div className="section-title">
                     <h4>Machine Usage (Optional)</h4>
                     <button className="btn-add-job" onClick={addMachine}>+ Add Machine</button>
@@ -604,7 +991,15 @@ function EstimatorDashboard({ onLoginClick }) {
                       </div>
                       <div className="job-item-field">
                         <label>Machine Type</label>
-                        <input type="text" placeholder="e.g., 2-Post Lift" value={item.machineType} onChange={(e) => handleMachineChange(index, 'machineType', e.target.value)} />
+                        <select
+                            onChange={(e) => handleMachineChange(index,'machineType', e.target.value)}
+                        >  */}
+                        {/* <input type="text" placeholder="e.g., 2-Post Lift" value={item.machineType} onChange={(e) => handleMachineChange(index, 'machineType', e.target.value)} /> */}
+                        {/* <option> -- Select Type --</option>
+                        {machines.map((item)=>(
+                          <option key={item._id} value={item.name}>{item.name}</option>
+                        ) )}
+                        </select>
                       </div>
                       <div className="job-item-field">
                         <label>Description</label>
@@ -617,10 +1012,10 @@ function EstimatorDashboard({ onLoginClick }) {
                       <button className="btn-remove" onClick={() => removeMachine(index)}>🗑</button>
                     </div>
                   ))}
-                </div>
+                </div> */}
 
                 {/* --- Consumable Items --- */}
-                <div className="job-items-section">
+                {/* <div className="job-items-section">
                   <div className="section-title">
                     <h4>Consumables (Optional)</h4>
                     <button className="btn-add-job" onClick={addConsumable}>+ Add Consumable</button>
@@ -645,7 +1040,146 @@ function EstimatorDashboard({ onLoginClick }) {
                       <button className="btn-remove" onClick={() => removeConsumable(index)}>🗑</button>
                     </div>
                   ))}
-                </div>
+                </div> */}
+
+
+      <div className="job-items-section">
+  <div className="section-title">
+    <h4>Job Tasks</h4>
+    <button className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
+  </div>
+  {formData.jobItems.map((item, index) => (
+    <div key={index} className="job-item-card">
+      <div className="job-item-header">
+        <h5>Task #{index + 1}</h5>
+        <button 
+          className="btn-remove" 
+          onClick={() => removeJobItem(index)} 
+          disabled={formData.jobItems.length === 1}
+          type="button"
+        >
+          🗑
+        </button>
+      </div>
+
+      {/* Job Type and Description */}
+      <div className="form-row">
+        <div className="form-group">
+          <label>Job Type *</label>
+          <select 
+            value={item.itemData.job_type || ''} 
+            onChange={(e) => handleJobTypeSelect(index, e.target.value)}
+          >
+            <option value="">--Select job--</option>
+            {services.map((service) => (
+              <option key={service._id} value={service._id}>
+                {service.name} - ₹{service.price}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Estimated Price (₹) *</label>
+          <input 
+            type="number" 
+            placeholder="0" 
+            value={item.estimatedPrice || ''} 
+            onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Description *</label>
+        <input 
+          type="text" 
+          placeholder="Describe this job" 
+          value={item.itemData.description} 
+          onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Priority</label>
+        <select 
+          value={item.itemData.priority || ''} 
+          onChange={(e) => handleJobItemChange(index, 'priority', e.target.value)}
+        >
+          <option value="">Select Priority</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+      </div>
+
+      {/* Machine Required */}
+      <div className="form-group">
+        <label>Machine Required (Optional)</label>
+        <select 
+          value={item.machine.machineRequired || ''} 
+          onChange={(e) => handleMachineRequiredChange(index, e.target.value)}
+        >
+          <option value="">--No Machine Required--</option>
+          {machines.map((machine) => (
+            <option key={machine._id} value={machine._id}>
+              {machine.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Materials Required */}
+      <div className="form-group">
+        <label>Materials Required (Optional)</label>
+        <div className="materials-list">
+          {item.material.materialsRequired.map((material, matIndex) => (
+            <div key={matIndex} className="material-tag">
+              <span>{material}</span>
+              <button 
+                type="button"
+                onClick={() => handleRemoveMaterialFromJobItem(index, matIndex)}
+                className="material-remove"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="material-input-row">
+          <input 
+            type="text" 
+            placeholder="Enter material name and press Enter"
+            id={`material-input-${index}`}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddMaterialToJobItem(index, e.target.value);
+                e.target.value = '';
+              }
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Material Estimated Price */}
+      <div className="form-group">
+        <label>Material Estimated Price (₹)</label>
+        <input 
+          type="number" 
+          placeholder="0" 
+          value={item.material.estimatedPrice || ''} 
+          onChange={(e) => handleMaterialsChange(
+            index, 
+            item.material.materialsRequired, 
+            e.target.value
+          )}
+        />
+      </div>
+
+      <hr className="item-divider" />
+    </div>
+  ))}
+</div>
 
 
                 {/* --- Form Footer --- */}

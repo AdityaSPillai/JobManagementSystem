@@ -31,15 +31,7 @@ export const createMachineController =async(req,res)=>{
             
             
             // check if already existing
-            const existing= await MachineModel.findOne({name:name});
-            if(existing) 
-                {
-                    return res.status(404).send({
-                    succcess:false,
-                    message:"Machiene already existing"}
-                );
-                }
-
+           
                 const ownerId= req.body.userId;
                 const shop=await ShopModel.findOne({ownerId})
                 if(!shop)

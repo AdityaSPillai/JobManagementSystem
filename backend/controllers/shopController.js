@@ -1,7 +1,7 @@
-import e from "express";
 import MachineModel from "../schema/machieneModel.js";
 import ShopModel from "../schema/shopSchema.js";
 import UserModel from "../schema/userSchema.js";
+import JobCardModel from "../schema/jobCardSchema.js";
 
 export const createShop = async (req, res) => {
   try {
@@ -10,14 +10,20 @@ export const createShop = async (req, res) => {
       ownerId,
       contactInfo,
       address,
+      services,
     } = req.body;
 
     // Validation
     if (!shopName)  return res.status(400).send({ success: false, message: "Shop name is required"});
     if (!ownerId) return res.status(400).send({ success: false, message: "Owner ID is required" });
     if (!contactInfo || !contactInfo.phone || !contactInfo.email) return res.status(400).send({success: false,  message: "Contact information (phone and email) is required" });
-    if (!address || !address.street || !address.city || !address.state || !address.pincode) return res.status(400).send({success: false,});
-   
+    if (!address || !address.street || !address.city || !address.state || !address.pincode)
+  return res.status(400).send({ success: false, message: "Complete address is required" });
+if (!Array.isArray(services) || services.length === 0) {
+  return res.status(400).send({ success: false, message: "Services must be a non-empty array" });
+}
+
+
 
     // Check if owner exists and has owner role
     const owner = await UserModel.findById(ownerId);
@@ -35,7 +41,11 @@ export const createShop = async (req, res) => {
     }
 
     // Check if shop already existing based on the address given 
-    const existingShop = await ShopModel.findOne({address:address});
+const existingShop = await ShopModel.findOne({
+  ownerId,
+  "address.city": address.city,
+  "address.pincode": address.pincode
+});
     if (existingShop) {
       return res.status(400).send({
         success: false,
@@ -44,19 +54,22 @@ export const createShop = async (req, res) => {
     }
 
     // Create new shop
-    const shop = new ShopModelz({
+    const shop = new ShopModel({
       shopName,
       ownerId,
       contactInfo,
       address,
+      services
     
     });
 
     await shop.save();
 
     // Update owner's shopId
-    owner.shopId = shop._id;
-    await owner.save();
+
+owner.shopId = shop._id;
+await owner.save();
+
 
     res.status(201).send({
       success: true,
@@ -77,34 +90,169 @@ export const createShop = async (req, res) => {
 
 
 
-export const getAllEmployees= async(req,res)=>{
+export const addNewService= async(req,res)=>{
   try {
-        //get the Shop iD from params
+    const { shopId } = req.params;
+    const { services } = req.body;
 
-    const  {shopId}= req.params;
+    if (!shopId) return res.status(400).json({ success: false, message: "Shop ID is required" });
+    if (!services || !Array.isArray(services))
+      return res.status(400).json({ success: false, message: "Services must be an array" });
+
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    shop.services.push(...services);
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Services added successfully",
+      services: shop.services,
+    });
+ } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      success: false,
+      message: "Error Adding new services ",
+      error: error.message
+    });
+  }
+};
+
+// {
+// "services":[{
+//     "name":"brake_service",
+//     "description":"Change the Break pad ",
+//     "price":1000
+// }]
+// }
 
 
-    const users= await UserModel.find({shopId:shopId});
 
-    if(!users){
-      return res.status(404).send({
-        success:false,
-        message:"Unable to find the shop with the given userId"
-      })
-    }
 
-    res.status(200).json(users);
-  
+export const updateShopServices= async(req,res)=>{
+  try {
+    const { name, description, price,note} = req.body;
+    const {shopId,serviceId}=req.params;
+
+    if (!shopId|| !serviceId) return res.status(400).json({ success: false, message: "Shop ID  or Serive Id is required" });
+
+    const shop = await ShopModel.findById(shopId);
+
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    const service = shop.services.id(serviceId);
+    if (!service) return res.status(404).json({ success: false, message: "Service not found" });
+
+    if (name) service.name = name;
+    if (description) service.description = description;
+    if (price !== undefined) service.price = price;
+    if(note) service.note=note;
+
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Service updated successfully",
+      services: shop.services,
+    });
+
+    
   } catch (error) {
     console.error(error);
     res.status(500).send({
-     success:false,
-     message:"Unable to find all workers",
-     error
-     }
-    )
+      success: false,
+      message: "Error updating service ",
+      error: error.message
+    });
+  }
+};
+
+
+// {
+//     "price":2000,
+//     "description":"Change the Engine Oil"
+// }
+
+
+
+
+export const allServices=async(req,res)=>{
+    try {
+
+    const {shopId}=req.params;
+     if (!shopId) {
+      return res.status(400).json({
+        success: false,
+        message: "Shop ID is required."
+      });
+    }
+      //check if shop is existing
+      const shop= await ShopModel.findById(shopId).select("-address -contactInfo -workers");
+      if(!shop)
+      {
+        console.log("Shop not exisiting");
+        return res.status(404).send({
+          succes:false,
+          message:"Unable to find the shop"
+        })
+      }
+
+      return res.status(200).send({
+        success:true,
+        message:"All Services Recieved",
+        shop
+      });
+      
+  } catch (error) {
+    res.status(500).send({
+      success:false,
+      message:"Unable to Create Shop services",
+      error
+    })
   }
 }
+
+
+
+
+export const getAllEmployees = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+
+    if (!shopId) {
+      return res.status(400).json({
+        success: false,
+        message: "Shop ID is required."
+      });
+    }
+
+    const users = await UserModel.find({ shopId });
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No employees registered for this shop."
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message:"All Employee data recievede Succesfully",
+      users
+    });
+
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    res.status(500).json({
+      success: false,
+      message: "Unable to find all workers",
+      error: error.message
+    });
+  }
+};
+
 
 
 export const getAllWorkers=async(req,res)=>{
@@ -122,8 +270,12 @@ export const getAllWorkers=async(req,res)=>{
       })
     }
 
-    res.status(200).json(users);
-  } catch (error) {
+ res.status(200).json({
+      success: true,
+      message:"All Worker data recievede Succesfully",
+      users
+    });  }
+     catch (error) {
     res.status(500).send({
       success:false,
       message:"Unable to find all the Workers",
@@ -157,7 +309,109 @@ export const getAllMachineController= async(req,res)=>{
       message:"All machines Found Succesfully",
       machines
     })
-  } catch (error) {
-    
+  }  catch (error) {
+    res.status(500).send({
+      success:false,
+      message:"Unable to find all the Machines",
+      error
+    })
   }
 }
+
+
+export const getAllShopJobsController= async(req,res)=>{
+  try {
+    const{shopId}=req.params;
+    if(!shopId)
+     {
+      return res.status(400).send({
+        success:false,
+        message:"ShopId is required"
+      })
+    }
+
+    const allJobs=await JobCardModel.find({shopId:shopId}) 
+    if(!allJobs)
+    {
+      return res.status(404).send({
+        succes:false,
+        message:"Unable to find Jobs from that shop"
+      })
+    }
+
+    if(allJobs.length==0)
+    {
+      return res.status(400).send
+      ({
+        succes:false,
+        message:"NO employee found for this shop "
+      })
+    }
+
+    res.status(200).send({
+      succes:true,
+      message:"All jobs recieved",
+      allJobs
+    })
+
+  }  catch (error) {
+    res.status(500).send({
+      success:false,
+      message:"Unable to find the Jobs",
+      error
+    })
+  }
+}
+
+
+
+
+export const deleteShopService = async (req, res) => {
+  try {
+    const { shopId, serviceId } = req.params;
+
+    if (!shopId || !serviceId) {
+      return res.status(400).send({
+        success: false,
+        message: "Shop ID or Service ID not provided",
+      });
+    }
+
+    // Find the shop
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) {
+      return res.status(404).send({
+        success: false,
+        message: "Shop not found",
+      });
+    }
+
+    // Find the service inside the shop
+    const service = shop.services.id(serviceId);
+    if (!service) {
+      return res.status(404).send({
+        success: false,
+        message: "Service not found in this shop",
+      });
+    }
+
+    // Remove the service
+    service.deleteOne();
+
+    // Save the shop after removal
+    await shop.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Service deleted successfully",
+      shop,
+    });
+  } catch (error) {
+    console.error("Error deleting service:", error);
+    res.status(500).send({
+      success: false,
+      message: "Unable to delete service",
+      error: error.message,
+    });
+  }
+};

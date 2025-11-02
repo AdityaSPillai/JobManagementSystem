@@ -10,6 +10,7 @@ router.post('/createEmployee',isOwner,createEmployeeController);
 // get single employee
 router.get('/get/:empid',getEmployeeController)
 
+
 //upadte employee
 router.put('/updateEmployee/:empid',isOwner,updateEmployeeController)
 

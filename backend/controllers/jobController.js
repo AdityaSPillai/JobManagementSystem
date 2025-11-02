@@ -4,13 +4,13 @@ import MachineModel from "../schema/machieneModel.js";
 
 let endingtime= new Date();
     function timeDifference(start, end) {
-    endingtime= Math.round((end - start) / (1000 * 60)); // duration in minutes
+    endingtime= Math.round((end - start) / (1000 * 60)); 
     } ;
 
 
 export const createJobCard = async (req, res) => {
   try {
-    const { templateId,isVerifiedByUser, formData, jobItems } = req.body;
+    const { templateId,isVerifiedByUser,shopId, formData, jobItems } = req.body;
     
     // Validate template exists
     const template = await FormTemplateModel.findById(templateId);
@@ -46,6 +46,7 @@ export const createJobCard = async (req, res) => {
     const jobCard = await JobCardModel.create({
       jobCardNumber,
       templateId,
+      shopId,
       isVerifiedByUser,
       formData: new Map(Object.entries(formData)),
       jobItems: jobItems.map(item => ({

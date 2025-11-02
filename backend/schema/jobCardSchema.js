@@ -19,6 +19,11 @@ const JobCardSchema = new mongoose.Schema({
     type: Map,
     of: mongoose.Schema.Types.Mixed
   },
+  shopId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Shop",
+    required:true
+  },
   
   // Job items with dynamic fields
   
