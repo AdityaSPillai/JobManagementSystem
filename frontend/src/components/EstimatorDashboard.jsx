@@ -23,7 +23,7 @@ function EstimatorDashboard({ onLoginClick }) {
   const [selectedJob, setSelectedJob] = useState(null);
   const [services, setServices] = useState([]);
   const [machines, setMachines] = useState([]);
-  const { userInfo } = useAuth();
+  const { userInfo, isAuthenticated, logout } = useAuth();
 
   const shopId = userInfo?.shopId;
 
@@ -666,7 +666,12 @@ const handleSaveJob = async () => {
 
   return (
     <div className="estimator-dashboard">
-      <Header userRole="Estimator" onLogin={onLoginClick} showLogin={true} />
+      <Header 
+        userRole={isAuthenticated ? userInfo?.role : 'Estimator'}
+        onLogin={onLoginClick}
+        onLogout={logout}
+        showLogin={!isAuthenticated}
+      />
       <div className="dashboard-content">
         <div className="dashboard-title-section">
           <div className="dashboard-wrapper">

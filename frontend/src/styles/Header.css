@@ -27,6 +27,12 @@
   font-weight: 500;
 }
 
+.container-user-btn{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem
+}
+
 .user-dropdown {
   position: relative;
 }
@@ -46,6 +52,10 @@
 .user-btn:hover {
   background-color: #e9ecef;
   border-color: #adb5bd;
+}
+
+.user-btn:focus {
+  outline: none;
 }
 
 .login-btn {
@@ -71,11 +81,6 @@
 .logout-btn:hover {
   background-color: #c82333;
 }
-
-
-
-
-
 
 .header-actions {
   display: flex;

@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import LoginModal from './LoginModal';
 import '../styles/Header.css';
 
 function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, onLoginClick }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -48,6 +51,16 @@ function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, o
       onLogin(role);
     }
   };
+  
+  // New handler for navigating to Dashboard
+  const handleGoToDashboard = () => {
+      navigate('/dashboard');
+  };
+
+  // New handler for navigating to Home
+  const handleGoToHome = () => {
+      navigate('/home');
+  };
 
   return (
     <>
@@ -55,9 +68,27 @@ function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, o
         <h1>AutoCare WorkShop</h1>
         <div className="header-right">
           <span className="datetime">{getCurrentDateTime()}</span>
-          <div className="user-dropdown">
-            <button className="user-btn">{userRole}</button>
+          <div className="container-user-btn">
+            {/* Home button always navigates to /home */}
+            <button className="user-btn" onClick={handleGoToHome}>
+              Home
+            </button>
+            
+            {/* Conditionally render user button's action */}
+            {showLogin ? (
+              // Not logged in: Button is just text, no navigation
+              <button className="user-btn"> 
+                {userRole}
+              </button>
+            ) : (
+              // Logged in: Button navigates to /dashboard
+              <button className="user-btn" onClick={handleGoToDashboard}> 
+                {userRole}
+              </button>
+            )}
           </div>
+          
+          {/* Conditionally render Login or Logout button */}
           {showLogin ? (
             <button className="login-btn" onClick={handleLoginClick}>
               Login

@@ -1,51 +1,38 @@
-import { useEffect, useState } from 'react';
 import './App.css';
 import EstimatorDashboard from './components/EstimatorDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
 import SupervisorDashboard from './components/SupervisorDashboard';
 import QADashboard from './components/QADashboard';
 import useAuth from './context/context';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
+const getRoleDashboard = (userInfo, onLogout) => {
+  if (!userInfo?.role) {
+      return <Navigate to="/home" replace />;
+  }
+
+  switch (userInfo.role) {
+    case 'owner':
+      return <OwnerDashboard onLogout={onLogout} />;
+    case 'supervisor':
+      return <SupervisorDashboard onLogout={onLogout} />;
+    case 'qaqc':
+      return <QADashboard onLogout={onLogout} />;
+    default:
+      return <EstimatorDashboard onLoginClick={() => console.log('Authenticated user')} />;
+  }
+};
 
 function App() {
-  const [currentView, setCurrentView] = useState('estimator');
-  const { userInfo, logout, loading } = useAuth(); // Destructure properly
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Sync authentication state when userInfo changes
-  useEffect(() => {
-    if (userInfo?.role) {
-      setIsAuthenticated(true);
-      setCurrentView(userInfo.role);
-    } else {
-      setIsAuthenticated(false);
-      setCurrentView('estimator');
-    }
-  }, [userInfo]);
-
-  const handleLogin = (role) => {
-    // Login is already handled by LoginModal using useAuth
-    // Just update the view
-    setIsAuthenticated(true);
-    setCurrentView(role);
-  };
+  const { userInfo, logout, loading, isAuthenticated } = useAuth();
 
   const handleLogout = () => {
-    logout(); // This clears userInfo, localStorage, and axios headers
-    setIsAuthenticated(false);
-    setCurrentView('estimator');
+    logout();
+  };
+  const handleLogin = (role) => {
+    console.log(`Login requested for role: ${role}. Context handles actual login.`);
   };
 
-  const handleLoginClick = () => {
-    setCurrentView('login');
-  };
-
-  const handleBackToEstimator = () => {
-    setCurrentView('estimator');
-  };
-
-  // Show loading while checking auth status
   if (loading) {
     return (
       <div className="app">
@@ -54,36 +41,30 @@ function App() {
     );
   }
 
-  const renderContent = () => {
-    // Check authenticated views first
-    if (isAuthenticated && userInfo?.role) {
-      switch (userInfo.role) {
-        case 'owner':
-          return <OwnerDashboard onLogout={handleLogout} />;
-        case 'supervisor':
-          return <SupervisorDashboard onLogout={handleLogout} />;
-        case 'qa_qc':
-          return <QADashboard onLogout={handleLogout} />;
-        default:
-          return <EstimatorDashboard onLoginClick={handleLogin} />;
-      }
-    }
-
-    // Default to estimator dashboard (has login modal in header)
-    return <EstimatorDashboard onLoginClick={handleLogin} />;
-  };
-
   return (
-    <>
-    <Routes>
-            <Route path="/home" element={<EstimatorDashboard/>}/>
-            </Routes>
-    
-
     <div className="app">
-      {renderContent()}
+      <Routes>
+        <Route 
+          path="/home" 
+          element={<EstimatorDashboard onLoginClick={handleLogin} />} 
+        />
+        
+        <Route
+          path="/dashboard"
+          element={
+            isAuthenticated 
+              ? getRoleDashboard(userInfo, handleLogout)
+              : <Navigate to="/home" replace />
+          }
+        />
+
+        <Route 
+          path="/" 
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/home" replace />}
+        />
+        <Route path="*" element={<h1>404 Not Found</h1>} />
+      </Routes>
     </div>
-    </>
   );
 }
 
