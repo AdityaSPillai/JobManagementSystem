@@ -237,7 +237,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         {!isRegisterMode ? (
           // In Login Mode
           <>
-            <p className="demo-hint">Use username: <strong>demo</strong> and password: <strong>demo</strong></p>
             {selectedRole === 'owner' && (
               <p className="toggle-mode-hint">
                 Don't have an account?{' '}
