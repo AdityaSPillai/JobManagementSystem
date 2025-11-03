@@ -182,8 +182,8 @@ function LoginModal({ isOpen, onClose, onLogin }) {
             Supervisor
           </button>
           <button
-            className={`role-tab ${selectedRole === 'qaqc' ? 'active' : ''}`}
-            onClick={() => handleRoleSelect('qaqc')}
+            className={`role-tab ${selectedRole === 'qa_qc' ? 'active' : ''}`}
+            onClick={() => handleRoleSelect('qa_qc')}
           >
             QA/QC
           </button>

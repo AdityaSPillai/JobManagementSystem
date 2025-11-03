@@ -62,7 +62,7 @@ function App() {
           return <OwnerDashboard onLogout={handleLogout} />;
         case 'supervisor':
           return <SupervisorDashboard onLogout={handleLogout} />;
-        case 'qaqc':
+        case 'qa_qc':
           return <QADashboard onLogout={handleLogout} />;
         default:
           return <EstimatorDashboard onLoginClick={handleLogin} />;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import '../styles/SupervisorDashboard.css'; // Use the supervisor CSS
-
+import useAuth from '../context/context.js';
 // Import all necessary icons
 import clipboardIcon from '../assets/clipboard.svg';
 import workerIcon from '../assets/worker.svg';
@@ -13,6 +13,7 @@ import refreshIcon from '../assets/refresh.svg';
 import infoIcon from '../assets/info.svg';
 import tickIcon from '../assets/tick.svg'; // Already imported, used for ✅
 import deleteIcon from '../assets/delete.svg'; // For the bin/trash icon
+import axios from "../utils/axios.js"
 // --- END NEW ICON IMPORTS ---
 
 // --- Edit Job Modal Component (Updated with Delete Icon) ---
@@ -216,6 +217,7 @@ function SupervisorDashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState(null); // Initially no job selected
   const [jobToEdit, setJobToEdit] = useState(null);
+  const {userInfo}=useAuth();
   
   // Employee list
   const employees = [
@@ -223,13 +225,118 @@ function SupervisorDashboard({ onLogout }) {
    ];
 
   // Jobs array
-  const [jobs, setJobs] = useState([
-    { id: 'JOB-20251004-0001', customer_name: 'Devanath DR', vehicle_number: 'ABC-123', engine_number: 'EN12345', vehicle_model: 'Toyota Camry 2018', contact_number: '555-1234', date: 'Oct 5, 2025, 08:30 AM', status: 'In Progress', assignedEmployee: { id: 'EMP001', name: 'John Doe' }, items: [{ jobType: 'Oil Change', description: 'Change engine oil', estimatedPrice: 50, itemStatus: 'running' }, { jobType: 'Brake Check', description: 'Inspect brake pads', estimatedPrice: 75, itemStatus: 'stopped' }], machines: [{ machineType: '2-Post Lift', description: 'Vehicle Lift', estimatedPrice: 20 }], consumables: [{ name: 'Engine Oil', quantity: 5, perPiecePrice: 8 }, { name: 'Oil Filter', quantity: 1, perPiecePrice: 15 }] },
-    { id: 'JOB-20251004-0002', customer_name: 'Aljo KJ', vehicle_number: 'XYZ-789', engine_number: 'EN67890', vehicle_model: 'Honda Civic 2020', contact_number: '555-5678', date: 'Oct 5, 2025, 08:30 AM', status: 'Not Assigned', assignedEmployee: null, items: [{ jobType: 'Tire Rotation', description: 'Rotate all 4 tires', estimatedPrice: 40, itemStatus: 'stopped' }], machines: [], consumables: [] }
-   ]);
+  const [jobs, setJobs] = useState([]);
 
   // Form state for creating new job
-  const [formData, setFormData] = useState({ customer_name: '', vehicle_number: '', engine_number: '', vehicle_model: '', contact_number: '', items: [{ jobType: '', description: '', estimatedPrice: 0 }], machines: [], consumables: [] });
+ const [formData, setFormData] = useState({
+    templateId: '68f50077a6d75c0ab83cd019',
+    isVerifiedByUser: true,
+    shopId: userInfo?.shopId || '',
+    formData: {
+      customer_name: '',
+      vehicle_number: '',
+      engine_number: '',
+      vehicle_model: '',
+      contact_number: '',
+    },
+    jobItems: [
+      {
+        itemData: {
+          job_type: '',
+          description: '',
+          priority: '',
+        },
+        estimatedPrice: 0,
+        machine: {
+          machineRequired: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        worker: {
+          workerAssigned: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        material: {
+          materialsRequired: [],
+          estimatedPrice: 0,
+        },
+      },
+    ],
+    machines: [],
+    consumables: []
+  });
+  useEffect(() => {
+      if (!userInfo) return;
+      if (!userInfo.shopId) {
+        console.log("⚠️ User info loaded but no shopId found");
+        return;
+      }
+      getAllJobs();
+    }, [userInfo]);
+
+useEffect(() => {
+    if (selectedJob) {
+      const updatedJob = jobs.find(job => job.id === selectedJob.id);
+      if (updatedJob) {
+        setSelectedJob(updatedJob);
+      }
+    }
+  }, [jobs, selectedJob]);
+
+
+
+const getAllJobs = async () => {
+  try {
+    const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
+    if (res.data?.allJobs?.length > 0) {
+      // Transform backend data to match display structure
+      const transformedJobs = res.data.allJobs.map(job => ({
+        id: job._id || job.jobId,
+        customer_name: job.formData?.customer_name || '',
+        vehicle_number: job.formData?.vehicle_number || '',
+        engine_number: job.formData?.engine_number || '',
+        vehicle_model: job.formData?.vehicle_model || '',
+        contact_number: job.formData?.contact_number || '',
+        date: new Date(job.createdAt || Date.now()).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        }),
+        status: job.status || 'Not Assigned',
+        assignedEmployee: job.assignedEmployee || null,
+        items: job.jobItems?.map(item => ({
+          jobType: item.itemData?.job_type || '',
+          description: item.itemData?.description || '',
+          estimatedPrice: item.estimatedPrice || 0,
+          itemStatus: item.itemStatus || 'stopped'
+        })) || [],
+        machines: [], // Add if backend provides this
+        consumables: [] // Add if backend provides this
+      }));
+      
+      setJobs(transformedJobs);
+      console.log('Transformed jobs:', transformedJobs);
+    } else {
+      console.log("No jobs found for this shop");
+      setJobs([]); // Set empty array instead of leaving old data
+    }
+  } catch (error) {
+    console.error("Error fetching Jobs:", error);
+    setJobs([]); // Set empty array on error
+  }
+};
+
+useEffect(() => {
+  console.log('Jobs updated:', jobs);
+}, [jobs]);;
+
+
+
+
+
+
 
   // Select first job initially if available
   useEffect(() => {

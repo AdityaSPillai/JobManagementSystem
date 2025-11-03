@@ -84,7 +84,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
 
   // Jobs array
-  const [jobs, setJobs] = useState([])
+  const [jobs, setJobs] = useState([]);
 
   // Form state following nested structure pattern
   const [formData, setFormData] = useState({
