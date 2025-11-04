@@ -416,6 +416,10 @@
   border-top: 2px solid #e2e8f0;
 }
 
+.materials-name{
+  color: black;
+}
+
 .job-items-title {
   display: block;
   margin-bottom: 16px;

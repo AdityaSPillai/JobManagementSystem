@@ -959,8 +959,7 @@ const handleSaveJob = async () => {
                             <div className="job-items-container">
                               <strong className="job-items-title">Consumables Used:</strong>
                               <div className="full-width">
-                                <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
-                                <span> (₹{item.materials.estimatedPrice})</span>
+                                <p className='materials-name'><strong>Materials:</strong> {item.materials.materialsRequired.join(', ')} <span> (₹{item.materials.estimatedPrice})</span></p>
                               </div>
                             </div>
                           )}
