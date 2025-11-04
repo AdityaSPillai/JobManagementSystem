@@ -17,7 +17,6 @@ import '../styles/EstimatorDashboard.css';
 function EstimatorDashboard({ onLoginClick }) {
   const [showJobDetails, setShowJobDetails] = useState(false);
   const [showCreateJob, setShowCreateJob] = useState(false);
-  const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
   const [services, setServices] = useState([]);
@@ -786,16 +785,8 @@ const handleJobTypeSelect = (index, serviceId) => {
               <p>Create job cards and track order history</p>
             </div>
             <div className="action-buttons">
-              <button className="btn-action" onClick={() => {
-                setShowOrderHistory(!showOrderHistory);
-                setShowCreateJob(false);
-                setShowJobDetails(false);
-              }}>
-                <img src={clipboardIcon} alt="History" className="btn-icon-left" /> View Order History
-              </button>
               <button className="btn-action-primary" onClick={() => {
                 setShowCreateJob(!showCreateJob);
-                setShowOrderHistory(false);
                 setShowJobDetails(false);
               }}>
                 + Add Job Card
@@ -830,7 +821,6 @@ const handleJobTypeSelect = (index, serviceId) => {
                     setSelectedJob(job);
                     setShowJobDetails(true);
                     setShowCreateJob(false);
-                    setShowOrderHistory(false);
                   }}
                 >
                   <div className="job-header">
@@ -859,7 +849,7 @@ const handleJobTypeSelect = (index, serviceId) => {
           </div>
 
           <div className="details-section">
-            {!showJobDetails && !showCreateJob && !showOrderHistory && (
+            {!showJobDetails && !showCreateJob && (
               <div className="no-selection">
                 <div className="no-selection-icon">
                   <img src={clipboardIcon} alt="No selection" />
@@ -1195,18 +1185,6 @@ const handleJobTypeSelect = (index, serviceId) => {
                     <span className="amount">₹{calculateFormTotal().toFixed(2)}</span>
                   </div>
                   <button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button>
-                </div>
-              </div>
-            )}
-
-            {showOrderHistory && (
-              <div className="order-history-view">
-                <div className="form-header">
-                  <h3><img src={clipboardIcon} alt="History" className="inline-icon" /> Order History</h3>
-                  <button className="close-btn" onClick={() => setShowOrderHistory(false)}>✕</button>
-                </div>
-                <div className="order-history-content">
-                  <p>Order history feature coming soon...</p>
                 </div>
               </div>
             )}

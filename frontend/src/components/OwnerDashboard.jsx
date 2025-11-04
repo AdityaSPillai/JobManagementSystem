@@ -247,7 +247,8 @@ function OwnerDashboard({ onLogout }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [empCount,setEmpCount]=useState(0)
   const[machineCount,setMchineCount]=useState(0)
-    const{userInfo}=useAuth()
+  const[jobCount,setJobCount]=useState(0)
+  const{userInfo}=useAuth()
 
 
   const getEmployeeeCount=async()=>{
@@ -261,7 +262,6 @@ function OwnerDashboard({ onLogout }) {
     }
   }
 
-
  const getMachinesCount=async()=>{
     try {
       const allMachines= await axios.get(`/shop/getAllMachines/${userInfo.shopId}`)
@@ -272,12 +272,23 @@ function OwnerDashboard({ onLogout }) {
       console.log(error)
     }
   }
-  
+
+  const getJobCount=async()=>{
+    try {
+      const res= await axios.get(`/shop/getAllJobs/${userInfo.shopId}`)
+      console.log(res.data.allJobs.length)
+      setJobCount(res.data.allJobs.length)
+      
+    } catch (error) {
+      console.log(error)
+    }
+  }  
   
   useEffect(()=>{
     if (userInfo?.shopId) {
     getEmployeeeCount();
     getMachinesCount();
+    getJobCount();
   }
   },[userInfo?.shopId])
   const handleShopSubmit = (shopData) => {
@@ -302,16 +313,6 @@ function OwnerDashboard({ onLogout }) {
         
         <div className="stats-cards">
           <div className="stat-card">
-            <span className="stat-label">Total Revenue</span>
-            <span className="stat-value">$160</span>
-            <span className="stat-icon">💵</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-label">Pending Revenue</span>
-            <span className="stat-value">$310</span>
-            <span className="stat-icon">📈</span>
-          </div>
-          <div className="stat-card">
             <span className="stat-label">All Employees</span>
             <span className="stat-value">{empCount}</span>
             <span className="stat-icon">👥</span>
@@ -320,6 +321,11 @@ function OwnerDashboard({ onLogout }) {
             <span className="stat-label">Available Machines</span>
             <span className="stat-value">{machineCount}</span>
             <span className="stat-icon">🔧</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Total Jobs</span>
+            <span className="stat-value">{jobCount}</span>
+            <span className="stat-icon">📈</span>
           </div>
         </div>
       </div>
@@ -330,7 +336,6 @@ function OwnerDashboard({ onLogout }) {
           <button className={`tab-btn ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}>👥 Employees</button>
           <button className={`tab-btn ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}>🔧 Machinery</button>
           <button className={`tab-btn ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
-          <button className={`tab-btn ${activeTab === 'financial' ? 'active' : ''}`} onClick={() => setActiveTab('financial')}>💰 Financial</button>
         </div>
 
         <div className="tab-content">
@@ -338,7 +343,6 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
           {activeTab === 'jobTypes' && <JobTypeTab/> }
-          {activeTab === 'financial' && <div className="placeholder-content">Financial Dashboard Coming Soon...</div>}
         </div>
       </div>
       
