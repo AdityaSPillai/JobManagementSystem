@@ -410,6 +410,24 @@ function EmployeesTab() {
     console.log("New Employee:", employeeData);
   };
 
+  const handleDeleteEmployee = async (employeeId) => {
+  if (!window.confirm("Are you sure you want to remove this employee?")) return;
+
+  try {
+    const response = await axios.delete(`/auth/deleteEmployee/${employeeId}`);
+
+    if (response.data.success) {
+      alert("✅ Employee deleted successfully!");
+      fetchEmployees(); // refresh list
+    } else {
+      alert(response.data.message || "Failed to delete employee.");
+    }
+  } catch (error) {
+    console.error("❌ Error deleting employee:", error);
+    alert(error.response?.data?.message || "Failed to delete employee.");
+  }
+};
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -464,7 +482,7 @@ function EmployeesTab() {
                 >
                   Edit
                 </button>
-                <button className="btn-card-action btn-danger">Remove</button>
+                <button className="btn-card-action btn-danger" onClick={() => handleDeleteEmployee(emp._id)}>Remove</button>
               </div>
             </div>
           ))}
