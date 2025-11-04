@@ -117,7 +117,7 @@ const JobCardSchema = new mongoose.Schema({
   },
   notes:{
     type:String,
-    default:'Neeed completion',
+    default:null,
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
