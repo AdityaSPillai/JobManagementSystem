@@ -117,6 +117,10 @@
   background: #f7fafc;
 }
 
+.tab-btn:focus{
+  outline: none;
+}
+
 .tab-content {
   padding-top: 16px;
 }
