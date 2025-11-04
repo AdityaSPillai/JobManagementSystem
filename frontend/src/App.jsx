@@ -16,7 +16,7 @@ const getRoleDashboard = (userInfo, onLogout) => {
       return <OwnerDashboard onLogout={onLogout} />;
     case 'supervisor':
       return <SupervisorDashboard onLogout={onLogout} />;
-    case 'qaqc':
+    case 'qa_qc':
       return <QADashboard onLogout={onLogout} />;
     default:
       return <EstimatorDashboard onLoginClick={() => console.log('Authenticated user')} />;
