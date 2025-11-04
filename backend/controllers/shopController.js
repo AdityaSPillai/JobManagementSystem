@@ -261,7 +261,7 @@ export const getAllWorkers=async(req,res)=>{
     const  {shopId}= req.params;
 
       //find users based on the id and role= worker
-    const users= await UserModel.find({shopId:shopId, role:"worker"}).select("-role -shopId -profileImage -createdAt -updatedAt -__v -experience");
+    const users= await UserModel.find({shopId:shopId, role:"worker"}).select("-role -shopId -profileImage -createdAt -updatedAt -__v -experience -password");
 
     if(!users){
       return res.status(404).send({
@@ -330,7 +330,7 @@ export const getAllShopJobsController= async(req,res)=>{
       })
     }
 
-    const allJobs=await JobCardModel.find({shopId:shopId}) 
+    const allJobs=await JobCardModel.find({shopId:shopId}).populate('jobItems.machine.machineRequired', 'name')
     if(!allJobs)
     {
       return res.status(404).send({

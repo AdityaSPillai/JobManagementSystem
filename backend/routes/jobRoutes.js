@@ -7,7 +7,8 @@ import { createJobCard,
     startMachineForJobItem,
     endMachineForJobItem,
     startWorkerTimer,
-    endWorkerTimer
+    endWorkerTimer,
+    assignWorkerController
     } from "../controllers/jobController.js";
 
 const router= express.Router();
@@ -25,6 +26,11 @@ router.put('/update-job/:jobId',updateJobSettings)
 
 //delete job
 router.delete('/delete-job/:jobId',deleteJobController)
+
+
+//assign worker to job
+
+router.put('/assign-worker/:userId/:jobId/:jobItemId',assignWorkerController)
 
 
 // start  machine working timer

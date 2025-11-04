@@ -105,6 +105,10 @@ const JobCardSchema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
+  workVerified:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

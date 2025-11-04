@@ -24,17 +24,17 @@ function EstimatorDashboard({ onLoginClick }) {
   const [services, setServices] = useState([]);
   const [machines, setMachines] = useState([]);
   const { userInfo, isAuthenticated, logout } = useAuth();
-
+  const[employees,setEmployees]=useState([]);
   const shopId = userInfo?.shopId;
 
   // Employee list
-  const employees = [
-    { id: 'EMP001', name: 'John Doe' },
-    { id: 'EMP002', name: 'Jane Smith' },
-    { id: 'EMP003', name: 'Mike Johnson' },
-    { id: 'EMP004', name: 'Sarah Williams' },
-    { id: 'EMP005', name: 'David Brown' }
-  ];
+  // const employees = [
+  //   { id: 'EMP001', name: 'John Doe' },
+  //   { id: 'EMP002', name: 'Jane Smith' },
+  //   { id: 'EMP003', name: 'Mike Johnson' },
+  //   { id: 'EMP004', name: 'Sarah Williams' },
+  //   { id: 'EMP005', name: 'David Brown' }
+  // ];
 
   const getAllServices = async () => {
     if (!shopId) return console.log("No shopId found");
@@ -55,7 +55,6 @@ function EstimatorDashboard({ onLoginClick }) {
     try {
       const res = await axios.get(`/shop/getAllMachines/${userInfo.shopId}`);
       if (res.data?.machines?.length > 0) {
-        console.log(res.data.machines);
         setMachines(res.data.machines);
       } else {
         console.log("No machines found for this shop");
@@ -66,6 +65,18 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
+
+const getAllWorlers=async()=>{
+  try {
+    const res= await axios.get(`/shop/getAllWorkers/${userInfo?.shopId}`);
+    if(res.data?.users?.length>0){
+      setEmployees(res.data.users)
+    }
+    
+  } catch (error) {
+      console.error("Error fetching Workers:", error);
+    }
+  };
 
 
 
@@ -80,6 +91,7 @@ function EstimatorDashboard({ onLoginClick }) {
     getAllServices();
     getAllMachines();
     getAllJobs();
+    getAllWorlers();
   }, [userInfo]);
 
 
@@ -90,6 +102,7 @@ function EstimatorDashboard({ onLoginClick }) {
   const [formData, setFormData] = useState({
     templateId: '68f50077a6d75c0ab83cd019',
     isVerifiedByUser: true,
+    workVerified:null,
     shopId: userInfo?.shopId || '',
     formData: {
       customer_name: '',
@@ -107,7 +120,10 @@ function EstimatorDashboard({ onLoginClick }) {
         },
         estimatedPrice: 0,
         machine: {
-          machineRequired: null,
+          machineRequired: {
+            _id:null,
+            name:''
+          },
           startTime: null,
           endTime: null,
           actualDuration: null,
@@ -122,6 +138,8 @@ function EstimatorDashboard({ onLoginClick }) {
           materialsRequired: [],
           estimatedPrice: 0,
         },
+        estimatedPrice:null,
+        id:null
       },
     ],
     machines: [],
@@ -135,6 +153,7 @@ function EstimatorDashboard({ onLoginClick }) {
         setSelectedJob(updatedJob);
       }
     }
+
   }, [jobs, selectedJob]);
 
 
@@ -143,45 +162,63 @@ const getAllJobs = async () => {
   try {
     const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
     if (res.data?.allJobs?.length > 0) {
-      // Transform backend data to match display structure
       const transformedJobs = res.data.allJobs.map(job => ({
-        id: job._id || job.jobId,
+        id: job._id,
+        jobCardNumber: job.jobCardNumber,
         customer_name: job.formData?.customer_name || '',
         vehicle_number: job.formData?.vehicle_number || '',
         engine_number: job.formData?.engine_number || '',
         vehicle_model: job.formData?.vehicle_model || '',
         contact_number: job.formData?.contact_number || '',
         date: new Date(job.createdAt || Date.now()).toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: '2-digit', 
+          minute: '2-digit'
         }),
         status: job.status || 'Not Assigned',
-        assignedEmployee: job.assignedEmployee || null,
+        totalEstimatedAmount: job.totalEstimatedAmount || 0,
+        // Transform job items with all their related data
         items: job.jobItems?.map(item => ({
+          itemId: item._id,
           jobType: item.itemData?.job_type || '',
           description: item.itemData?.description || '',
+          priority: item.itemData?.priority || '',
           estimatedPrice: item.estimatedPrice || 0,
-          itemStatus: item.itemStatus || 'stopped'
-        })) || [],
-        machines: [], // Add if backend provides this
-        consumables: [] // Add if backend provides this
+          itemStatus: item.itemStatus || 'stopped',
+          // Machine details
+          machine: {
+            machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
+            machineId: item.machine?.machineRequired?._id || null,
+            startTime: item.machine?.startTime || null,
+            endTime: item.machine?.endTime || null,
+            actualDuration: item.machine?.actualDuration || null
+          },
+          // Worker details
+          worker: {
+            workerAssigned: item.worker?.workerAssigned || null,
+            startTime: item.worker?.startTime || null,
+            endTime: item.worker?.endTime || null,
+            actualDuration: item.worker?.actualDuration || null
+          },
+          // Material/Consumables details
+          materials: {
+            materialsRequired: item.material?.materialsRequired || [],
+            estimatedPrice: item.material?.estimatedPrice || 0
+          }
+        })) || []
       }));
-      
-      setJobs(transformedJobs);
-      console.log('Transformed jobs:', transformedJobs);
-    } else {
-      console.log("No jobs found for this shop");
-      setJobs([]); // Set empty array instead of leaving old data
+
+      // Use transformedJobs here
+      setJobs(transformedJobs); // or whatever you need to do with it
     }
   } catch (error) {
-    console.error("Error fetching Jobs:", error);
-    setJobs([]); // Set empty array on error
+    console.error('Error fetching jobs:', error);
   }
 };
 
-useEffect(() => {
-  console.log('Jobs updated:', jobs);
-}, [jobs]);;
+
 
 
 
@@ -194,24 +231,64 @@ useEffect(() => {
 
 
   // Handle employee selection
-  const handleEmployeeSelect = (jobId, employeeId) => {
-    setJobs(prevJobs => prevJobs.map(job => {
-      if (job.id === jobId) {
-        const employee = employees.find(e => e.id === employeeId);
-        const hasRunningTask = job.items.some(item => item.itemStatus === 'running');
-        if (hasRunningTask) {
-          alert('Cannot change assigned employee while a job task is running.');
-          return job;
+const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
+  console.log("Assigning worker:", employeeId, jobId, itemIndex);
+  
+  const job = jobs.find(j => j.id === jobId);
+  if (!job) return;
+  
+  const itemId = job.items[itemIndex].itemId;
+  console.log( "Assigning worker:", employeeId,jobId,itemId);
+  
+  // Check if any task is running
+  const hasRunningTask = job.items.some(item => item.itemStatus === 'running');
+  if (hasRunningTask) {
+    alert('Cannot change assigned employee while a job task is running.');
+    return;
+  }
+
+  try {
+
+    if(!employeeId||!jobId||!itemId)
+    {
+      console.log(" all ids not recieved")
+    }
+    // Call your API
+    const response = await axios.put(
+      `/jobs/assign-worker/${employeeId}/${jobId}/${itemId}`
+    );
+    
+    if (response.data.success) {
+      // Update local state
+      setJobs(prevJobs => prevJobs.map(job => {
+        if (job.id === jobId) {
+          const newItems = [...job.items];
+          newItems[itemIndex] = {
+            ...newItems[itemIndex],
+            worker: {
+              ...newItems[itemIndex].worker,
+              workerAssigned: employeeId
+            }
+          };
+          
+          const employee = employees.find(e => e._id === employeeId);
+          return {
+            ...job,
+            items: newItems,
+            assignedEmployee: employee,
+            status: employee ? 'Assigned' : 'Not Assigned'
+          };
         }
-        return {
-          ...job,
-          assignedEmployee: employee,
-          status: employee ? 'Assigned' : 'Not Assigned'
-        };
-      }
-      return job;
-    }));
-  };
+        return job;
+      }));
+      
+      alert('Worker assigned successfully!');
+    }
+  } catch (error) {
+    console.error('Error assigning worker:', error,error.message);
+    alert('Failed to assign worker. Please try again.');
+  }
+};
 
   // --- SIMPLIFIED BUTTON HANDLERS ---
   const handleStartItemTimer = (jobId, itemIndex) => {
@@ -493,13 +570,19 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
   };
 
   // Calculate total for a displayed job
-  const calculateJobTotal = (job) => {
-    if (!job) return 0;
-    const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-    const machinesTotal = job.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-    const consumablesTotal = job.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
-    return itemsTotal + machinesTotal + consumablesTotal;
-  };
+ const calculateJobTotal = (job) => {
+  if (!job || !job.items) return 0;
+  
+  // Sum up all item prices
+  const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+  
+  // Sum up all materials prices from items
+  const materialsTotal = job.items.reduce((sum, item) => 
+    sum + (item.materials?.estimatedPrice || 0), 0
+  );
+  
+  return itemsTotal + materialsTotal;
+};
 
   // UPDATED: Save job with nested structure
 const handleSaveJob = async () => {
@@ -793,106 +876,104 @@ const handleSaveJob = async () => {
                         {selectedJob.status}
                       </span>
                     </div>
-                    <div className="full-width">
-                      <strong>Assign Employee:</strong>
-                      <select 
-                        className="employee-select"
-                        value={selectedJob.assignedEmployee?.id || ''}
-                        onChange={(e) => handleEmployeeSelect(selectedJob.id, e.target.value)}
-                        disabled={selectedJob.status === 'Completed'}
-                      >
-                        <option value="">Select Employee</option>
-                        {employees.map(emp => (
-                          <option key={emp.id} value={emp.id}>{emp.name} ({emp.id})</option>
-                        ))}
-                      </select>
-                    </div>
+                    
                   </div>
                   
                   {/* --- JOB TASKS --- */}
                   <div className="job-items-container">
                     <strong className="job-items-title">Job Tasks:</strong>
-                    {selectedJob.items.map((item, index) => (
-                      <div key={index} className="job-detail-item">
-                        <div className="item-header-row">
-                          <div className="item-info">
-                            <div className="item-title">
-                              <strong>Job #{index + 1}</strong>
-                              {item.jobType && <span className="item-type">({item.jobType})</span>}
-                            </div>
-                            <div className="item-description">{item.description}</div>
-                            <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
-                          </div>
-                          {selectedJob.assignedEmployee && (
-                            <div className="item-timer-section">
-                              <div className="item-timer-controls">
-                                {(item.itemStatus === 'stopped' || item.itemStatus === 'paused') && (
-                                  <button title={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-timer-small btn-start" onClick={() => handleStartItemTimer(selectedJob.id, index)}>
-                                    <img src={playIcon} alt={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-icon" />
-                                  </button>
-                                )}
-                                {item.itemStatus === 'running' && (
-                                  <button title="Pause" className="btn-timer-small btn-pause" onClick={() => handlePauseItemTimer(selectedJob.id, index)}>
-                                    <img src={pauseIcon} alt="Pause" className="btn-icon" />
-                                  </button>
-                                )}
-                                {item.itemStatus !== 'completed' && (
-                                   <button title="End" className="btn-timer-small btn-end" onClick={() => handleEndItemTimer(selectedJob.id, index)}>
-                                    <img src={tickIcon} alt="End" className="btn-icon" />
-                                   </button>
-                                )}
-                                {item.itemStatus === 'completed' && (
-                                  <div className="completed-badge-small">
-                                    <img src={tickIcon} alt="Completed" className="btn-icon" />
+                   {selectedJob.items.map((item, index) => (
+                        <div key={index}> 
+                          <div className="job-detail-item">
+                            <div className="item-header-row">
+                              <div className="item-info">
+                                <div className="item-title">
+                                  <strong>Job #{index + 1}</strong>
+                                  {item.jobType && <span className="item-type">({item.jobType})</span>}
+                                </div>
+                                <div className="item-description">{item.description}</div>
+                                <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
+                              </div>
+                              {item.worker.workerAssigned && (
+                                <div className="item-timer-section">
+                                  <div className="item-timer-controls">
+                                    {(item.itemStatus === 'stopped' || item.itemStatus === 'paused') && (
+                                      <button title={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-timer-small btn-start" onClick={() => handleStartItemTimer(selectedJob.id, index)}>
+                                        <img src={playIcon} alt={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-icon" />
+                                      </button>
+                                    )}
+                                    {item.itemStatus === 'running' && (
+                                      <button title="Pause" className="btn-timer-small btn-pause" onClick={() => handlePauseItemTimer(selectedJob.id, index)}>
+                                        <img src={pauseIcon} alt="Pause" className="btn-icon" />
+                                      </button>
+                                    )}
+                                    {item.itemStatus !== 'completed' && (
+                                      <button title="End" className="btn-timer-small btn-end" onClick={() => handleEndItemTimer(selectedJob.id, index)}>
+                                        <img src={tickIcon} alt="End" className="btn-icon" />
+                                      </button>
+                                    )}
+                                    {item.itemStatus === 'completed' && (
+                                      <div className="completed-badge-small">
+                                        <img src={tickIcon} alt="Completed" className="btn-icon" />
+                                      </div>
+                                    )}
                                   </div>
-                                )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="full-width">
+                                <strong>Assign Employee for this task:</strong>
+                                <select 
+                                  className="employee-select"
+                                  value={item.worker.workerAssigned || ''}
+                                  onChange={(e) => {
+                                    const selectedEmployeeId = e.target.value;
+                                    if (selectedEmployeeId) { // ✅ Only call API if employee is selected
+                                      handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
+                                    }
+                                  }}
+                                  disabled={selectedJob.status === 'Completed' || item.itemStatus === 'running'}
+                                >
+                                  <option value="">Select Employee</option>
+                                  {employees.map(emp => (
+                                    <option key={emp._id} value={emp._id}>
+                                      {emp.name} ({emp._id})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                          </div>
+
+                          {/* Machine section */}
+                          {item.machine.machineRequired && (
+                            <div className="job-items-container">
+                              <strong className="job-items-title">Machine Used:</strong>
+                              <div className="full-width">
+                                <p className='machiene-name'> <strong >Machine:</strong> {item.machine.machineRequired}</p>
                               </div>
                             </div>
                           )}
-                        </div>
-                      </div>
-                    ))}
+
+                          {/* Materials section */}
+                          {item.materials.materialsRequired.length > 0 && (
+                            <div className="job-items-container">
+                              <strong className="job-items-title">Consumables Used:</strong>
+                              <div className="full-width">
+                                <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
+                                <span> (₹{item.materials.estimatedPrice})</span>
+                              </div>
+                            </div>
+                          )}
+                        </div> 
+                      ))}
                   </div>
 
-                  {/* --- MACHINE DETAILS --- */}
-                  {selectedJob.machines.length > 0 && (
-                    <div className="job-items-container">
-                      <strong className="job-items-title">Machines Used:</strong>
-                      {selectedJob.machines.map((machine, index) => (
-                        <div key={index} className="job-detail-item simple-item-row">
-                          <div className="item-info">
-                            <div className="item-title">
-                              <strong>{machine.machineType}</strong>
-                            </div>
-                            <div className="item-description">{machine.description}</div>
-                          </div>
-                          <div className="item-price">${machine.estimatedPrice.toFixed(2)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
-                  {/* --- CONSUMABLE DETAILS --- */}
-                  {selectedJob.consumables.length > 0 && (
-                    <div className="job-items-container">
-                      <strong className="job-items-title">Consumables Used:</strong>
-                      {selectedJob.consumables.map((item, index) => (
-                        <div key={index} className="job-detail-item simple-item-row">
-                          <div className="item-info">
-                            <div className="item-title">
-                              <strong>{item.name}</strong>
-                            </div>
-                            <div className="item-description">
-                              {item.quantity} x ${item.perPiecePrice.toFixed(2)}
-                            </div>
-                          </div>
-                          <div className="item-price">
-                            ${(item.quantity * item.perPiecePrice).toFixed(2)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                
+
+
+                    
+
 
                   {/* --- TOTAL --- */}
                   <div className="job-detail-total">
@@ -1030,7 +1111,7 @@ const handleSaveJob = async () => {
         <div className="materials-list">
           {item.material.materialsRequired.map((material, matIndex) => (
             <div key={matIndex} className="material-tag">
-              <span>{material}</span>
+               <span className='meterial-name' >{material}</span>
               <button 
                 type="button"
                 onClick={() => handleRemoveMaterialFromJobItem(index, matIndex)}

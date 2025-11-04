@@ -48,6 +48,7 @@ export const createJobCard = async (req, res) => {
       templateId,
       shopId,
       isVerifiedByUser,
+      workVerified,
       formData: new Map(Object.entries(formData)),
       jobItems: jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
@@ -515,3 +516,49 @@ if(!workerFound){
     });
   } 
 }
+
+
+  export const assignWorkerController = async (req, res) => {
+  try {
+    const { userId, jobId, jobItemId } = req.params;
+    
+    if (!userId || !jobId || !jobItemId) {
+      return res.status(400).send({
+        success: false,
+        message: "UserID, JobID and JobItemId are required"
+      });
+    }
+
+    const job = await JobCardModel.findOneAndUpdate(
+      { 
+        _id: jobId,
+        "jobItems._id": jobItemId
+      },
+      { 
+        $set: { "jobItems.$.worker.workerAssigned": userId }
+      },
+      { new: true }
+    );
+
+    if (!job) {
+      return res.status(404).send({
+        success: false,
+        message: "Job or job item not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Worker assigned successfully",
+      data: job
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Unable to assign worker to job",
+      error,
+    });
+  }
+};
