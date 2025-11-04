@@ -130,48 +130,35 @@
     };
 
     // --- QA Action Handlers ---
-  const handleItemQualityChange = async(jobId, quality) => {
-        if (!selectedJob || selectedJob.status !== 'completed') return;
-        console.log(jobId,quality)
+  const handleItemQualityChange = async (jobId, quality) => {
+  if (!selectedJob || selectedJob.status !== 'completed') return;
+
   try {
+    const res = await axios.put(
+      `/jobs/qualityCheck/${jobId}/${userInfo.id}/${encodeURIComponent(quality)}`
+    );
 
-    const res=await axios.put(`/jobs/qualityCheck/${jobId}/${userInfo.id}/${encodeURIComponent(quality)}`)
-    if(!res.status.success){
-      console.log("Unable to Assign Quality")
-    }
-    else{
-      alert("Status Updated succesfully");
+    if (!res.data?.success) {
+      console.log("Unable to assign quality");
+    } else {
+      alert("Status updated successfully");
     }
 
+    // Update local job list
+    setJobs(prevJobs =>
+      prevJobs.map(job =>
+        job.id === jobId ? { ...job, qualityStatus: quality } : job
+      )
+    );
+
+    // Update selected job
+    setSelectedJob(prev =>
+      prev && prev.id === jobId ? { ...prev, qualityStatus: quality } : prev
+    );
   } catch (error) {
-    console.log(error.message.error)
-    
+    console.error(error.response?.data || error.message);
   }
-        setJobs(prevJobs => prevJobs.map(job => {
-            if (job.id === jobId) {
-                const newItems = [...job.items];
-                // Ensure the item itself is completed before setting quality
-                if (newItems[itemIndex].itemStatus === 'completed') {
-                    newItems[itemIndex].qualityStatus = quality;
-                } else {
-                    alert("This task must be marked 'completed' by the worker first.");
-                }
-                return { ...job, items: newItems };
-            }
-            return job;
-        }));
-        // Also update the selected job state directly for immediate UI feedback
-        setSelectedJob(prev => {
-            if (prev && prev.id === jobId) {
-                  const newItems = [...prev.items];
-                  if (newItems[itemIndex].itemStatus === 'completed') {
-                      newItems[itemIndex].qualityStatus = quality;
-                  }
-                  return {...prev, items: newItems};
-            }
-            return prev;
-        })
-    };
+};
 
     const handleMarkQualityChecked = (jobId) => {
           if (!selectedJob || selectedJob.status !== 'completed') return;
