@@ -202,9 +202,6 @@ function MachinesTab() {
             <div key={machine._id} className="data-card">
               <div className="data-card-header">
                 <h4>{machine.name}</h4>
-                <span className={`data-card-status ${getStatusClass(machine.status)}`}>
-                  {machine.status}
-                </span>
               </div>
               <div className="data-card-body">
                 <p><strong>Type:</strong> {machine.type}</p>
