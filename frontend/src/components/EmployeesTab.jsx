@@ -261,12 +261,109 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
   );
 }
 
+function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
+  const [formData, setFormData] = useState(employee || {});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setFormData(employee || {});
+  }, [employee]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!employee?._id) {
+      alert('Invalid employee data.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.put(`/employee/updateEmployee/${employee._id}`, formData);
+      
+      if (response.data.success) {
+        alert('✅ Employee updated successfully');
+        onUpdate(); // Refresh employee list
+        onClose();
+      } else {
+        setError(response.data.message || 'Failed to update employee');
+      }
+    } catch (err) {
+      console.error('❌ Error updating employee:', err);
+      setError(err.response?.data?.message || 'Failed to update employee');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content modal-large">
+        <div className="modal-header">
+          <h3>✏️ Edit Employee</h3>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-grid cols-2">
+            <div className="form-group">
+              <label>Name</label>
+              <input type="text" name="name" value={formData.name || ''} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" name="email" value={formData.email || ''} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Phone</label>
+              <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Specialization</label>
+              <select name="specialization" value={formData.specialization || ''} onChange={handleChange}>
+                <option value="mechanic">Mechanic</option>
+                <option value="electrician">Electrician</option>
+                <option value="bodywork">Bodywork</option>
+                <option value="painter">Painter</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Hourly Rate</label>
+              <input type="number" name="hourlyRate" value={formData.hourlyRate || ''} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Experience (Years)</label>
+              <input type="number" name="experience" value={formData.experience || ''} onChange={handleChange} required />
+            </div>
+          </div>
+
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? 'Updating...' : 'Update Employee'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // --- Main Employees Tab Component ---
 function EmployeesTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const { userInfo } = useAuth();
 
@@ -358,7 +455,15 @@ function EmployeesTab() {
                 )}
               </div>
               <div className="data-card-footer">
-                <button className="btn-card-action">Edit</button>
+                <button 
+                  className="btn-card-action"
+                  onClick={() => {
+                    setSelectedEmployee(emp);
+                    setIsEditModalOpen(true);
+                  }}
+                >
+                  Edit
+                </button>
                 <button className="btn-card-action btn-danger">Remove</button>
               </div>
             </div>
@@ -370,6 +475,12 @@ function EmployeesTab() {
         isVisible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddEmployee}
+      />
+      <EditEmployeeModal
+        isVisible={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        employee={selectedEmployee}
+        onUpdate={fetchEmployees}
       />
     </div>
   );
