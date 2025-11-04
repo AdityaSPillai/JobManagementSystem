@@ -12,5 +12,4 @@ router.get('/user/:id',getSingleUserController)
 
 
 
-
 export default router;

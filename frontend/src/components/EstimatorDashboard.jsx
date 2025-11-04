@@ -153,6 +153,8 @@ const getAllWorlers=async()=>{
         setSelectedJob(updatedJob);
       }
     }
+    console.log('selected job =',jobs[2]?.items[0]?.jobType)
+    
 
   }, [jobs, selectedJob]);
 
@@ -796,7 +798,7 @@ const handleSaveJob = async () => {
 };
 
   // UPDATED: Handle job type selection with nested structure
- const handleJobTypeSelect = (index, serviceId) => {
+const handleJobTypeSelect = (index, serviceId) => {
   const selectedService = services.find(service => service._id === serviceId);
 
   setFormData(prev => {
@@ -806,8 +808,8 @@ const handleSaveJob = async () => {
       ...updatedJobItems[index],
       itemData: {
         ...updatedJobItems[index].itemData,
-        job_type: serviceId, // ✅ store ID for proper select binding
-        job_type_name: selectedService?.name || '', // optional readable name
+        job_type: selectedService?.name || '', // ✅ Store NAME for display
+        job_type_id: serviceId, // ✅ Store ID for backend reference
         description: selectedService?.description || ''
       },
       estimatedPrice: selectedService?.price || 0
@@ -954,6 +956,7 @@ const handleSaveJob = async () => {
                   <div className="job-items-container">
                     <strong className="job-items-title">Job Tasks:</strong>
                    {selectedJob.items.map((item, index) => (
+                      
                       <div key={index}> 
                         <div className="job-detail-item">
                           <div className="item-header-row">
@@ -1125,16 +1128,16 @@ const handleSaveJob = async () => {
 
       {/* Job Type and Description */}
       <div className="form-row">
-        <div className="form-group">
-          <label>Job Type *</label>
+       <div className="form-group">
+        <label>Job Type *</label>
           <select 
-            value={item.itemData.job_type || ''} 
+            value={item.itemData.job_type_id || ''} 
             onChange={(e) => handleJobTypeSelect(index, e.target.value)}
           >
             <option value="">--Select job--</option>
             {services.map((service) => (
               <option key={service._id} value={service._id}>
-                {service.name} - ₹{service.price}
+                {service.name} 
               </option>
             ))}
           </select>
