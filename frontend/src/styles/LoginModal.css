@@ -1,5 +1,5 @@
 /* Modal Overlay */
-.modal-overlay {
+.login-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -14,7 +14,7 @@
 }
 
 /* Modal Content */
-.modal-content {
+.login-modal-content {
   background: white;
   border-radius: 12px;
   padding: 2.5rem;
@@ -70,6 +70,10 @@
   font-size: 1.5rem;
   color: #333;
   text-align: center;
+}
+
+.modal-title-login{
+  color:#536068;
 }
 
 /* Role Tabs */

@@ -4,16 +4,11 @@ import axios from "../utils/axios.js";
 import useAuth from '../context/context.js';
 
 function LoginModal({ isOpen, onClose, onLogin }) {
-  // --- New State ---
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
-  // --- useAuth Hook ---
   const { login } = useAuth();
-
-  // --- New State for Registration Form ---
   const [regFormData, setRegFormData] = useState({
     name: '',
     email: '',
@@ -22,7 +17,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     shopname: ''
   });
 
-  // --- Login Submit Handler ---
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -37,14 +31,11 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         email: username,
         password: password,
       });
-
               console.log(response.data)
-
       if (!response.data.success) {
         setError(response.data.message || 'Login failed. Please try again.');
         console.log('Login Error:', response.data.message);
       } else {
-        // Use the useAuth login function to set user info and token
         
         login({
           id: response.data.user._id || response.data.user.id,
@@ -53,20 +44,16 @@ function LoginModal({ isOpen, onClose, onLogin }) {
           role: response.data.user.role,
           phone: response.data.user.phone,
           shopname: response.data.user.shopname,
-          
            ...(response.data.user?.shopId && { shopId: response.data.user.shopId }),
-
           token: response.data.token
         });
 
         console.log('Logged in User:', response.data.user);
         window.location.reload();
 
-        // Call parent callback with user role
         if (onLogin) {
           onLogin(response.data.user.role);
         }
-
         handleClose();
       }
     } catch (error) {
@@ -75,7 +62,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     }
   };
 
-  // --- New: Registration Submit Handler ---
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -86,7 +72,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         setError('Please fill in all registration fields');
         return;
       }
-
       const ownerData = {
         name,
         email,
@@ -95,14 +80,12 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         phone,
         shopname
       };
-
       const response = await axios.post('/auth/signup', ownerData);
       
       if (!response.data.success) {
         setError(response.data.message || 'Registration failed. Please try again.');
         console.log('Registration Error:', response.data.message);
       } else {
-        // Auto-login after successful registration
         login({
           id: response.data.user._id || response.data.user.id,
           name: response.data.user.name,
@@ -118,8 +101,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         if (onLogin) {
           onLogin(response.data.user.role);
         }
-
-        // Reset and close
         setIsRegisterMode(false);
         handleClose();
       }
@@ -129,13 +110,11 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     }
   };
 
-  // --- New: Registration Form Change Handler ---
   const handleRegFormChange = (e) => {
     const { name, value } = e.target;
     setRegFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- Updated: handleClose to reset all state ---
   const handleClose = () => {
     setUsername('');
     setPassword('');
@@ -148,15 +127,11 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        
-        <h2>{isRegisterMode ? 'Register as Owner' : 'Login to AutoCare WorkShop'}</h2>
-
+    <div className="login-modal-overlay" onClick={handleClose}>
+      <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+        <h2 className="modal-title-login">{isRegisterMode ? 'Register as Owner' : 'Login to AutoCare WorkShop'}</h2>
         {error && <div className="error-message">{error}</div>}
-
         {isRegisterMode ? (
-          // --- REGISTRATION FORM ---
           <form onSubmit={handleRegisterSubmit}>
             <div className="form-group">
               <label>Full Name</label>
@@ -181,7 +156,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
             <button type="submit" className="btn-login">Register</button>
           </form>
         ) : (
-          // --- LOGIN FORM ---
           <form onSubmit={handleLoginSubmit}>
             <div className="form-group">
               <label>Username</label>
@@ -197,9 +171,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
           </form>
         )}
 
-        {/* --- Conditional Hint/Toggle --- */}
         {!isRegisterMode ? (
-          // In Login Mode
           <>
             <p className="toggle-mode-hint">
               Don't have an account?{' '}
@@ -207,13 +179,11 @@ function LoginModal({ isOpen, onClose, onLogin }) {
             </p>
           </>
         ) : (
-          // In Register Mode
           <p className="toggle-mode-hint">
             Already have an account?{' '}
             <span onClick={() => setIsRegisterMode(false)}>Login here</span>
           </p>
         )}
-
       </div>
     </div>
   );
