@@ -592,7 +592,6 @@ const handleSaveJob = async () => {
       };
 
       await getAllJobs();
-      setJobs(prev => [newJob, ...prev]);
 
       setFormData({
         templateId: '68f50077a6d75c0ab83cd019',
@@ -670,10 +669,10 @@ const handleJobTypeSelect = (index, serviceId) => {
         onLogout={logout}
         showLogin={!isAuthenticated}
       />
-      <div className="dashboard-content">
-        <div className="dashboard-title-section">
-          <div className="dashboard-wrapper">
-            <div className="dashboard-title">
+      <div className="e-dashboard-content">
+        <div className="e-dashboard-title-section">
+          <div className="e-dashboard-wrapper">
+            <div className="e-dashboard-title">
               <h2>Estimator Dashboard</h2>
               <p>Create job cards and track order history</p>
             </div>
@@ -846,10 +845,12 @@ const handleJobTypeSelect = (index, serviceId) => {
                             {item.worker.workerAssigned && (
                               <div className="item-timer-section">
                                 <div className="item-timer-controls">
-                                  {item.itemStatus === 'completed' || selectedJob.status === 'completed' ? (
-                                    <div className="completed-badge-small">
-                                      <img src={tickIcon} alt="Completed" className="btn-icon" />
-                                    </div>
+                                  {item.itemStatus === 'completed' || 
+                                    selectedJob.status.toLowerCase() === 'completed' || 
+                                    selectedJob.status.toLowerCase() === 'approved' ? (
+                                      <div className="completed-badge-small">
+                                        <img src={tickIcon} alt="Completed" className="btn-icon" />
+                                      </div>
                                   ) : (
                                     <>
                                       {item.itemStatus === 'stopped' && (
@@ -879,7 +880,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                           </div>
                           <div className="full-width">
                             <p className="employee-select-label"><strong>Assign Employee for this task:</strong></p>
-                            <select 
+                            <select
                               className="employee-select"
                               value={item.worker.workerAssigned || ''}
                               onChange={(e) => {
@@ -888,7 +889,13 @@ const handleJobTypeSelect = (index, serviceId) => {
                                   handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
                                 }
                               }}
-                              disabled={selectedJob.status === 'completed' || item.itemStatus === 'running'}
+                              disabled={
+                                selectedJob.status.toLowerCase() === 'in_progress' ||
+                                selectedJob.status.toLowerCase() === 'completed' ||
+                                selectedJob.status.toLowerCase() === 'approved' ||
+                                item.itemStatus === 'running' ||
+                                item.itemStatus === 'completed'
+                              }
                             >
                               <option value="">Select Employee</option>
                               {employees.map(emp => (

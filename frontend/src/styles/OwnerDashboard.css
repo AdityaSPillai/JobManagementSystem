@@ -334,22 +334,41 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  padding-bottom: 10px;
+  padding: 10px 15px;
   border-bottom: 2px solid #e2e8f0;
+  position: relative;
 }
-.modal-header h3 { margin: 0; font-size: 22px; color: #2d3748; }
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #2d3748;
+  flex: 1;
+}
+
 .modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
   background: #fed7d7;
   border: none;
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  font-size: 18px;
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
   color: #c53030;
-  transition: background 0.2s;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-.modal-close-btn:hover { background: #fc8181; color: white; }
+
+.modal-close-btn:hover {
+  background: #fc8181;
+  color: white;
+}
+
+.modal-close-btn:focus {
+  outline: none;
+}
 
 /* --- NEW: Generic Modal Form Styles --- */
 .modal-form {

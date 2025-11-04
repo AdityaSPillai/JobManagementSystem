@@ -307,8 +307,12 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>✏️ Edit Employee</h3>
-          <button className="modal-close-btn" onClick={onClose}>✕</button>
+          <div className="modal-header-left">
+            <h3>✏️ Edit Employee</h3>
+          </div>
+          <div className="modal-header-right">
+            <button className="modal-close-btn" onClick={onClose}>✕</button>
+          </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}

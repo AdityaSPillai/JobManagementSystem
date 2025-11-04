@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
-import '../styles/SupervisorDashboard.css'; // Use the supervisor CSS
+import '../styles/SupervisorDashboard.css';
 import useAuth from '../context/context.js';
-// Import all necessary icons
 import clipboardIcon from '../assets/clipboard.svg';
 import workerIcon from '../assets/worker.svg';
 import userIcon from '../assets/user.svg';
@@ -11,12 +10,10 @@ import editIcon from '../assets/edit.svg';
 // --- NEW ICON IMPORTS ---
 import refreshIcon from '../assets/refresh.svg';
 import infoIcon from '../assets/info.svg';
-import tickIcon from '../assets/tick.svg'; // Already imported, used for ✅
-import deleteIcon from '../assets/delete.svg'; // For the bin/trash icon
+import tickIcon from '../assets/tick.svg';
+import deleteIcon from '../assets/delete.svg';
 import axios from "../utils/axios.js"
-// --- END NEW ICON IMPORTS ---
 
-// --- Edit Job Modal Component (Updated with Delete Icon) ---
 function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete }) {
   const [selectedJobIdInternal, setSelectedJobIdInternal] = useState('');
   const [editFormData, setEditFormData] = useState(null);
@@ -47,7 +44,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     onClose();
   };
 
-  const handleFormChange = (field, value) => setEditFormData(prev => ({ ...prev, [field]: value }));
   const handleItemChange = (index, field, value, type) => {
     setEditFormData(prev => {
       const newItems = [...prev[type]];
@@ -59,6 +55,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
       return { ...prev, [type]: newItems };
     });
   };
+
   const addItem = (type) => {
     setEditFormData(prev => {
       let newItem;
@@ -68,6 +65,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
       return { ...prev, [type]: [...prev[type], newItem] };
     });
   };
+
   const removeItem = (index, type) => {
     if (type === 'items' && editFormData.items.length <= 1) return;
     setEditFormData(prev => ({ ...prev, [type]: prev[type].filter((_, i) => i !== index) }));
@@ -80,13 +78,16 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
       alert('Task statuses reset. Save changes to apply.');
     }
   };
+
   const handleDeleteClick = () => {
     if (window.confirm(`Are you sure you want to permanently delete Job ${editFormData.id}? This action cannot be undone.`)) {
       onDelete(editFormData.id);
       handleClose();
     }
   };
+
   const handleSubmit = (e) => { e.preventDefault(); onSave(editFormData); handleClose(); };
+
   const calculateTotal = () => {
     if (!editFormData) return 0;
     const itemsTotal = editFormData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
@@ -96,9 +97,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
    };
 
   if (!isOpen) return null;
-
-
-   
 
   return (
     <div className="modal-overlay">
@@ -125,7 +123,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
           <form onSubmit={handleSubmit}>
             {!initialJobData && (<button type="button" className="btn-back" onClick={() => handleJobSelect('')}>&larr; Back to Job Selection</button>)}
             
-            {/* Customer Fields */}
             <div className="form-row">
               <div className="form-group"><label>Customer Name *</label><input type="text" value={editFormData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} /></div>
               <div className="form-group"><label>Contact Number *</label><input type="tel" value={editFormData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} /></div>
@@ -136,7 +133,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
             </div>
             <div className="form-group"><label>Engine Number</label><input type="text" value={editFormData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} /></div>
 
-            {/* Supervisor Actions */}
             <div className="job-items-section supervisor-actions">
               <div className="section-title"><h4>Supervisor Actions</h4></div>
               <div className="form-row">
@@ -157,7 +153,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
               </div>
             </div>
 
-            {/* Job Tasks */}
             <div className="job-items-section">
               <div className="section-title"><h4>Job Tasks</h4><button type="button" className="btn-add-job" onClick={() => addItem('items')}>+ Add Task</button></div>
               {editFormData.items.map((item, index) => (
@@ -165,13 +160,12 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                    <div className="job-item-field"><label>Task #{index + 1}</label></div>
                    <div className="job-item-field"><label>Job Type</label><input type="text" value={item.jobType} onChange={(e) => handleItemChange(index, 'jobType', e.target.value, 'items')} /></div>
                    <div className="job-item-field"><label>Description *</label><input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'items')} /></div>
-                   <div className="job-item-field"><label>Est. Price ($)*</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'items')} /></div>
+                   <div className="job-item-field"><label>Est. Price (₹)*</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'items')} /></div>
                    <button type="button" className="btn-remove" onClick={() => removeItem(index, 'items')} disabled={editFormData.items.length === 1}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
                 </div>
               ))}
             </div>
 
-            {/* Machines */}
             <div className="job-items-section">
               <div className="section-title"><h4>Machine Usage (Optional)</h4><button type="button" className="btn-add-job" onClick={() => addItem('machines')}>+ Add Machine</button></div>
               {editFormData.machines.map((item, index) => (
@@ -179,13 +173,12 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                    <div className="job-item-field"><label>Machine #{index + 1}</label></div>
                    <div className="job-item-field"><label>Machine Type</label><input type="text" value={item.machine.machineRequired} onChange={(e) => handleItemChange(index, 'machineType', e.target.value, 'machines')} /></div>
                    <div className="job-item-field"><label>Description</label><input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'machines')} /></div>
-                   <div className="job-item-field"><label>Est. Price ($)</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'machines')} /></div>
+                   <div className="job-item-field"><label>Est. Price (₹)</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'machines')} /></div>
                    <button type="button" className="btn-remove" onClick={() => removeItem(index, 'machines')}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
                 </div>
               ))}
             </div>
 
-            {/* Consumables */}
             <div className="job-items-section">
               <div className="section-title"><h4>Consumables (Optional)</h4><button type="button" className="btn-add-job" onClick={() => addItem('consumables')}>+ Add Consumable</button></div>
               {editFormData.consumables.map((item, index) => (
@@ -193,17 +186,16 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                    <div className="job-item-field"><label>Item #{index + 1}</label></div>
                    <div className="job-item-field"><label>Name of Consumable</label><input type="text" value={item.name} onChange={(e) => handleItemChange(index, 'name', e.target.value, 'consumables')} /></div>
                    <div className="job-item-field"><label>Quantity</label><input type="number" value={item.quantity || ''} onChange={(e) => handleItemChange(index, 'quantity', e.target.value, 'consumables')} /></div>
-                   <div className="job-item-field"><label>Price Per Piece ($)</label><input type="number" value={item.perPiecePrice || ''} onChange={(e) => handleItemChange(index, 'perPiecePrice', e.target.value, 'consumables')} /></div>
+                   <div className="job-item-field"><label>Price Per Piece (₹)</label><input type="number" value={item.perPiecePrice || ''} onChange={(e) => handleItemChange(index, 'perPiecePrice', e.target.value, 'consumables')} /></div>
                    <button type="button" className="btn-remove" onClick={() => removeItem(index, 'consumables')}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
                 </div>
               ))}
             </div>
 
-            {/* Footer */}
             <div className="form-footer edit-footer">
               <button type="button" className="btn-delete-job" onClick={handleDeleteClick}>Delete Job</button>
               <div className="footer-right">
-                <div className="total-amount"><span>Total Est. Amount:</span><span className="amount">${calculateTotal().toFixed(2)}</span></div>
+                <div className="total-amount"><span>Total Est. Amount:</span><span className="amount">₹{calculateTotal().toFixed(2)}</span></div>
                 <button type="submit" className="btn-save-job">Save Changes</button>
               </div>
             </div>
@@ -213,29 +205,21 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     </div>
   );
 }
-// --- End Edit Job Modal ---
 
-
-// --- Main Supervisor Dashboard Component ---
 function SupervisorDashboard({ onLogout }) {
-  const [showJobDetails, setShowJobDetails] = useState(true); // Default to showing details
-  const [showCreateJob, setShowCreateJob] = useState(false);
+  const [showJobDetails, setShowJobDetails] = useState(true);
   const [showEditJobModal, setShowEditJobModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedJob, setSelectedJob] = useState(null); // Initially no job selected
+  const [selectedJob, setSelectedJob] = useState(null);
   const [jobToEdit, setJobToEdit] = useState(null);
   const {userInfo}=useAuth();
   
-  // Employee list
   const employees = [
     { id: 'EMP001', name: 'John Doe' }, { id: 'EMP002', name: 'Jane Smith' }, { id: 'EMP003', name: 'Mike Johnson' }, { id: 'EMP004', name: 'Sarah Williams' }, { id: 'EMP005', name: 'David Brown' }
    ];
 
-  // Jobs array
   const [jobs, setJobs] = useState([]);
 
-  // Form state for creating new job
- // In SupervisorDashboard, replace the formData useState with:
 const [formData, setFormData] = useState({
   templateId: '68f50077a6d75c0ab83cd019',
   isVerifiedByUser: true,
@@ -294,8 +278,6 @@ useEffect(() => {
     }
   }, [jobs, selectedJob]);
 
-
-
 const getAllJobs = async () => {
   try {
    const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
@@ -317,7 +299,6 @@ const getAllJobs = async () => {
         }),
         status: job.status || 'Not Assigned',
         totalEstimatedAmount: job.totalEstimatedAmount || 0,
-        // Transform job items with all their related data
         items: job.jobItems?.map(item => ({
           itemId: item._id,
           jobType: item.itemData?.job_type || '',
@@ -325,7 +306,6 @@ const getAllJobs = async () => {
           priority: item.itemData?.priority || '',
           estimatedPrice: item.estimatedPrice || 0,
           itemStatus: item.itemStatus || 'stopped',
-          // Machine details
           machine: {
             machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
             machineId: item.machine?.machineRequired?._id || null,
@@ -333,14 +313,12 @@ const getAllJobs = async () => {
             endTime: item.machine?.endTime || null,
             actualDuration: item.machine?.actualDuration || null
           },
-          // Worker details
           worker: {
             workerAssigned: item.worker?.workerAssigned || null,
             startTime: item.worker?.startTime || null,
             endTime: item.worker?.endTime || null,
             actualDuration: item.worker?.actualDuration || null
           },
-          // Material/Consumables details
           materials: {
             materialsRequired: item.material?.materialsRequired || [],
             estimatedPrice: item.material?.estimatedPrice || 0
@@ -352,25 +330,17 @@ const getAllJobs = async () => {
       console.log('Transformed jobs:', transformedJobs);
     } else {
       console.log("No jobs found for this shop");
-      setJobs([]); // Set empty array instead of leaving old data
+      setJobs([]);
     }
   } catch (error) {
     console.error("Error fetching Jobs:", error);
-    setJobs([]); // Set empty array on error
+    setJobs([]);
   }
 };
 
 useEffect(() => {
   console.log('Jobs updated:', jobs);
 }, [jobs]);;
-
-
-
-
-
-
-
-  // Select first job initially if available
   useEffect(() => {
     if (jobs.length > 0 && !selectedJob) {
       setSelectedJob(jobs[0]);
@@ -379,9 +349,8 @@ useEffect(() => {
       setSelectedJob(null);
       setShowJobDetails(false);
     }
-  }, [jobs]); // Re-run if jobs list changes (e.g., after delete)
+  }, [jobs]);
 
-  // Effect to update selected job view if jobs list changes
   useEffect(() => {
     if (selectedJob) {
       const updatedJob = jobs.find(job => job.id === selectedJob.id);
@@ -390,7 +359,6 @@ useEffect(() => {
     }
   }, [jobs, selectedJob?.id]);
 
-  // Handle employee selection
   const handleEmployeeSelect = (jobId, employeeId) => {
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
@@ -406,87 +374,8 @@ useEffect(() => {
     }));
   };
 
-  // Filter jobs
   const filteredJobs = jobs.filter(job => job.id.toLowerCase().includes(searchQuery.toLowerCase()) || job.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) || job.vehicle_number.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // Generate ID
-  const generateJobId = () => { const today = new Date(); const dateStr = today.toISOString().split('T')[0].replace(/-/g, ''); const jobNumber = String(jobs.length + 1).padStart(4, '0'); return `JOB-${dateStr}-${jobNumber}`; };
-
-  // Create Form Handlers
-  // Replace handleFormChange:
-const handleFormChange = (field, value) => {
-  setFormData(prev => ({
-    ...prev,
-    formData: {
-      ...prev.formData,
-      [field]: value
-    }
-  }));
-};
-
-// Replace handleJobItemChange:
-const handleJobItemChange = (index, field, value) => {
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    if (field === 'estimatedPrice') {
-      newJobItems[index].estimatedPrice = parseFloat(value) || 0;
-    } else {
-      newJobItems[index].itemData[field] = value;
-    }
-    return { ...prev, jobItems: newJobItems };
-  });
-};
-
-// Replace addJobItem:
-const addJobItem = () => {
-  setFormData(prev => ({
-    ...prev,
-    jobItems: [
-      ...prev.jobItems,
-      {
-        itemData: {
-          job_type: '',
-          description: '',
-          priority: '',
-        },
-        estimatedPrice: 0,
-        machine: {
-          machineRequired: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
-        worker: {
-          workerAssigned: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
-        material: {
-          materialsRequired: [],
-          estimatedPrice: 0,
-        },
-      }
-    ]
-  }));
-};
-
-// Replace removeJobItem:
-const removeJobItem = (index) => {
-  if (formData.jobItems.length > 1) {
-    setFormData(prev => ({
-      ...prev,
-      jobItems: prev.jobItems.filter((_, i) => i !== index)
-    }));
-  }
-};
-  
-  const addMachine = () => setFormData(prev => ({ ...prev, machines: [...prev.machines, { machineType: '', description: '', estimatedPrice: 0 }] }));
-  const removeMachine = (index) => { const newMachines = formData.machines.filter((_, i) => i !== index); setFormData(prev => ({ ...prev, machines: newMachines })); };
-  const handleConsumableChange = (index, field, value) => { const newConsumables = [...formData.consumables]; newConsumables[index][field] = (field === 'quantity' || field === 'perPiecePrice') ? parseFloat(value) || 0 : value; setFormData(prev => ({ ...prev, consumables: newConsumables })); };
-  const addConsumable = () => setFormData(prev => ({ ...prev, consumables: [...prev.consumables, { name: '', quantity: 1, perPiecePrice: 0 }] }));
-  const removeConsumable = (index) => { const newConsumables = formData.consumables.filter((_, i) => i !== index); setFormData(prev => ({ ...prev, consumables: newConsumables })); };
-  const calculateFormTotal = () => { const itemsTotal = formData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0); const machinesTotal = formData.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0); const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0); return itemsTotal + machinesTotal + consumablesTotal; };
  const calculateJobTotal = (job) => {
   if (!job || !job.items) return 0;
   
@@ -500,91 +389,6 @@ const removeJobItem = (index) => {
   
   return itemsTotal + materialsTotal;
 };
-  // Save new job
- const handleSaveJob = () => {
-  if (!formData.formData.customer_name || !formData.formData.vehicle_number || !formData.formData.contact_number) {
-    alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
-    return;
-  }
-  if (formData.jobItems.some(item => !item.itemData.description || !item.estimatedPrice)) {
-    alert('Please fill in all job item descriptions and prices');
-    return;
-  }
-  
-  const newJob = {
-    id: generateJobId(),
-    customer_name: formData.formData.customer_name,
-    vehicle_number: formData.formData.vehicle_number,
-    engine_number: formData.formData.engine_number,
-    vehicle_model: formData.formData.vehicle_model,
-    contact_number: formData.formData.contact_number,
-    date: new Date().toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }),
-    status: 'Not Assigned',
-    assignedEmployee: null,
-    items: formData.jobItems.map(item => ({
-      jobType: item.itemData.job_type,
-      description: item.itemData.description,
-      estimatedPrice: item.estimatedPrice,
-      itemStatus: 'stopped'
-    })),
-    machines: formData.machines,
-    consumables: formData.consumables
-  };
-  
-  setJobs(prev => [newJob, ...prev]);
-  
-  // Reset form with proper structure
-  setFormData({
-    templateId: '68f50077a6d75c0ab83cd019',
-    isVerifiedByUser: true,
-    shopId: userInfo?.shopId || '',
-    formData: {
-      customer_name: '',
-      vehicle_number: '',
-      engine_number: '',
-      vehicle_model: '',
-      contact_number: '',
-    },
-    jobItems: [
-      {
-        itemData: {
-          job_type: '',
-          description: '',
-          priority: '',
-        },
-        estimatedPrice: 0,
-        machine: {
-          machineRequired: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
-        worker: {
-          workerAssigned: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
-        material: {
-          materialsRequired: [],
-          estimatedPrice: 0,
-        },
-      },
-    ],
-    machines: [],
-    consumables: []
-  });
-  
-  setShowCreateJob(false);
-  alert('Job card created successfully!');
-};
-
   // Save Updated Job
   const handleUpdateJob = (updatedJob) => {
     setJobs(prevJobs => prevJobs.map(job => job.id === updatedJob.id ? updatedJob : job));
@@ -610,9 +414,6 @@ const removeJobItem = (index) => {
     if (selectedJob) {
       setJobToEdit(selectedJob);
       setShowEditJobModal(true);
-      setShowCreateJob(false);
-      // Keep details view open in background? Decided against it for clarity.
-      // setShowJobDetails(false); // Optionally close details view
     } else {
       alert("Please select a job from the list first.");
     }
@@ -622,7 +423,6 @@ const removeJobItem = (index) => {
   const openGeneralEditModal = () => {
       setJobToEdit(null);
       setShowEditJobModal(true);
-      setShowCreateJob(false);
       setShowJobDetails(false); // Hide details view when opening general edit
       setSelectedJob(null);
   };
@@ -686,7 +486,6 @@ useEffect(() => {
             <div className="dashboard-title"><h2>Job Management</h2><p>Assign, edit, and create new job cards</p></div>
             <div className="action-buttons">
               <button className="btn-action" onClick={openGeneralEditModal}><img src={editIcon} alt="Edit" className="btn-icon-left" /> Edit Job</button>
-              <button className="btn-action-primary" onClick={() => { setShowCreateJob(true); setShowJobDetails(false); setSelectedJob(null); }}>+ Add Job Card</button>
             </div>
           </div>
         </div>
@@ -699,7 +498,7 @@ useEffect(() => {
             <input type="text" className="search-input" placeholder="Search by job number, customer or vehicle..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             {filteredJobs.length === 0 ? (<div className="no-jobs-found"><p>No jobs found...</p></div>) : (
               filteredJobs.map((job) => (
-                <div key={job.id} className={`job-card ${selectedJob?.id === job.id ? 'selected' : ''}`} onClick={() => { setSelectedJob(job); setShowJobDetails(true); setShowCreateJob(false); }}>
+                <div key={job.id} className={`job-card ${selectedJob?.id === job.id ? 'selected' : ''}`} onClick={() => { setSelectedJob(job); setShowJobDetails(true);}}>
                   <div className="job-header">
                     <span className="job-number">{job.id}</span>
                     <span className={`status-badge ${ job.status === 'In Progress' ? 'status-progress' : job.status === 'Completed' ? 'status-completed' : job.status === 'Assigned' ? 'status-assigned-active' : 'status-assigned' }`}>{job.status}</span>
@@ -718,7 +517,7 @@ useEffect(() => {
 
           {/* Details Section */}
           <div className="details-section">
-            {!showJobDetails && !showCreateJob && (
+            {!showJobDetails && (
               <div className="no-selection">
                 <div className="no-selection-icon">
                   <img src={clipboardIcon} alt="No selection" />
@@ -764,40 +563,34 @@ useEffect(() => {
                                                      <strong>Job #{index + 1}</strong>
                                                      {item.jobType && <span className="item-type">({item.jobType})</span>}
                                                    </div>
-                                        <p className="item-description">
-                                          {item.worker.workerAssigned && (
-                                            <>Done by {employeeNames[item.worker.workerAssigned] || 'Loading...'}</>
-                                          )}
-                                        </p>                                                   <div className="item-description">{item.description}</div>
-                                                   <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
+                                                    <p className="item-description">
+                                                      {item.worker.workerAssigned && (
+                                                        <>Done by {employeeNames[item.worker.workerAssigned] || 'Loading...'}</>
+                                                      )}
+                                                    </p>
+                                                   <div className="item-description">{item.description}</div>
 
+                                                    {item.machine.machineRequired && (
+                                                      <div className="job-items-container">
+                                                        <strong className="job-items-title">Machine Used:</strong>
+                                                        <div className="full-width">
+                                                          <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                    {item.materials.materialsRequired.length > 0 && (
+                                                      <div className="job-items-container">
+                                                        <strong className="job-items-title">Consumables Used:</strong>
+                                                        <div className="full-width">
+                                                          <p className='job-items-title-Materials'><strong>Materials:</strong> {item.materials.materialsRequired.join(', ')} <span> (₹{item.materials.estimatedPrice})</span></p>
+                                                        </div>
+                                                      </div>
+                                                    )}
 
+                                                   <div className="item-price">₹{item.estimatedPrice.toFixed(2)}</div>
                                                  </div>
-                                                 
                                                </div>
-                                               
                                              </div>
-                     
-                                             {/* Machine section */}
-                                             {item.machine.machineRequired && (
-                                               <div className="job-items-container">
-                                                 <strong className="job-items-title">Machine Used:</strong>
-                                                 <div className="full-width">
-                                                   <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
-                                                 </div>
-                                               </div>
-                                             )}
-                     
-                                             {/* Materials section */}
-                                             {item.materials.materialsRequired.length > 0 && (
-                                               <div className="job-items-container">
-                                                 <strong className="job-items-title">Consumables Used:</strong>
-                                                 <div className="full-width">
-                                                   <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
-                                                   <span> (₹{item.materials.estimatedPrice})</span>
-                                                 </div>
-                                               </div>
-                                             )}
                                            </div> 
                                          ))}
                    </div>
@@ -805,71 +598,8 @@ useEffect(() => {
                      {/* {selectedJob.machines.length > 0 && (<div className="job-items-container"><strong className="job-items-title">Machines Used:</strong>{selectedJob.machines.map((machine, index) => (<div key={index} className="job-detail-item simple-item-row"><div className="item-info"><div className="item-title"><strong>{machine.machineType}</strong></div><div className="item-description">{machine.description}</div></div><div className="item-price">${machine.estimatedPrice.toFixed(2)}</div></div>))}</div>)} */}
                    {/* Consumables */}
                    {/* Total */}
-                   <div className="job-detail-total"><strong className="total-label">Total Estimated Amount:</strong><strong className="total-amount">${calculateJobTotal(selectedJob).toFixed(2)}</strong></div>
+                   <div className="job-detail-total"><strong className="total-label">Total Estimated Amount:</strong><strong className="total-amount">₹{calculateJobTotal(selectedJob).toFixed(2)}</strong></div>
                 </div>
-              </div>
-            )}
-
-            {/* Create Job Form */}
-            {showCreateJob && (
-              <div className="create-job-form">
-                 <div className="form-header"><h3><img src={clipboardIcon} alt="Create" className="inline-icon" /> Create New Job Card</h3><button className="close-btn" onClick={() => setShowCreateJob(false)}>✕</button></div>
-                 <p className="form-subtitle">Fill in the details to create a new job order</p>
-                 {/* Customer Fields */}
-                 <div className="form-row"><div className="form-group"><label>Customer Name *</label><input type="text" placeholder="Customer Name" value={formData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} /></div><div className="form-group"><label>Contact Number *</label><input type="tel" placeholder="Contact Number" value={formData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} /></div></div>
-                 <div className="form-row"><div className="form-group"><label>Vehicle Number *</label><input type="text" placeholder="Vehicle Number" value={formData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} /></div><div className="form-group"><label>Vehicle Model</label><input type="text" placeholder="Vehicle Model" value={formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} /></div></div>
-                 <div className="form-group"><label>Engine Number</label><input type="text" placeholder="Engine Number" value={formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} /></div>
-                 {/* Job Tasks */}
-
-                  <div className="job-items-section">
-  <div className="section-title">
-    <h4>Job Tasks</h4>
-    <button type="button" className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
-  </div>
-  {formData.jobItems.map((item, index) => (
-    <div key={index} className="job-item-row job-item-row-tasks">
-      <div className="job-item-field"><label>Task #{index + 1}</label></div>
-      <div className="job-item-field">
-        <label>Job Type</label>
-        <input 
-          type="text" 
-          value={item.itemData.job_type} 
-          onChange={(e) => handleJobItemChange(index, 'job_type', e.target.value)} 
-        />
-      </div>
-      <div className="job-item-field">
-        <label>Description *</label>
-        <input 
-          type="text" 
-          value={item.itemData.description} 
-          onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
-        />
-      </div>
-      <div className="job-item-field">
-        <label>Est. Price ($)*</label>
-        <input 
-          type="number" 
-          value={item.estimatedPrice || ''} 
-          onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)} 
-        />
-      </div>
-      <button 
-        type="button" 
-        className="btn-remove" 
-        onClick={() => removeJobItem(index)} 
-        disabled={formData.jobItems.length === 1}
-      >
-        <img src={deleteIcon} alt="Remove" className="btn-icon small" />
-      </button>
-    </div>
-  ))}
-</div>
-                 {/* Machines */}
-                 <div className="job-items-section"><div className="section-title"><h4>Machine Usage (Optional)</h4><button type="button" className="btn-add-job" onClick={addMachine}>+ Add Machine</button></div>{formData.machines.map((item, index) => (<div key={index} className="job-item-row job-item-row-machines"><div className="job-item-field"><label>Machine #{index + 1}</label></div><div className="job-item-field"><label>Machine Type</label><input type="text" value={item.machineType} onChange={(e) => handleMachineChange(index, 'machineType', e.target.value)} /></div><div className="job-item-field"><label>Description</label><input type="text" value={item.description} onChange={(e) => handleMachineChange(index, 'description', e.target.value)} /></div><div className="job-item-field"><label>Est. Price ($)</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleMachineChange(index, 'estimatedPrice', e.target.value)} /></div><button type="button" className="btn-remove" onClick={() => removeMachine(index)}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button></div>))}</div>
-                 {/* Consumables */}
-                 <div className="job-items-section"><div className="section-title"><h4>Consumables (Optional)</h4><button type="button" className="btn-add-job" onClick={addConsumable}>+ Add Consumable</button></div>{formData.consumables.map((item, index) => (<div key={index} className="job-item-row job-item-row-consumables"><div className="job-item-field"><label>Item #{index + 1}</label></div><div className="job-item-field"><label>Name</label><input type="text" value={item.name} onChange={(e) => handleConsumableChange(index, 'name', e.target.value)} /></div><div className="job-item-field"><label>Quantity</label><input type="number" value={item.quantity || ''} onChange={(e) => handleConsumableChange(index, 'quantity', e.target.value)} /></div><div className="job-item-field"><label>Price/Piece ($)</label><input type="number" value={item.perPiecePrice || ''} onChange={(e) => handleConsumableChange(index, 'perPiecePrice', e.target.value)} /></div><button type="button" className="btn-remove" onClick={() => removeConsumable(index)}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button></div>))}</div>
-                 {/* Footer */}
-                 <div className="form-footer"><div className="total-amount"><span>Total Estimated Amount:</span><span className="amount">${calculateFormTotal().toFixed(2)}</span></div><button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button></div>
               </div>
             )}
           </div>

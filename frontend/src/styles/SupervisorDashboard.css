@@ -85,6 +85,7 @@
 .employee-select:disabled { background: #f7fafc; cursor: not-allowed; opacity: 0.6; }
 .job-items-container { margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0; }
 .job-items-title { display: block; margin-bottom: 16px; font-size: 16px; font-weight: 600; color: #2d3748; }
+.job-items-title-Materials{color: black;}
 .job-detail-item { margin-bottom: 16px; padding: 20px; background-color: #f7fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s; }
 .job-detail-item:hover { border-color: #cbd5e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
 .item-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
