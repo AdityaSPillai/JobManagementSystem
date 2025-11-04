@@ -291,49 +291,120 @@ const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
 };
 
   // --- SIMPLIFIED BUTTON HANDLERS ---
-  const handleStartItemTimer = (jobId, itemIndex) => {
-    console.log(`API CALL: Start timer for job ${jobId}, item ${itemIndex}`);
+// --- SIMPLIFIED BUTTON HANDLERS ---
+const handleStartItemTimer = async (jobId, itemIndex, workerID) => {
+  console.log(`API CALL: Start timer for job ${jobId}, User ${workerID}`);
+
+  try {
+    const response = await axios.put(`/jobs/start-worker-timer/${jobId}/${workerID}`);
+    
+    if (!response.data.success) {
+      console.log('Error occurred');
+      alert('Failed to start timer');
+      return;
+    }
+    
+    console.log('Started successfully');
+    
+    // Update local state
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
-        if (!job.assignedEmployee) {
-          alert('Please assign an employee to the job card before starting any task.');
-          return job;
-        }
         const newItems = [...job.items];
         newItems[itemIndex].itemStatus = 'running';
+        
+        // Check if any task is running to update job status
         const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
-        return { ...job, items: newItems, status: hasRunningTask ? 'In Progress' : job.status };
+        
+        return { 
+          ...job, 
+          items: newItems, 
+          status: hasRunningTask ? 'In Progress' : job.status 
+        };
       }
       return job;
     }));
-  };
+    
+  } catch (error) {
+    console.log('Error starting timer:', error);
+    alert('Failed to start timer');
+  }
+};
 
-  const handlePauseItemTimer = (jobId, itemIndex) => {
-    console.log(`API CALL: Pause timer for job ${jobId}, item ${itemIndex}`);
+const handlePauseItemTimer = async (jobId, itemIndex, workerID) => {
+  console.log(`API CALL: Pause timer for job ${jobId}, item ${itemIndex}`);
+  
+  try {
+    const response = await axios.put(`/jobs/pause-worker-timer/${jobId}/${workerID}`);
+    
+    if (!response.data.success) {
+      console.log('Error occurred');
+      alert('Failed to pause timer');
+      return;
+    }
+    
+    console.log('Paused successfully');
+    
+    // Update local state
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
         const newItems = [...job.items];
         newItems[itemIndex].itemStatus = 'paused';
+        
         const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
-        return { ...job, items: newItems, status: hasRunningTask ? 'In Progress' : 'Assigned' };
+        
+        return { 
+          ...job, 
+          items: newItems, 
+          status: hasRunningTask ? 'In Progress' : 'Assigned' 
+        };
       }
       return job;
     }));
-  };
+    
+  } catch (error) {
+    console.log('Error pausing timer:', error);
+    alert('Failed to pause timer');
+  }
+};
 
-  const handleEndItemTimer = (jobId, itemIndex) => {
-    console.log(`API CALL: End timer for job ${jobId}, item ${itemIndex}`);
+const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
+  console.log(`API CALL: End timer for job ${jobId}, User ${workerID}`);
+
+  try {
+    const response = await axios.put(`/jobs/end-worker-timer/${jobId}/${workerID}`);
+    
+    if (!response.data.success) {
+      console.log('Error occurred');
+      alert('Failed to end timer');
+      return;
+    }
+    
+    console.log('Ended successfully');
+    
+    // Update local state
     setJobs(prevJobs => prevJobs.map(job => {
       if (job.id === jobId) {
         const newItems = [...job.items];
         newItems[itemIndex].itemStatus = 'completed';
+        
+        // Check if all tasks are completed
         const allCompleted = newItems.every(item => item.itemStatus === 'completed');
         const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
-        return { ...job, items: newItems, status: allCompleted ? 'Completed' : (hasRunningTask ? 'In Progress' : 'Assigned') };
+        
+        return { 
+          ...job, 
+          items: newItems, 
+          status: allCompleted ? 'Completed' : (hasRunningTask ? 'In Progress' : 'Assigned') 
+        };
       }
       return job;
     }));
-  };
+    
+  } catch (error) {
+    console.log('Error ending timer:', error);
+    alert('Failed to end timer');
+  }
+};
 
   // Filter jobs based on search query
   const filteredJobs = jobs.filter(job =>
@@ -883,89 +954,101 @@ const handleSaveJob = async () => {
                   <div className="job-items-container">
                     <strong className="job-items-title">Job Tasks:</strong>
                    {selectedJob.items.map((item, index) => (
-                        <div key={index}> 
-                          <div className="job-detail-item">
-                            <div className="item-header-row">
-                              <div className="item-info">
-                                <div className="item-title">
-                                  <strong>Job #{index + 1}</strong>
-                                  {item.jobType && <span className="item-type">({item.jobType})</span>}
-                                </div>
-                                <div className="item-description">{item.description}</div>
-                                <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
+                      <div key={index}> 
+                        <div className="job-detail-item">
+                          <div className="item-header-row">
+                            <div className="item-info">
+                              <div className="item-title">
+                                <strong>Job #{index + 1}</strong>
+                                {item.jobType && <span className="item-type">({item.jobType})</span>}
                               </div>
-                              {item.worker.workerAssigned && (
-                                <div className="item-timer-section">
-                                  <div className="item-timer-controls">
-                                    {(item.itemStatus === 'stopped' || item.itemStatus === 'paused') && (
-                                      <button title={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-timer-small btn-start" onClick={() => handleStartItemTimer(selectedJob.id, index)}>
-                                        <img src={playIcon} alt={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-icon" />
-                                      </button>
-                                    )}
-                                    {item.itemStatus === 'running' && (
-                                      <button title="Pause" className="btn-timer-small btn-pause" onClick={() => handlePauseItemTimer(selectedJob.id, index)}>
-                                        <img src={pauseIcon} alt="Pause" className="btn-icon" />
-                                      </button>
-                                    )}
-                                    {item.itemStatus !== 'completed' && (
-                                      <button title="End" className="btn-timer-small btn-end" onClick={() => handleEndItemTimer(selectedJob.id, index)}>
-                                        <img src={tickIcon} alt="End" className="btn-icon" />
-                                      </button>
-                                    )}
-                                    {item.itemStatus === 'completed' && (
-                                      <div className="completed-badge-small">
-                                        <img src={tickIcon} alt="Completed" className="btn-icon" />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+                              <div className="item-description">{item.description}</div>
+                              <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
                             </div>
-                            <div className="full-width">
-                                <strong>Assign Employee for this task:</strong>
-                                <select 
-                                  className="employee-select"
-                                  value={item.worker.workerAssigned || ''}
-                                  onChange={(e) => {
-                                    const selectedEmployeeId = e.target.value;
-                                    if (selectedEmployeeId) { // ✅ Only call API if employee is selected
-                                      handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
-                                    }
-                                  }}
-                                  disabled={selectedJob.status === 'Completed' || item.itemStatus === 'running'}
-                                >
-                                  <option value="">Select Employee</option>
-                                  {employees.map(emp => (
-                                    <option key={emp._id} value={emp._id}>
-                                      {emp.name} ({emp._id})
-                                    </option>
-                                  ))}
-                                </select>
+                            {item.worker.workerAssigned && (
+                              <div className="item-timer-section">
+                                <div className="item-timer-controls">
+                                  {(item.itemStatus === 'stopped' || item.itemStatus === 'paused') && (
+                                    <button 
+                                      title={item.itemStatus === 'paused' ? 'Resume' : 'Start'} 
+                                      className="btn-timer-small btn-start" 
+                                      onClick={() => handleStartItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
+                                    >
+                                      <img src={playIcon} alt={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-icon" />
+                                    </button>
+                                  )}
+                                  {item.itemStatus === 'running' && (
+                                    <button 
+                                      title="Pause" 
+                                      className="btn-timer-small btn-pause" 
+                                      onClick={() => handlePauseItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
+                                    >
+                                      <img src={pauseIcon} alt="Pause" className="btn-icon" />
+                                    </button>
+                                  )}
+                                  {item.itemStatus !== 'completed' && (
+                                    <button 
+                                      title="End" 
+                                      className="btn-timer-small btn-end" 
+                                      onClick={() => handleEndItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
+                                    >
+                                      <img src={tickIcon} alt="End" className="btn-icon" />
+                                    </button>
+                                  )}
+                                  {item.itemStatus === 'completed' && (
+                                    <div className="completed-badge-small">
+                                      <img src={tickIcon} alt="Completed" className="btn-icon" />
+                                    </div>
+                                  )}
+                                </div>
                               </div>
+                            )}
                           </div>
+                          <div className="full-width">
+                            <strong>Assign Employee for this task:</strong>
+                            <select 
+                              className="employee-select"
+                              value={item.worker.workerAssigned || ''}
+                              onChange={(e) => {
+                                const selectedEmployeeId = e.target.value;
+                                if (selectedEmployeeId) {
+                                  handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
+                                }
+                              }}
+                              disabled={selectedJob.status === 'Completed' || item.itemStatus === 'running'}
+                            >
+                              <option value="">Select Employee</option>
+                              {employees.map(emp => (
+                                <option key={emp._id} value={emp._id}>
+                                  {emp.name} ({emp._id})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
 
-                          {/* Machine section */}
-                          {item.machine.machineRequired && (
-                            <div className="job-items-container">
-                              <strong className="job-items-title">Machine Used:</strong>
-                              <div className="full-width">
-                                <p className='machiene-name'> <strong >Machine:</strong> {item.machine.machineRequired}</p>
-                              </div>
+                        {/* Machine section */}
+                        {item.machine.machineRequired && (
+                          <div className="job-items-container">
+                            <strong className="job-items-title">Machine Used:</strong>
+                            <div className="full-width">
+                              <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
                             </div>
-                          )}
+                          </div>
+                        )}
 
-                          {/* Materials section */}
-                          {item.materials.materialsRequired.length > 0 && (
-                            <div className="job-items-container">
-                              <strong className="job-items-title">Consumables Used:</strong>
-                              <div className="full-width">
-                                <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
-                                <span> (₹{item.materials.estimatedPrice})</span>
-                              </div>
+                        {/* Materials section */}
+                        {item.materials.materialsRequired.length > 0 && (
+                          <div className="job-items-container">
+                            <strong className="job-items-title">Consumables Used:</strong>
+                            <div className="full-width">
+                              <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
+                              <span> (₹{item.materials.estimatedPrice})</span>
                             </div>
-                          )}
-                        </div> 
-                      ))}
+                          </div>
+                        )}
+                      </div> 
+                    ))}
                   </div>
 
 

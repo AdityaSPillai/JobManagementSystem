@@ -40,7 +40,7 @@ router.put('/start-machine-timer/:jobId/:machineId',startMachineForJobItem,)
 router.put('/end-machine-timer/:jobId/:machineId',endMachineForJobItem,)
 
 //start worker timer
-router.put('/strat-worker-timer/:jobId/:userId',startWorkerTimer)
+router.put('/start-worker-timer/:jobId/:userId',startWorkerTimer)
 
 router.put('/end-worker-timer/:jobId/:userId',endWorkerTimer)
 

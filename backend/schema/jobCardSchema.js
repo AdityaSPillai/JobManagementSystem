@@ -98,7 +98,7 @@ const JobCardSchema = new mongoose.Schema({
   
   status: {
     type: String,
-    enum: ['pending', 'in_progress', 'completed', 'cancelled'],
+    enum: ['pending', 'in_progress', 'completed','approved', 'cancelled'],
     default: 'pending'
   },
   isVerifiedByUser:{

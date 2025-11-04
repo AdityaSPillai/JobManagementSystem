@@ -428,9 +428,11 @@ export const startWorkerTimer= async (req, res) => {
       });
     } 
 
+console.log(jobItem.status)
     let workerFound = false;
 
     for (const item of jobItem.jobItems) {
+        console.log("worker assigned is ",item.worker?.workerAssigned ,"useriD is",  userId)
       if (item.worker?.workerAssigned?.toString() === userId) {
         item.worker.startTime = new Date();
         workerFound = true; 
@@ -445,6 +447,8 @@ export const startWorkerTimer= async (req, res) => {
         message: "Worker not found in job items",
       });
     } 
+        jobItem.status="in_progress"
+
     await jobItem.save();
 
     res.status(200).json({
@@ -498,6 +502,15 @@ export const endWorkerTimer= async (req, res) => {
         break;
       }
     }
+            jobItems.status="completed"
+            await jobItems.save()
+
+    res.status(200).json({
+      success: true,
+      message: "Worker timer ended successfully",
+      jobItems,
+    });
+
 if(!workerFound){
       console.error("Worker not found in job items");
       return res.status(404).json({
