@@ -878,7 +878,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                             )}
                           </div>
                           <div className="full-width">
-                            <strong>Assign Employee for this task:</strong>
+                            <p className="employee-select-label"><strong>Assign Employee for this task:</strong></p>
                             <select 
                               className="employee-select"
                               value={item.worker.workerAssigned || ''}
