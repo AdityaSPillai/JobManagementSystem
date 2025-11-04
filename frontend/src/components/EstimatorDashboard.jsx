@@ -18,6 +18,7 @@ function EstimatorDashboard({ onLoginClick }) {
   const [showJobDetails, setShowJobDetails] = useState(false);
   const [showCreateJob, setShowCreateJob] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedJob, setSelectedJob] = useState(null);
   const [services, setServices] = useState([]);
   const [machines, setMachines] = useState([]);
@@ -370,11 +371,20 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
 };
 
   // Filter jobs based on search query
-  const filteredJobs = jobs.filter(job =>
-  job.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  job.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  job.vehicle_number?.toLowerCase().includes(searchQuery.toLowerCase())
-);
+  const filteredJobs = jobs.filter(job => {
+  const matchesSearch =
+    job.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.vehicle_number?.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const matchesFilter =
+    statusFilter === 'all' ||
+    (statusFilter === 'completed' && job.status === 'completed') ||
+    (statusFilter === 'assigned' && job.status === 'in_progress') ||
+    (statusFilter === 'unassigned' && job.status === 'pending');
+
+  return matchesSearch && matchesFilter;
+});
 
 
   // Generate new job ID
@@ -797,8 +807,34 @@ const handleJobTypeSelect = (index, serviceId) => {
 
         <div className="dashboard-grid">
           <div className="job-list-section">
-            <div className="section-header">
+            <div className="section-header job-header-with-filters">
               <h3><img src={clipboardIcon} alt="Jobs" className="inline-icon" /> Job Cards</h3>
+              <div className="filter-buttons">
+                <button 
+                  className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`} 
+                  onClick={() => setStatusFilter('all')}
+                >
+                  All
+                </button>
+                <button 
+                  className={`filter-btn ${statusFilter === 'assigned' ? 'active' : ''}`} 
+                  onClick={() => setStatusFilter('assigned')}
+                >
+                  Assigned
+                </button>
+                <button 
+                  className={`filter-btn ${statusFilter === 'unassigned' ? 'active' : ''}`} 
+                  onClick={() => setStatusFilter('unassigned')}
+                >
+                  Unassigned
+                </button>
+                <button 
+                  className={`filter-btn ${statusFilter === 'completed' ? 'active' : ''}`} 
+                  onClick={() => setStatusFilter('completed')}
+                >
+                  Completed
+                </button>
+              </div>
             </div>
             <input
               type="text"

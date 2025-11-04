@@ -94,7 +94,13 @@ function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, o
               Login
             </button>
           ) : (
-            <button className="login-btn logout-btn" onClick={onLogout}>
+            <button
+              className="login-btn logout-btn"
+              onClick={() => {
+                if (onLogout) onLogout();
+                window.location.reload();
+              }}
+            >
               Logout
             </button>
           )}
