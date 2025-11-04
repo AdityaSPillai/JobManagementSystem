@@ -728,24 +728,24 @@ const handleSaveJob = async () => {
  const handleJobTypeSelect = (index, serviceId) => {
   const selectedService = services.find(service => service._id === serviceId);
 
-  if (selectedService) {
-    const updatedJobItems = [...formData.jobItems];
+  setFormData(prev => {
+    const updatedJobItems = [...prev.jobItems];
+
     updatedJobItems[index] = {
       ...updatedJobItems[index],
       itemData: {
         ...updatedJobItems[index].itemData,
-        job_type: selectedService.name,  // ✅ Store service name
-        description: updatedJobItems[index].itemData.description || selectedService.description
+        job_type: serviceId, // ✅ store ID for proper select binding
+        job_type_name: selectedService?.name || '', // optional readable name
+        description: selectedService?.description || ''
       },
-      estimatedPrice: selectedService.price
+      estimatedPrice: selectedService?.price || 0
     };
 
-    setFormData(prev => ({
-      ...prev,
-      jobItems: updatedJobItems
-    }));
-  }
+    return { ...prev, jobItems: updatedJobItems };
+  });
 };
+
 
   return (
     <div className="estimator-dashboard">
