@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import playIcon from '../assets/play.svg';
-import pauseIcon from '../assets/pause.svg';
 import useAuth from '../context/context.js';
 import tickIcon from '../assets/tick.svg';
 import axios from '../utils/axios.js'
@@ -179,7 +178,7 @@ const getAllJobs = async () => {
           hour: '2-digit', 
           minute: '2-digit'
         }),
-        status: job.status || 'Not Assigned',
+        status: (job.status || 'Not Assigned').toLowerCase(),
         totalEstimatedAmount: job.totalEstimatedAmount || 0,
         // Transform job items with all their related data
         items: job.jobItems?.map(item => ({
@@ -188,7 +187,7 @@ const getAllJobs = async () => {
           description: item.itemData?.description || '',
           priority: item.itemData?.priority || '',
           estimatedPrice: item.estimatedPrice || 0,
-          itemStatus: item.itemStatus || 'stopped',
+          itemStatus: (item.itemStatus || 'stopped').toLowerCase(),
           // Machine details
           machine: {
             machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
@@ -332,43 +331,6 @@ const handleStartItemTimer = async (jobId, itemIndex, workerID) => {
   }
 };
 
-const handlePauseItemTimer = async (jobId, itemIndex, workerID) => {
-  console.log(`API CALL: Pause timer for job ${jobId}, item ${itemIndex}`);
-  
-  try {
-    const response = await axios.put(`/jobs/pause-worker-timer/${jobId}/${workerID}`);
-    
-    if (!response.data.success) {
-      console.log('Error occurred');
-      alert('Failed to pause timer');
-      return;
-    }
-    
-    console.log('Paused successfully');
-    
-    // Update local state
-    setJobs(prevJobs => prevJobs.map(job => {
-      if (job.id === jobId) {
-        const newItems = [...job.items];
-        newItems[itemIndex].itemStatus = 'paused';
-        
-        const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
-        
-        return { 
-          ...job, 
-          items: newItems, 
-          status: hasRunningTask ? 'In Progress' : 'Assigned' 
-        };
-      }
-      return job;
-    }));
-    
-  } catch (error) {
-    console.log('Error pausing timer:', error);
-    alert('Failed to pause timer');
-  }
-};
-
 const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
   console.log(`API CALL: End timer for job ${jobId}, User ${workerID}`);
 
@@ -396,7 +358,7 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
         return { 
           ...job, 
           items: newItems, 
-          status: allCompleted ? 'Completed' : (hasRunningTask ? 'In Progress' : 'Assigned') 
+          status: allCompleted ? 'completed' : (hasRunningTask ? 'in Progress' : 'assigned') 
         };
       }
       return job;
@@ -582,18 +544,6 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
     return { ...prev, jobItems: newJobItems };
   });
 };
-
-
-
-
-
-
-
-
-
-
-
-
   // Machine Handlers (flat structure maintained)
   const handleMachineChange = (index, field, value) => {
     const newMachines = [...formData.machines];
@@ -887,7 +837,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                     <span className="job-number">{job.id}</span>
                     <span className={`status-badge ${
                       job.status === 'In Progress' ? 'status-progress' : 
-                      job.status === 'Completed' ? 'status-completed' :
+                      job.status === 'completed' ? 'status-completed' :
                       job.status === 'Assigned' ? 'status-assigned-active' :
                       'status-assigned'
                     }`}>
@@ -942,7 +892,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                       <strong>Status:</strong>
                       <span className={`status-badge ${
                         selectedJob.status === 'In Progress' ? 'status-progress' : 
-                        selectedJob.status === 'Completed' ? 'status-completed' :
+                        selectedJob.status === 'completed' ? 'status-completed' :
                         selectedJob.status === 'Assigned' ? 'status-assigned-active' :
                         'status-assigned'
                       }`}>
@@ -966,42 +916,57 @@ const handleJobTypeSelect = (index, serviceId) => {
                                 {item.jobType && <span className="item-type">({item.jobType})</span>}
                               </div>
                               <div className="item-description">{item.description}</div>
-                              <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
+                              {item.machine.machineRequired && (
+                                <div className="job-items-container">
+                                  <strong className="job-items-title">Machine Used:</strong>
+                                  <div className="full-width">
+                                    <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Materials section */}
+                              {item.materials.materialsRequired.length > 0 && (
+                                <div className="job-items-container">
+                                  <strong className="job-items-title">Consumables Used:</strong>
+                                  <div className="full-width">
+                                    <p className='materials-name'><strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
+                                    <span> (₹{item.materials.estimatedPrice})</span></p>
+                                  </div>
+                                </div>
+                              )}
+                              <div className="item-price">₹{item.estimatedPrice.toFixed(2)}</div>
                             </div>
                             {item.worker.workerAssigned && (
                               <div className="item-timer-section">
                                 <div className="item-timer-controls">
-                                  {(item.itemStatus === 'stopped' || item.itemStatus === 'paused') && (
-                                    <button 
-                                      title={item.itemStatus === 'paused' ? 'Resume' : 'Start'} 
-                                      className="btn-timer-small btn-start" 
-                                      onClick={() => handleStartItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
-                                    >
-                                      <img src={playIcon} alt={item.itemStatus === 'paused' ? 'Resume' : 'Start'} className="btn-icon" />
-                                    </button>
-                                  )}
-                                  {item.itemStatus === 'running' && (
-                                    <button 
-                                      title="Pause" 
-                                      className="btn-timer-small btn-pause" 
-                                      onClick={() => handlePauseItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
-                                    >
-                                      <img src={pauseIcon} alt="Pause" className="btn-icon" />
-                                    </button>
-                                  )}
-                                  {item.itemStatus !== 'completed' && (
-                                    <button 
-                                      title="End" 
-                                      className="btn-timer-small btn-end" 
-                                      onClick={() => handleEndItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
-                                    >
-                                      <img src={tickIcon} alt="End" className="btn-icon" />
-                                    </button>
-                                  )}
-                                  {item.itemStatus === 'completed' && (
+                                  {/* ✅ Completed tasks should ONLY show tick and never Start/End */}
+                                  {item.itemStatus === 'completed' || selectedJob.status === 'completed' ? (
                                     <div className="completed-badge-small">
                                       <img src={tickIcon} alt="Completed" className="btn-icon" />
                                     </div>
+                                  ) : (
+                                    <>
+                                      {item.itemStatus === 'stopped' && (
+                                        <button 
+                                          title="Start"
+                                          className="btn-timer-small btn-start"
+                                          onClick={() => handleStartItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
+                                        >
+                                          <img src={playIcon} alt="Start" className="btn-icon" />
+                                        </button>
+                                      )}
+
+                                      {item.itemStatus === 'running' && (
+                                        <button 
+                                          title="End" 
+                                          className="btn-timer-small btn-end" 
+                                          onClick={() => handleEndItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
+                                        >
+                                          <img src={tickIcon} alt="End" className="btn-icon" />
+                                        </button>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               </div>
@@ -1018,7 +983,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                                   handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
                                 }
                               }}
-                              disabled={selectedJob.status === 'Completed' || item.itemStatus === 'running'}
+                              disabled={selectedJob.status === 'completed' || item.itemStatus === 'running'}
                             >
                               <option value="">Select Employee</option>
                               {employees.map(emp => (
@@ -1031,41 +996,15 @@ const handleJobTypeSelect = (index, serviceId) => {
                         </div>
 
                         {/* Machine section */}
-                        {item.machine.machineRequired && (
-                          <div className="job-items-container">
-                            <strong className="job-items-title">Machine Used:</strong>
-                            <div className="full-width">
-                              <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Materials section */}
-                        {item.materials.materialsRequired.length > 0 && (
-                          <div className="job-items-container">
-                            <strong className="job-items-title">Consumables Used:</strong>
-                            <div className="full-width">
-                              <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
-                              <span> (₹{item.materials.estimatedPrice})</span>
-                            </div>
-                          </div>
-                        )}
+                        
                       </div> 
                     ))}
                   </div>
-
-
-                
-
-
-                    
-
-
                   {/* --- TOTAL --- */}
                   <div className="job-detail-total">
                     <strong className="total-label">Total Estimated Amount:</strong>
                     <strong className="total-amount">
-                      ${calculateJobTotal(selectedJob).toFixed(2)}
+                      ₹{calculateJobTotal(selectedJob).toFixed(2)}
                     </strong>
                   </div>
                 </div>
@@ -1253,7 +1192,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                 <div className="form-footer">
                   <div className="total-amount">
                     <span>Total Estimated Amount:</span>
-                    <span className="amount">${calculateFormTotal().toFixed(2)}</span>
+                    <span className="amount">₹{calculateFormTotal().toFixed(2)}</span>
                   </div>
                   <button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button>
                 </div>
