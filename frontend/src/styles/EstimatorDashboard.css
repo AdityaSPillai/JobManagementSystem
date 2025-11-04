@@ -664,6 +664,13 @@
   color: white;
 }
 
+.job-item-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #000;
+}
+
 .form-subtitle {
   color: #718096;
   margin: 0 0 24px 0;
@@ -671,6 +678,13 @@
 }
 
 .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
@@ -943,6 +957,9 @@
   }
   
   .form-row {
+    grid-template-columns: 1fr;
+  }
+  .form-row1 {
     grid-template-columns: 1fr;
   }
   

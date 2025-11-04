@@ -1027,6 +1027,7 @@ const handleSaveJob = async () => {
   </div>
   {formData.jobItems.map((item, index) => (
     <div key={index} className="job-item-card">
+      <hr className="item-divider" />
       <div className="job-item-header">
         <h5>Task #{index + 1}</h5>
         <button 
@@ -1066,28 +1067,31 @@ const handleSaveJob = async () => {
         </div>
       </div>
 
-      <div className="form-group">
-        <label>Description *</label>
-        <input 
-          type="text" 
-          placeholder="Describe this job" 
-          value={item.itemData.description} 
-          onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
-        />
+      <div className="form-row1">
+        <div className="form-group">
+          <label>Description *</label>
+          <input 
+            type="text" 
+            placeholder="Describe this job" 
+            value={item.itemData.description} 
+            onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Priority</label>
+          <select 
+            value={item.itemData.priority || ''} 
+            onChange={(e) => handleJobItemChange(index, 'priority', e.target.value)}
+          >
+            <option value="">Select Priority</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
       </div>
 
-      <div className="form-group">
-        <label>Priority</label>
-        <select 
-          value={item.itemData.priority || ''} 
-          onChange={(e) => handleJobItemChange(index, 'priority', e.target.value)}
-        >
-          <option value="">Select Priority</option>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-        </select>
-      </div>
 
       {/* Machine Required */}
       <div className="form-group">
@@ -1106,54 +1110,54 @@ const handleSaveJob = async () => {
       </div>
 
       {/* Materials Required */}
-      <div className="form-group">
-        <label>Materials Required (Optional)</label>
-        <div className="materials-list">
-          {item.material.materialsRequired.map((material, matIndex) => (
-            <div key={matIndex} className="material-tag">
-               <span className='meterial-name' >{material}</span>
-              <button 
-                type="button"
-                onClick={() => handleRemoveMaterialFromJobItem(index, matIndex)}
-                className="material-remove"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+      <div className='form-row1'>
+        <div className="form-group">
+          <label>Materials Required (Optional)</label>
+          <div className="materials-list">
+            {item.material.materialsRequired.map((material, matIndex) => (
+              <div key={matIndex} className="material-tag">
+                <span className='meterial-name' >{material}</span>
+                <button 
+                  type="button"
+                  onClick={() => handleRemoveMaterialFromJobItem(index, matIndex)}
+                  className="material-remove"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="material-input-row">
+            <input 
+              type="text" 
+              placeholder="Enter material name and press Enter"
+              id={`material-input-${index}`}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddMaterialToJobItem(index, e.target.value);
+                  e.target.value = '';
+                }
+              }}
+            />
+          </div>
         </div>
-        <div className="material-input-row">
+
+        {/* Material Estimated Price */}
+        <div className="form-group">
+          <label>Material Estimated Price (₹)</label>
           <input 
-            type="text" 
-            placeholder="Enter material name and press Enter"
-            id={`material-input-${index}`}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAddMaterialToJobItem(index, e.target.value);
-                e.target.value = '';
-              }
-            }}
+            type="number" 
+            placeholder="0" 
+            value={item.material.estimatedPrice || ''} 
+            onChange={(e) => handleMaterialsChange(
+              index, 
+              item.material.materialsRequired, 
+              e.target.value
+            )}
           />
         </div>
       </div>
-
-      {/* Material Estimated Price */}
-      <div className="form-group">
-        <label>Material Estimated Price (₹)</label>
-        <input 
-          type="number" 
-          placeholder="0" 
-          value={item.material.estimatedPrice || ''} 
-          onChange={(e) => handleMaterialsChange(
-            index, 
-            item.material.materialsRequired, 
-            e.target.value
-          )}
-        />
-      </div>
-
-      <hr className="item-divider" />
     </div>
   ))}
 </div>
