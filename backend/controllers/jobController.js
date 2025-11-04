@@ -10,7 +10,7 @@ let endingtime= new Date();
 
 export const createJobCard = async (req, res) => {
   try {
-    const { templateId,isVerifiedByUser,shopId, formData, jobItems } = req.body;
+    const { templateId,isVerifiedByUser,workVerified,shopId, formData, jobItems } = req.body;
     
     // Validate template exists
     const template = await FormTemplateModel.findById(templateId);
