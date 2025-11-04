@@ -328,8 +328,8 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
 
   const matchesFilter =
     statusFilter === 'all' ||
-    (statusFilter === 'completed' && job.status === 'completed') ||
-    (statusFilter === 'assigned' && job.status === 'in_progress') ||
+    (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'approved')) ||
+    (statusFilter === 'assigned' && (job.status === 'in_progress' || job.status === 'In Progress')) ||
     (statusFilter === 'unassigned' && job.status === 'pending');
 
   return matchesSearch && matchesFilter;
@@ -747,6 +747,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                     <span className={`status-badge ${
                       job.status === 'In Progress' ? 'status-progress' : 
                       job.status === 'completed' ? 'status-completed' :
+                      job.status === 'approved' ? 'status-approved' :
                       job.status === 'Assigned' ? 'status-assigned-active' :
                       'status-assigned'
                     }`}>
