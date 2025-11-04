@@ -185,3 +185,34 @@ export const getSingleUserController= async(req,res)=>{
         })
     }
 }
+
+
+export const deleteEmployeeController= async(req,res)=>{
+    try {
+
+        const {id}= req.params;
+
+        const user= await UserModel.findByIdAndDelete({_id:id});
+        if(!user)
+        {
+             return res.status(404).send({
+                success:false,
+                message:"Unable to delete"
+             })
+        }
+
+        res.status(200).send({
+            succes:true,
+            message:"Employee Deleted Succesfully",
+            user,
+        })
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            success:false,
+            message:"Unable to Delete the user",
+            error
+        })
+    }
+}

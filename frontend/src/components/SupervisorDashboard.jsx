@@ -97,6 +97,9 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
 
   if (!isOpen) return null;
 
+
+   
+
   return (
     <div className="modal-overlay">
       <div className="modal-content create-job-form large">
@@ -140,7 +143,11 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                 <div className="form-group">
                   <label>Job Status</label>
                   <select className="employee-select" value={editFormData.status} onChange={handleStatusChange}>
-                    <option value="Not Assigned">Not Assigned</option><option value="Assigned">Assigned</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option>
+                    <option value={editFormData.status}>{editFormData.status}</option>
+                    <option value="Not Assigned">Not Assigned</option>
+                    <option value="Assigned">Assigned</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -170,7 +177,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
               {editFormData.machines.map((item, index) => (
                 <div key={index} className="job-item-row job-item-row-machines">
                    <div className="job-item-field"><label>Machine #{index + 1}</label></div>
-                   <div className="job-item-field"><label>Machine Type</label><input type="text" value={item.machineType} onChange={(e) => handleItemChange(index, 'machineType', e.target.value, 'machines')} /></div>
+                   <div className="job-item-field"><label>Machine Type</label><input type="text" value={item.machine.machineRequired} onChange={(e) => handleItemChange(index, 'machineType', e.target.value, 'machines')} /></div>
                    <div className="job-item-field"><label>Description</label><input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'machines')} /></div>
                    <div className="job-item-field"><label>Est. Price ($)</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'machines')} /></div>
                    <button type="button" className="btn-remove" onClick={() => removeItem(index, 'machines')}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
@@ -228,46 +235,47 @@ function SupervisorDashboard({ onLogout }) {
   const [jobs, setJobs] = useState([]);
 
   // Form state for creating new job
- const [formData, setFormData] = useState({
-    templateId: '68f50077a6d75c0ab83cd019',
-    isVerifiedByUser: true,
-    shopId: userInfo?.shopId || '',
-    formData: {
-      customer_name: '',
-      vehicle_number: '',
-      engine_number: '',
-      vehicle_model: '',
-      contact_number: '',
-    },
-    jobItems: [
-      {
-        itemData: {
-          job_type: '',
-          description: '',
-          priority: '',
-        },
-        estimatedPrice: 0,
-        machine: {
-          machineRequired: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
-        worker: {
-          workerAssigned: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
-        material: {
-          materialsRequired: [],
-          estimatedPrice: 0,
-        },
+ // In SupervisorDashboard, replace the formData useState with:
+const [formData, setFormData] = useState({
+  templateId: '68f50077a6d75c0ab83cd019',
+  isVerifiedByUser: true,
+  shopId: userInfo?.shopId || '',
+  formData: {
+    customer_name: '',
+    vehicle_number: '',
+    engine_number: '',
+    vehicle_model: '',
+    contact_number: '',
+  },
+  jobItems: [
+    {
+      itemData: {
+        job_type: '',
+        description: '',
+        priority: '',
       },
-    ],
-    machines: [],
-    consumables: []
-  });
+      estimatedPrice: 0,
+      machine: {
+        machineRequired: null,
+        startTime: null,
+        endTime: null,
+        actualDuration: null,
+      },
+      worker: {
+        workerAssigned: null,
+        startTime: null,
+        endTime: null,
+        actualDuration: null,
+      },
+      material: {
+        materialsRequired: [],
+        estimatedPrice: 0,
+      },
+    },
+  ],
+  machines: [],
+  consumables: []
+});
   useEffect(() => {
       if (!userInfo) return;
       if (!userInfo.shopId) {
@@ -290,30 +298,54 @@ useEffect(() => {
 
 const getAllJobs = async () => {
   try {
-    const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
+   const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
     if (res.data?.allJobs?.length > 0) {
-      // Transform backend data to match display structure
       const transformedJobs = res.data.allJobs.map(job => ({
-        id: job._id || job.jobId,
+        id: job._id,
+        jobCardNumber: job.jobCardNumber,
         customer_name: job.formData?.customer_name || '',
         vehicle_number: job.formData?.vehicle_number || '',
         engine_number: job.formData?.engine_number || '',
         vehicle_model: job.formData?.vehicle_model || '',
         contact_number: job.formData?.contact_number || '',
         date: new Date(job.createdAt || Date.now()).toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: '2-digit', 
+          minute: '2-digit'
         }),
         status: job.status || 'Not Assigned',
-        assignedEmployee: job.assignedEmployee || null,
+        totalEstimatedAmount: job.totalEstimatedAmount || 0,
+        // Transform job items with all their related data
         items: job.jobItems?.map(item => ({
+          itemId: item._id,
           jobType: item.itemData?.job_type || '',
           description: item.itemData?.description || '',
+          priority: item.itemData?.priority || '',
           estimatedPrice: item.estimatedPrice || 0,
-          itemStatus: item.itemStatus || 'stopped'
-        })) || [],
-        machines: [], // Add if backend provides this
-        consumables: [] // Add if backend provides this
+          itemStatus: item.itemStatus || 'stopped',
+          // Machine details
+          machine: {
+            machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
+            machineId: item.machine?.machineRequired?._id || null,
+            startTime: item.machine?.startTime || null,
+            endTime: item.machine?.endTime || null,
+            actualDuration: item.machine?.actualDuration || null
+          },
+          // Worker details
+          worker: {
+            workerAssigned: item.worker?.workerAssigned || null,
+            startTime: item.worker?.startTime || null,
+            endTime: item.worker?.endTime || null,
+            actualDuration: item.worker?.actualDuration || null
+          },
+          // Material/Consumables details
+          materials: {
+            materialsRequired: item.material?.materialsRequired || [],
+            estimatedPrice: item.material?.estimatedPrice || 0
+          }
+        })) || []
       }));
       
       setJobs(transformedJobs);
@@ -381,29 +413,177 @@ useEffect(() => {
   const generateJobId = () => { const today = new Date(); const dateStr = today.toISOString().split('T')[0].replace(/-/g, ''); const jobNumber = String(jobs.length + 1).padStart(4, '0'); return `JOB-${dateStr}-${jobNumber}`; };
 
   // Create Form Handlers
-  const handleFormChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
-  const handleJobItemChange = (index, field, value) => { const newItems = [...formData.items]; newItems[index][field] = field === 'estimatedPrice' ? parseFloat(value) || 0 : value; setFormData(prev => ({ ...prev, items: newItems })); };
-  const addJobItem = () => setFormData(prev => ({ ...prev, items: [...prev.items, { jobType: '', description: '', estimatedPrice: 0 }] }));
-  const removeJobItem = (index) => { if (formData.items.length > 1) { const newItems = formData.items.filter((_, i) => i !== index); setFormData(prev => ({ ...prev, items: newItems })); } };
-  const handleMachineChange = (index, field, value) => { const newMachines = [...formData.machines]; newMachines[index][field] = field === 'estimatedPrice' ? parseFloat(value) || 0 : value; setFormData(prev => ({ ...prev, machines: newMachines })); };
+  // Replace handleFormChange:
+const handleFormChange = (field, value) => {
+  setFormData(prev => ({
+    ...prev,
+    formData: {
+      ...prev.formData,
+      [field]: value
+    }
+  }));
+};
+
+// Replace handleJobItemChange:
+const handleJobItemChange = (index, field, value) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    if (field === 'estimatedPrice') {
+      newJobItems[index].estimatedPrice = parseFloat(value) || 0;
+    } else {
+      newJobItems[index].itemData[field] = value;
+    }
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+// Replace addJobItem:
+const addJobItem = () => {
+  setFormData(prev => ({
+    ...prev,
+    jobItems: [
+      ...prev.jobItems,
+      {
+        itemData: {
+          job_type: '',
+          description: '',
+          priority: '',
+        },
+        estimatedPrice: 0,
+        machine: {
+          machineRequired: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        worker: {
+          workerAssigned: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        material: {
+          materialsRequired: [],
+          estimatedPrice: 0,
+        },
+      }
+    ]
+  }));
+};
+
+// Replace removeJobItem:
+const removeJobItem = (index) => {
+  if (formData.jobItems.length > 1) {
+    setFormData(prev => ({
+      ...prev,
+      jobItems: prev.jobItems.filter((_, i) => i !== index)
+    }));
+  }
+};
+  
   const addMachine = () => setFormData(prev => ({ ...prev, machines: [...prev.machines, { machineType: '', description: '', estimatedPrice: 0 }] }));
   const removeMachine = (index) => { const newMachines = formData.machines.filter((_, i) => i !== index); setFormData(prev => ({ ...prev, machines: newMachines })); };
   const handleConsumableChange = (index, field, value) => { const newConsumables = [...formData.consumables]; newConsumables[index][field] = (field === 'quantity' || field === 'perPiecePrice') ? parseFloat(value) || 0 : value; setFormData(prev => ({ ...prev, consumables: newConsumables })); };
   const addConsumable = () => setFormData(prev => ({ ...prev, consumables: [...prev.consumables, { name: '', quantity: 1, perPiecePrice: 0 }] }));
   const removeConsumable = (index) => { const newConsumables = formData.consumables.filter((_, i) => i !== index); setFormData(prev => ({ ...prev, consumables: newConsumables })); };
   const calculateFormTotal = () => { const itemsTotal = formData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0); const machinesTotal = formData.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0); const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0); return itemsTotal + machinesTotal + consumablesTotal; };
-  const calculateJobTotal = (job) => { if (!job) return 0; const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0); const machinesTotal = job.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0); const consumablesTotal = job.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0); return itemsTotal + machinesTotal + consumablesTotal; };
-
+ const calculateJobTotal = (job) => {
+  if (!job || !job.items) return 0;
+  
+  // Sum up all item prices
+  const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+  
+  // Sum up all materials prices from items
+  const materialsTotal = job.items.reduce((sum, item) => 
+    sum + (item.materials?.estimatedPrice || 0), 0
+  );
+  
+  return itemsTotal + materialsTotal;
+};
   // Save new job
-  const handleSaveJob = () => {
-    if (!formData.customer_name || !formData.vehicle_number || !formData.contact_number) { alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number'); return; }
-    if (formData.items.some(item => !item.description || !item.estimatedPrice)) { alert('Please fill in all job item descriptions and prices'); return; }
-    const newJob = { id: generateJobId(), customer_name: formData.customer_name, vehicle_number: formData.vehicle_number, engine_number: formData.engine_number, vehicle_model: formData.vehicle_model, contact_number: formData.contact_number, date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }), status: 'Not Assigned', assignedEmployee: null, items: formData.items.map(item => ({ ...item, itemStatus: 'stopped' })), machines: formData.machines, consumables: formData.consumables };
-    setJobs(prev => [newJob, ...prev]);
-    setFormData({ customer_name: '', vehicle_number: '', engine_number: '', vehicle_model: '', contact_number: '', items: [{ jobType: '', description: '', estimatedPrice: 0 }], machines: [], consumables: [] });
-    setShowCreateJob(false);
-    alert('Job card created successfully!');
+ const handleSaveJob = () => {
+  if (!formData.formData.customer_name || !formData.formData.vehicle_number || !formData.formData.contact_number) {
+    alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
+    return;
+  }
+  if (formData.jobItems.some(item => !item.itemData.description || !item.estimatedPrice)) {
+    alert('Please fill in all job item descriptions and prices');
+    return;
+  }
+  
+  const newJob = {
+    id: generateJobId(),
+    customer_name: formData.formData.customer_name,
+    vehicle_number: formData.formData.vehicle_number,
+    engine_number: formData.formData.engine_number,
+    vehicle_model: formData.formData.vehicle_model,
+    contact_number: formData.formData.contact_number,
+    date: new Date().toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+    status: 'Not Assigned',
+    assignedEmployee: null,
+    items: formData.jobItems.map(item => ({
+      jobType: item.itemData.job_type,
+      description: item.itemData.description,
+      estimatedPrice: item.estimatedPrice,
+      itemStatus: 'stopped'
+    })),
+    machines: formData.machines,
+    consumables: formData.consumables
   };
+  
+  setJobs(prev => [newJob, ...prev]);
+  
+  // Reset form with proper structure
+  setFormData({
+    templateId: '68f50077a6d75c0ab83cd019',
+    isVerifiedByUser: true,
+    shopId: userInfo?.shopId || '',
+    formData: {
+      customer_name: '',
+      vehicle_number: '',
+      engine_number: '',
+      vehicle_model: '',
+      contact_number: '',
+    },
+    jobItems: [
+      {
+        itemData: {
+          job_type: '',
+          description: '',
+          priority: '',
+        },
+        estimatedPrice: 0,
+        machine: {
+          machineRequired: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        worker: {
+          workerAssigned: null,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        },
+        material: {
+          materialsRequired: [],
+          estimatedPrice: 0,
+        },
+      },
+    ],
+    machines: [],
+    consumables: []
+  });
+  
+  setShowCreateJob(false);
+  alert('Job card created successfully!');
+};
 
   // Save Updated Job
   const handleUpdateJob = (updatedJob) => {
@@ -446,6 +626,44 @@ useEffect(() => {
       setShowJobDetails(false); // Hide details view when opening general edit
       setSelectedJob(null);
   };
+
+const [employeeNames, setEmployeeNames] = useState({});
+
+ const getSingleUser = async (userId) => {
+  if (!userId) return null;
+  
+  // Check if we already have this user's name
+  if (employeeNames[userId]) {
+    return employeeNames[userId];
+  }
+  
+  try {
+    const res = await axios.get(`/auth/user/${userId}`);
+    const name = res.data.user.name;
+    
+    // Store in state for future use
+    setEmployeeNames(prev => ({
+      ...prev,
+      [userId]: name
+    }));
+    
+    return name;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+// Fetch names when job is selected or items change
+useEffect(() => {
+  if (selectedJob?.items) {
+    selectedJob.items.forEach(item => {
+      if (item.worker.workerAssigned && !employeeNames[item.worker.workerAssigned]) {
+        getSingleUser(item.worker.workerAssigned);
+      }
+    });
+  }
+}, [selectedJob]);
 
   return (
     <div className="supervisor-dashboard">
@@ -500,7 +718,17 @@ useEffect(() => {
 
           {/* Details Section */}
           <div className="details-section">
-            {!showJobDetails && !showCreateJob && (<div className="no-selection"><div className="no-selection-icon"><img src={clipboardIcon} alt="No selection" /></div><p>No Selection</p><p className="no-selection-hint">Click a job card to view details or create a new job.</p></div>)}
+            {!showJobDetails && !showCreateJob && (
+              <div className="no-selection">
+                <div className="no-selection-icon">
+                  <img src={clipboardIcon} alt="No selection" />
+                  </div>
+                <p>No Selection</p>
+                <p className="no-selection-hint">
+                  Click a job card to view details or create a new job.
+                  </p>
+                  </div>
+                )}
 
             {showJobDetails && selectedJob && (
               <div className="job-details-view">
@@ -526,24 +754,56 @@ useEffect(() => {
                    {/* Job Tasks */}
                    <div className="job-items-container">
                      <strong className="job-items-title">Job Tasks:</strong>
-                     {selectedJob.items.map((item, index) => (
-                       <div key={index} className="job-detail-item">
-                         <div className="item-header-row">
-                           <div className="item-info">
-                             <div className="item-title"><strong>Job #{index + 1}</strong>{item.jobType && <span className="item-type">({item.jobType})</span>}</div>
-                             <div className="item-description">{item.description}</div><div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
-                           </div>
-                           <div className="item-status-display">
-                             <span className={`status-badge ${ item.itemStatus === 'running' ? 'status-progress' : item.itemStatus === 'completed' ? 'status-completed' : item.itemStatus === 'paused' ? 'status-assigned' : 'status-assigned' }`}>{item.itemStatus}</span>
-                           </div>
-                         </div>
-                       </div>
-                     ))}
+                      {selectedJob.items.map((item, index) => (
+                                           
+                                           <div key={index}> 
+                                             <div className="job-detail-item">
+                                               <div className="item-header-row">
+                                                 <div className="item-info">
+                                                   <div className="item-title">
+                                                     <strong>Job #{index + 1}</strong>
+                                                     {item.jobType && <span className="item-type">({item.jobType})</span>}
+                                                   </div>
+                                        <p className="item-description">
+                                          {item.worker.workerAssigned && (
+                                            <>Done by {employeeNames[item.worker.workerAssigned] || 'Loading...'}</>
+                                          )}
+                                        </p>                                                   <div className="item-description">{item.description}</div>
+                                                   <div className="item-price">${item.estimatedPrice.toFixed(2)}</div>
+
+
+                                                 </div>
+                                                 
+                                               </div>
+                                               
+                                             </div>
+                     
+                                             {/* Machine section */}
+                                             {item.machine.machineRequired && (
+                                               <div className="job-items-container">
+                                                 <strong className="job-items-title">Machine Used:</strong>
+                                                 <div className="full-width">
+                                                   <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
+                                                 </div>
+                                               </div>
+                                             )}
+                     
+                                             {/* Materials section */}
+                                             {item.materials.materialsRequired.length > 0 && (
+                                               <div className="job-items-container">
+                                                 <strong className="job-items-title">Consumables Used:</strong>
+                                                 <div className="full-width">
+                                                   <strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
+                                                   <span> (₹{item.materials.estimatedPrice})</span>
+                                                 </div>
+                                               </div>
+                                             )}
+                                           </div> 
+                                         ))}
                    </div>
                    {/* Machines */}
-                   {selectedJob.machines.length > 0 && (<div className="job-items-container"><strong className="job-items-title">Machines Used:</strong>{selectedJob.machines.map((machine, index) => (<div key={index} className="job-detail-item simple-item-row"><div className="item-info"><div className="item-title"><strong>{machine.machineType}</strong></div><div className="item-description">{machine.description}</div></div><div className="item-price">${machine.estimatedPrice.toFixed(2)}</div></div>))}</div>)}
+                     {/* {selectedJob.machines.length > 0 && (<div className="job-items-container"><strong className="job-items-title">Machines Used:</strong>{selectedJob.machines.map((machine, index) => (<div key={index} className="job-detail-item simple-item-row"><div className="item-info"><div className="item-title"><strong>{machine.machineType}</strong></div><div className="item-description">{machine.description}</div></div><div className="item-price">${machine.estimatedPrice.toFixed(2)}</div></div>))}</div>)} */}
                    {/* Consumables */}
-                   {selectedJob.consumables.length > 0 && (<div className="job-items-container"><strong className="job-items-title">Consumables Used:</strong>{selectedJob.consumables.map((item, index) => (<div key={index} className="job-detail-item simple-item-row"><div className="item-info"><div className="item-title"><strong>{item.name}</strong></div><div className="item-description">{item.quantity} x ${item.perPiecePrice.toFixed(2)}</div></div><div className="item-price">${(item.quantity * item.perPiecePrice).toFixed(2)}</div></div>))}</div>)}
                    {/* Total */}
                    <div className="job-detail-total"><strong className="total-label">Total Estimated Amount:</strong><strong className="total-amount">${calculateJobTotal(selectedJob).toFixed(2)}</strong></div>
                 </div>
@@ -560,7 +820,50 @@ useEffect(() => {
                  <div className="form-row"><div className="form-group"><label>Vehicle Number *</label><input type="text" placeholder="Vehicle Number" value={formData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} /></div><div className="form-group"><label>Vehicle Model</label><input type="text" placeholder="Vehicle Model" value={formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} /></div></div>
                  <div className="form-group"><label>Engine Number</label><input type="text" placeholder="Engine Number" value={formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} /></div>
                  {/* Job Tasks */}
-                 <div className="job-items-section"><div className="section-title"><h4>Job Tasks</h4><button type="button" className="btn-add-job" onClick={addJobItem}>+ Add Task</button></div>{formData.items.map((item, index) => (<div key={index} className="job-item-row job-item-row-tasks"><div className="job-item-field"><label>Task #{index + 1}</label></div><div className="job-item-field"><label>Job Type</label><input type="text" value={item.jobType} onChange={(e) => handleJobItemChange(index, 'jobType', e.target.value)} /></div><div className="job-item-field"><label>Description *</label><input type="text" value={item.description} onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} /></div><div className="job-item-field"><label>Est. Price ($)*</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)} /></div><button type="button" className="btn-remove" onClick={() => removeJobItem(index)} disabled={formData.items.length === 1}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button></div>))}</div>
+
+                  <div className="job-items-section">
+  <div className="section-title">
+    <h4>Job Tasks</h4>
+    <button type="button" className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
+  </div>
+  {formData.jobItems.map((item, index) => (
+    <div key={index} className="job-item-row job-item-row-tasks">
+      <div className="job-item-field"><label>Task #{index + 1}</label></div>
+      <div className="job-item-field">
+        <label>Job Type</label>
+        <input 
+          type="text" 
+          value={item.itemData.job_type} 
+          onChange={(e) => handleJobItemChange(index, 'job_type', e.target.value)} 
+        />
+      </div>
+      <div className="job-item-field">
+        <label>Description *</label>
+        <input 
+          type="text" 
+          value={item.itemData.description} 
+          onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
+        />
+      </div>
+      <div className="job-item-field">
+        <label>Est. Price ($)*</label>
+        <input 
+          type="number" 
+          value={item.estimatedPrice || ''} 
+          onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)} 
+        />
+      </div>
+      <button 
+        type="button" 
+        className="btn-remove" 
+        onClick={() => removeJobItem(index)} 
+        disabled={formData.jobItems.length === 1}
+      >
+        <img src={deleteIcon} alt="Remove" className="btn-icon small" />
+      </button>
+    </div>
+  ))}
+</div>
                  {/* Machines */}
                  <div className="job-items-section"><div className="section-title"><h4>Machine Usage (Optional)</h4><button type="button" className="btn-add-job" onClick={addMachine}>+ Add Machine</button></div>{formData.machines.map((item, index) => (<div key={index} className="job-item-row job-item-row-machines"><div className="job-item-field"><label>Machine #{index + 1}</label></div><div className="job-item-field"><label>Machine Type</label><input type="text" value={item.machineType} onChange={(e) => handleMachineChange(index, 'machineType', e.target.value)} /></div><div className="job-item-field"><label>Description</label><input type="text" value={item.description} onChange={(e) => handleMachineChange(index, 'description', e.target.value)} /></div><div className="job-item-field"><label>Est. Price ($)</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleMachineChange(index, 'estimatedPrice', e.target.value)} /></div><button type="button" className="btn-remove" onClick={() => removeMachine(index)}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button></div>))}</div>
                  {/* Consumables */}

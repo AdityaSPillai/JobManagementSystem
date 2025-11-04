@@ -8,7 +8,8 @@ import { createJobCard,
     endMachineForJobItem,
     startWorkerTimer,
     endWorkerTimer,
-    assignWorkerController
+    assignWorkerController,
+    qualityCheckController
     } from "../controllers/jobController.js";
 
 const router= express.Router();
@@ -43,5 +44,9 @@ router.put('/end-machine-timer/:jobId/:machineId',endMachineForJobItem,)
 router.put('/start-worker-timer/:jobId/:userId',startWorkerTimer)
 
 router.put('/end-worker-timer/:jobId/:userId',endWorkerTimer)
+
+
+//perform quality check
+router.put('/qualityCheck/:jobId/:userId/:status',qualityCheckController)
 
 export default router;

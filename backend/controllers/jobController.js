@@ -575,3 +575,43 @@ if(!workerFound){
     });
   }
 };
+
+
+
+export const qualityCheckController = async(req,res)=>{
+  try {
+    const {jobId,userId,status}= req.params;
+
+    const job= await JobCardModel.findOneAndUpdate(
+      {
+        _id:jobId
+      },{
+        $set:{workVerified:userId,
+          qualityStaus:status
+        }
+        },{new:true}
+    );
+    if (!job) {
+      return res.status(404).send({
+        success: false,
+        message: "Job or job item not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status assigned successfully",
+      job
+    });
+
+    
+   } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Unable to assign Quality to job",
+      error,
+    });
+  }
+};
+

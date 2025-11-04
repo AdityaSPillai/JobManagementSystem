@@ -108,8 +108,17 @@ const JobCardSchema = new mongoose.Schema({
   workVerified:{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    default:null
   },
-  
+  qualityStaus:{
+    type:String,
+    enum:['good','need-work'],
+    default:'need-work',
+  },
+  notes:{
+    type:String,
+    default:'Neeed completion',
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

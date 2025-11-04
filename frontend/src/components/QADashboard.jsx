@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Header from './Header';
 import '../styles/QADashboard.css'; // Use QA specific CSS
 import '../styles/SupervisorDashboard.css'; // Borrow some common styles like layout
+import axios  from '../utils/axios.js';
+import useAuth from '../context/context.js';
 
 // Import all necessary icons
 import clipboardIcon from '../assets/clipboard.svg';
@@ -16,61 +18,109 @@ import tickIcon from '../assets/tick.svg';
 function QADashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
-  const [qaReviewerName, setQaReviewerName] = useState(''); // State for reviewer name
+  const [qaReviewerName, setQaReviewerName] = useState(''); 
+const {userInfo}=useAuth();
+  const [jobs, setJobs] = useState([]);
 
-  // Jobs array - Added 'qualityStatus' to items and 'qaStatus'/'qaCheckedBy' to job
-  // QA typically only acts on 'Completed' jobs
-  const [jobs, setJobs] = useState([
-    {
-      id: 'JOB-20251004-0001', customer_name: 'Devanath DR', vehicle_number: 'ABC-123', engine_number: 'EN12345', vehicle_model: 'Toyota Camry 2018', contact_number: '555-1234', date: 'Oct 5, 2025, 08:30 AM', status: 'Completed', // Status QA acts on
-      assignedEmployee: { id: 'EMP001', name: 'John Doe' },
-      items: [
-        { jobType: 'Oil Change', description: 'Change engine oil', estimatedPrice: 50, itemStatus: 'completed', qualityStatus: null }, // null, 'Good', 'Needs Work'
-        { jobType: 'Brake Check', description: 'Inspect brake pads', estimatedPrice: 75, itemStatus: 'completed', qualityStatus: null }
-      ],
-      machines: [{ machineType: '2-Post Lift', description: 'Vehicle Lift', estimatedPrice: 20 }],
-      consumables: [{ name: 'Engine Oil', quantity: 5, perPiecePrice: 8 }, { name: 'Oil Filter', quantity: 1, perPiecePrice: 15 }],
-      qaStatus: 'Pending', // Pending, Checked
-      qaCheckedBy: null
-    },
-    {
-      id: 'JOB-20251004-0002', customer_name: 'Aljo KJ', vehicle_number: 'XYZ-789', engine_number: 'EN67890', vehicle_model: 'Honda Civic 2020', contact_number: '555-5678', date: 'Oct 5, 2025, 08:30 AM', status: 'In Progress', // QA cannot act yet
-      assignedEmployee: { id: 'EMP002', name: 'Jane Smith' },
-      items: [{ jobType: 'Tire Rotation', description: 'Rotate all 4 tires', estimatedPrice: 40, itemStatus: 'running', qualityStatus: null }],
-      machines: [], consumables: [], qaStatus: 'Pending', qaCheckedBy: null
-    },
-     {
-      id: 'JOB-20251004-0003', customer_name: 'Third Customer', vehicle_number: 'TEST-001', engine_number: 'EN0000', vehicle_model: 'Test Car', contact_number: '555-9999', date: 'Oct 28, 2025, 10:00 AM', status: 'Quality Checked', // Already checked
-      assignedEmployee: { id: 'EMP001', name: 'John Doe' },
-      items: [{ jobType: 'Inspection', description: 'Final check', estimatedPrice: 30, itemStatus: 'completed', qualityStatus: 'Good' }],
-      machines: [], consumables: [], qaStatus: 'Checked', qaCheckedBy: 'QA Inspector A'
+
+
+
+
+
+
+  const getAllJobs = async () => {
+  try {
+    const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
+    if (res.data?.allJobs?.length > 0) {
+      const transformedJobs = res.data.allJobs.map(job => ({
+        id: job._id,
+        jobCardNumber: job.jobCardNumber,
+        customer_name: job.formData?.customer_name || '',
+        vehicle_number: job.formData?.vehicle_number || '',
+        engine_number: job.formData?.engine_number || '',
+        vehicle_model: job.formData?.vehicle_model || '',
+        contact_number: job.formData?.contact_number || '',
+        date: new Date(job.createdAt || Date.now()).toLocaleString('en-US', {
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: '2-digit', 
+          minute: '2-digit'
+        }),
+        status: (job.status || 'Not Assigned').toLowerCase(),
+        totalEstimatedAmount: job.totalEstimatedAmount || 0,
+        // Transform job items with all their related data
+        items: job.jobItems?.map(item => ({
+          itemId: item._id,
+          jobType: item.itemData?.job_type || '',
+          description: item.itemData?.description || '',
+          priority: item.itemData?.priority || '',
+          estimatedPrice: item.estimatedPrice || 0,
+          itemStatus: (item.itemStatus || 'pending').toLowerCase(),
+          // Machine details
+          machine: {
+            machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
+            machineId: item.machine?.machineRequired?._id || null,
+            startTime: item.machine?.startTime || null,
+            endTime: item.machine?.endTime || null,
+            actualDuration: item.machine?.actualDuration || null
+          },
+          // Worker details
+          worker: {
+            workerAssigned: item.worker?.workerAssigned || null,
+            startTime: item.worker?.startTime || null,
+            endTime: item.worker?.endTime || null,
+            actualDuration: item.worker?.actualDuration || null
+          },
+          // Material/Consumables details
+          materials: {
+            materialsRequired: item.material?.materialsRequired || [],
+            estimatedPrice: item.material?.estimatedPrice || 0
+          }
+        })) || []
+      }));
+
+      // Use transformedJobs here
+      setJobs(transformedJobs); // or whatever you need to do with it
     }
-  ]);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+  }
+};
 
-  // Select first completed job initially if available
+
+ useEffect(() => {
+    if (!userInfo) return;
+    if (!userInfo.shopId) {
+      console.log("⚠️ User info loaded but no shopId found");
+      return;
+    }
+
+    getAllJobs();
+  }, [userInfo]);
+  // Filter jobs based on search query
+  const filteredJobs = jobs.filter(job =>
+  job.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  job.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  job.vehicle_number?.toLowerCase().includes(searchQuery.toLowerCase())
+);
+
+
+
+
   useEffect(() => {
     if (!selectedJob) {
-        const firstCompletedJob = jobs.find(job => job.status === 'Completed' || job.status === 'Quality Checked');
+        const firstCompletedJob = jobs.find(job => job.status === 'completed' || job.status === 'Quality Checked');
         if (firstCompletedJob) {
             setSelectedJob(firstCompletedJob);
         } else if (jobs.length > 0) {
-            setSelectedJob(jobs[0]); // Fallback to selecting the first job if none are completed
+            setSelectedJob(jobs[0]); 
         }
     }
-  }, [jobs]); // Re-run if jobs list changes
+  }, [jobs]); 
 
 
-  // Filter jobs - QA might want to see Completed or QA Checked by default
-  const filteredJobs = jobs.filter(job =>
-    (job.status === 'Completed' || job.status === 'Quality Checked') && // Primary filter for QA
-    (
-      job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.vehicle_number.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
 
-  // Calculate total for a displayed job
   const calculateJobTotal = (job) => {
     if (!job) return 0;
     const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
@@ -80,8 +130,25 @@ function QADashboard({ onLogout }) {
    };
 
    // --- QA Action Handlers ---
-   const handleItemQualityChange = (jobId, itemIndex, quality) => {
-       if (!selectedJob || selectedJob.status !== 'Completed') return; // Only allow on completed jobs
+const handleItemQualityChange = async(jobId, quality) => {
+       if (!selectedJob || selectedJob.status !== 'completed') return;
+       console.log(jobId,quality)
+try {
+
+  const res=await axios.put(`/jobs/qualityCheck/${jobId}/${userInfo.id}/${encodeURIComponent(quality)}`)
+  if(!res.status.success){
+    console.log("Unable to Assign Quality")
+  }
+  else{
+    alert("Status Updated succesfully");
+  }
+
+} catch (error) {
+  console.log(error.message.error)
+  
+}
+}
+
 
        setJobs(prevJobs => prevJobs.map(job => {
            if (job.id === jobId) {
@@ -110,7 +177,7 @@ function QADashboard({ onLogout }) {
    };
 
    const handleMarkQualityChecked = (jobId) => {
-        if (!selectedJob || selectedJob.status !== 'Completed') return;
+        if (!selectedJob || selectedJob.status !== 'completed') return;
         if (!qaReviewerName.trim()) {
             alert('Please enter your name in the "Reviewed by" field.');
             return;
@@ -141,7 +208,7 @@ function QADashboard({ onLogout }) {
 
 
   // Calculate stats for banner
-  const pendingReviewCount = jobs.filter(j => j.status === 'Completed').length;
+  const pendingReviewCount = jobs.filter(j => j.status === 'completed').length;
   const qualityCheckedCount = jobs.filter(j => j.status === 'Quality Checked').length;
   const needsWorkCount = jobs.reduce((count, job) => {
       if (job.status === 'Quality Checked') {
@@ -205,8 +272,8 @@ function QADashboard({ onLogout }) {
                 <div key={job.id} className={`job-card ${selectedJob?.id === job.id ? 'selected' : ''}`} onClick={() => setSelectedJob(job)}>
                   <div className="job-header">
                     <span className="job-number">{job.id}</span>
-                    <span className={`status-badge ${ job.status === 'Completed' ? 'status-review' /* Specific QA status */ : job.status === 'Quality Checked' ? 'status-completed' : 'status-assigned' }`}>
-                      {job.status === 'Completed' ? 'Ready for QA' : job.status}
+                    <span className={`status-badge ${ job.status === 'completed' ? 'status-review' /* Specific QA status */ : job.status === 'Quality Checked' ? 'status-completed' : 'status-assigned' }`}>
+                      {job.status === 'completed' ? 'Ready for QA' : job.status}
                     </span>
                   </div>
                   <p className="job-owner">{job.customer_name}</p>
@@ -239,55 +306,58 @@ function QADashboard({ onLogout }) {
                    {/* Customer Info */}
                    <div className="job-info-grid">
                       <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div><div><strong>Contact:</strong> <span>{selectedJob.contact_number}</span></div><div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div><div><strong>Model:</strong> <span>{selectedJob.vehicle_model || 'N/A'}</span></div><div><strong>Engine:</strong> <span>{selectedJob.engine_number || 'N/A'}</span></div><div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
-                      <div><strong>Status:</strong><span className={`status-badge ${ selectedJob.status === 'Completed' ? 'status-review' : selectedJob.status === 'Quality Checked' ? 'status-completed' : 'status-assigned' }`}>{selectedJob.status === 'Completed' ? 'Ready for QA' : selectedJob.status}</span></div>
+                      <div><strong>Status:</strong><span className={`status-badge ${ selectedJob.status === 'completed' ? 'status-review' : selectedJob.status === 'Quality Checked' ? 'status-completed' : 'status-assigned' }`}>{selectedJob.status === 'Completed' ? 'Ready for QA' : selectedJob.status}</span></div>
                       <div className="full-width"><strong>Assigned Employee:</strong> <span>{selectedJob.assignedEmployee?.name || 'N/A'}</span></div>
                       {selectedJob.qaCheckedBy && (<div className="full-width"><strong>QA Checked By:</strong> <span>{selectedJob.qaCheckedBy}</span></div>)}
                    </div>
                    
                    {/* Job Tasks with QA Actions */}
-                   <div className="job-items-container">
-                     <strong className="job-items-title">Job Tasks to Review:</strong>
-                     {selectedJob.items.map((item, index) => (
-                       <div key={index} className="job-item-card qa-item-card"> {/* Specific QA card */}
-                         <div className="item-header-row"> {/* Reusing class */}
-                           <div className="item-info">
-                             <div className="item-title"><strong>Task #{index + 1}</strong>{item.jobType && <span className="item-type">({item.jobType})</span>}</div>
-                             <div className="item-description">{item.description}</div>
-                             {/* <div className="item-price">${item.estimatedPrice.toFixed(2)}</div> */}
-                           </div>
-                           <div className="item-status-display">
-                             <span className="status-badge status-completed">{item.itemStatus}</span> {/* Should always be completed here */}
-                           </div>
-                         </div>
-                         
-                         {/* --- QA Section for this item --- */}
-                         <div className="qa-actions-section">
-                           <div className="quality-assessment">
-                             <span>Quality Assessment:</span>
-                             <div className="quality-buttons">
-                               <button
-                                 className={`btn-good ${item.qualityStatus === 'Good' ? 'active' : ''}`}
-                                 onClick={() => handleItemQualityChange(selectedJob.id, index, 'Good')}
-                                 disabled={selectedJob.status !== 'Completed'} // Disable if job already QA'd
-                               >
-                                 <img src={tickIcon} alt="Good" className="btn-icon small qa-icon" /> Good
-                               </button>
-                               <button
-                                 className={`btn-needs-work ${item.qualityStatus === 'Needs Work' ? 'active' : ''}`}
-                                 onClick={() => handleItemQualityChange(selectedJob.id, index, 'Needs Work')}
-                                 disabled={selectedJob.status !== 'Completed'} // Disable if job already QA'd
-                               >
-                                 <img src={infoIcon} alt="Needs Work" className="btn-icon small qa-icon" /> Needs Work
-                               </button>
-                             </div>
-                           </div>
-                         </div>
-                       </div>
-                     ))}
-                   </div>
+                <div className="job-items-container">
+  <strong className="job-items-title">Job Tasks to Review:</strong>
+
+  {/* List all job tasks */}
+  {selectedJob.items.map((item, index) => (
+    <div key={index} className="job-item-card qa-item-card">
+      <div className="item-header-row">
+        <div className="item-info">
+          <div className="item-title">
+            <strong>Task #{index + 1}</strong>
+            {item.jobType && <span className="item-type">({item.jobType})</span>}
+          </div>
+          <div className="item-description">{item.description}</div>
+        </div>
+        <div className="item-status-display">
+          <span className="status-badge status-completed">{selectedJob.status}</span>
+        </div>
+      </div>
+    </div>
+  ))}
+
+  {/* --- Single Quality Assessment section below all tasks --- */}
+  <div className="qa-actions-section">
+    <strong className="job-items-title">Quality Assessment:</strong>
+    <div className="quality-buttons">
+      <button
+        className="btn-good"
+        onClick={() => handleItemQualityChange(selectedJob.id,  'Good')}
+        disabled={selectedJob.status !== 'completed'}
+      >
+        <img src={tickIcon} alt="Good" className="btn-icon small qa-icon" /> Good
+      </button>
+      <button
+        className="btn-needs-work"
+        onClick={() => handleItemQualityChange(selectedJob.id, 'Needs Work')}
+        disabled={selectedJob.status !== 'completed'}
+      >
+        <img src={infoIcon} alt="Needs Work" className="btn-icon small qa-icon" /> Needs Work
+      </button>
+    </div>
+  </div>
+</div>
+
 
                    {/* --- Final QA Confirmation Section --- */}
-                   {selectedJob.status === 'Completed' && (
+                   {selectedJob.status === 'completed' && (
                      <div className="qa-final-section job-items-container">
                        <div className="reviewed-by">
                          <span>Reviewed by:</span>
