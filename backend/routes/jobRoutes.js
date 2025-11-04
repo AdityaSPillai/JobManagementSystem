@@ -47,6 +47,6 @@ router.put('/end-worker-timer/:jobId/:userId',endWorkerTimer)
 
 
 //perform quality check
-router.put('/qualityCheck/:jobId/:userId/:status',qualityCheckController)
+router.put('/qualityCheck/:jobId/:userId/:qualityStatus',qualityCheckController)
 
 export default router;

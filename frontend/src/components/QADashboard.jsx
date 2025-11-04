@@ -130,16 +130,16 @@
     };
 
     // --- QA Action Handlers ---
-  const handleItemQualityChange = async (jobId, quality) => {
+  const handleItemQualityChange = async (jobId, qualityStatus ) => {
   if (!selectedJob || selectedJob.status !== 'completed') return;
 
   try {
     const res = await axios.put(
-      `/jobs/qualityCheck/${jobId}/${userInfo.id}/${encodeURIComponent(quality)}`
+      `/jobs/qualityCheck/${jobId}/${userInfo.id}/${encodeURIComponent(qualityStatus )}`
     );
 
     if (!res.data?.success) {
-      console.log("Unable to assign quality");
+      console.log("Unable to assign qualityStatus ");
     } else {
       alert("Status updated successfully");
     }
@@ -147,13 +147,13 @@
     // Update local job list
     setJobs(prevJobs =>
       prevJobs.map(job =>
-        job.id === jobId ? { ...job, qualityStatus: quality } : job
+        job.id === jobId ? { ...job, qualityStatus: qualityStatus  } : job
       )
     );
 
     // Update selected job
     setSelectedJob(prev =>
-      prev && prev.id === jobId ? { ...prev, qualityStatus: quality } : prev
+      prev && prev.id === jobId ? { ...prev, qualityStatus: qualityStatus  } : prev
     );
   } catch (error) {
     console.error(error.response?.data || error.message);
@@ -319,23 +319,32 @@
 
     {/* --- Single Quality Assessment section below all tasks --- */}
     <div className="qa-actions-section">
-      <strong className="job-items-title">Quality Assessment:</strong>
-      <div className="quality-buttons">
-        <button
-          className="btn-good"
-          onClick={() => handleItemQualityChange(selectedJob.id,  'Good')}
-          disabled={selectedJob.status !== 'completed'}
-        >
-          <img src={tickIcon} alt="Good" className="btn-icon small qa-icon" /> Good
-        </button>
-        <button
-          className="btn-needs-work"
-          onClick={() => handleItemQualityChange(selectedJob.id, 'Needs Work')}
-          disabled={selectedJob.status !== 'completed'}
-        >
-          <img src={infoIcon} alt="Needs Work" className="btn-icon small qa-icon" /> Needs Work
-        </button>
-      </div>
+      {selectedJob.status === 'approved' || selectedJob.status === 'Quality Checked' ? (
+    <div className="verified-message">
+      <img src={tickIcon} alt="Verified" className="btn-icon small qa-icon" /> 
+      <span className="verified-text">Item verified</span>
+    </div>
+      ) : (
+        <>
+          <strong className="job-items-title">Quality Assessment:</strong>
+          <div className="quality-buttons">
+            <button
+              className="btn-good"
+              onClick={() => handleItemQualityChange(selectedJob.id,  'Good')}
+              disabled={selectedJob.status !== 'completed'}
+            >
+              <img src={tickIcon} alt="Good" className="btn-icon small qa-icon" /> Good
+            </button>
+            <button
+              className="btn-needs-work"
+              onClick={() => handleItemQualityChange(selectedJob.id, 'Needs Work')}
+              disabled={selectedJob.status !== 'completed'}
+            >
+              <img src={infoIcon} alt="Needs Work" className="btn-icon small qa-icon" /> Needs Work
+            </button>
+          </div>
+          </>
+          )}
     </div>
   </div>
 
@@ -358,7 +367,7 @@
                         </button>
                       </div>
                     )}
-                    {selectedJob.status === 'Quality Checked' && (
+                    {selectedJob.status === 'approved' && (
                       <div className="qa-final-section job-items-container reviewed-indicator">
                           <span><img src={tickIcon} alt="Checked" className="inline-icon"/> This job has been Quality Checked by {selectedJob.qaCheckedBy || 'QA'}.</span>
                       </div>

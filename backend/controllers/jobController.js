@@ -580,14 +580,15 @@ if(!workerFound){
 
 export const qualityCheckController = async(req,res)=>{
   try {
-    const {jobId,userId,status}= req.params;
+    const {jobId,userId,qualityStatus }= req.params;
 
     const job= await JobCardModel.findOneAndUpdate(
       {
         _id:jobId
       },{
         $set:{workVerified:userId,
-          qualityStaus:status
+          qualityStatus,
+          status:'approved',
         }
         },{new:true}
     );

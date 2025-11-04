@@ -110,7 +110,7 @@ const JobCardSchema = new mongoose.Schema({
     ref: "User",
     default:null
   },
-  qualityStaus:{
+  qualityStatus:{
     type:String,
     enum:['good','need-work'],
     default:'need-work',
