@@ -6,9 +6,6 @@ import useAuth from '../context/context.js';
 function LoginModal({ isOpen, onClose, onLogin }) {
   // --- New State ---
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  
-  // --- Existing State ---
-  const [selectedRole, setSelectedRole] = useState('owner');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -138,18 +135,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     setRegFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- New: Handle Role Selection (to reset mode) ---
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-    if (role !== 'owner') {
-      setIsRegisterMode(false); // Only owners can register
-    }
-    setError('');
-    setUsername('');
-    setPassword('');
-    setRegFormData({ name: '', email: '', password: '', phone: '', shopname: '' });
-  };
-
   // --- Updated: handleClose to reset all state ---
   const handleClose = () => {
     setUsername('');
@@ -167,27 +152,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         
         <h2>{isRegisterMode ? 'Register as Owner' : 'Login to AutoCare WorkShop'}</h2>
-        
-        <div className="role-tabs">
-          <button
-            className={`role-tab ${selectedRole === 'owner' ? 'active' : ''}`}
-            onClick={() => handleRoleSelect('owner')}
-          >
-            Owner
-          </button>
-          <button
-            className={`role-tab ${selectedRole === 'supervisor' ? 'active' : ''}`}
-            onClick={() => handleRoleSelect('supervisor')}
-          >
-            Supervisor
-          </button>
-          <button
-            className={`role-tab ${selectedRole === 'qa_qc' ? 'active' : ''}`}
-            onClick={() => handleRoleSelect('qa_qc')}
-          >
-            QA/QC
-          </button>
-        </div>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -228,7 +192,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="form-control" placeholder="Enter password" />
             </div>
             <button type="submit" className="btn-login">
-              Login as {selectedRole === 'owner' ? 'Owner' : selectedRole === 'supervisor' ? 'Supervisor' : 'QA/QC'}
+              Login
             </button>
           </form>
         )}
@@ -237,12 +201,10 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         {!isRegisterMode ? (
           // In Login Mode
           <>
-            {selectedRole === 'owner' && (
-              <p className="toggle-mode-hint">
-                Don't have an account?{' '}
-                <span onClick={() => setIsRegisterMode(true)}>Register as Owner</span>
-              </p>
-            )}
+            <p className="toggle-mode-hint">
+              Don't have an account?{' '}
+              <span onClick={() => setIsRegisterMode(true)}>Register as Owner</span>
+            </p>
           </>
         ) : (
           // In Register Mode
