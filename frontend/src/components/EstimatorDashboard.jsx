@@ -118,7 +118,6 @@ const getAllWorlers=async()=>{
           materialsRequired: [],
           estimatedPrice: 0,
         },
-        estimatedPrice:null,
         id:null
       },
     ],
