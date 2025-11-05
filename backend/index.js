@@ -33,7 +33,7 @@ app.use(cors({
     'http://localhost:5174',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
-    'https://your-frontend.com'
+    'https://jobmanagementsystem-1.onrender.com'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
