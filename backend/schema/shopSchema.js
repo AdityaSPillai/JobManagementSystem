@@ -62,11 +62,6 @@ const shopSchema = new mongoose.Schema({
     sunday: { open: String, close: String, isClosed: Boolean }
   },
   
-  // services: [{
-  //   type: String,
-  //   enum: ['engine_repair', 'body_work', 'painting', 'electrical', 'ac_service', 
-  //          'oil_change', 'brake_service', 'suspension', 'transmission', 'general_maintenance']
-  // }],
   
 
   services:[{
@@ -78,6 +73,7 @@ const shopSchema = new mongoose.Schema({
       type:Number,
       required:true
     },
+    manHours:Number,
     description:String,
     note:String,
   }],

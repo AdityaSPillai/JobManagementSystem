@@ -178,7 +178,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
             </div>
             
             <div className="form-group">
-              <label htmlFor="specialization">Specialization {formData.role !== 'desk_employee' && '*'}</label> 
+              {/* <label htmlFor="specialization">Specialization {formData.role !== 'desk_employee' && '*'}</label> 
                <input 
                 type="text" 
                 id="specialization" 
@@ -188,8 +188,24 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 placeholder="e.g., Brakes, AC, Engine"
                 required={formData.role !== 'desk_employee'}
                 disabled={loading}
-              />
+              /> */}
 
+                       <label htmlFor="role">Specilaization </label>
+              <select 
+                id="specialization" 
+                name="specialization" 
+                value={formData.specialization} 
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="mechanic">mechanic</option>
+                <option value="electrician">electrician</option>
+                <option value="bodywork">bodywork</option>
+                <option value="painter">painter</option>
+                <option value="general">general</option>
+              
+
+              </select>
             </div>
             <div className="form-group">
               <label htmlFor="hourlyRate">Hourly Rate ($) *</label>
@@ -303,7 +319,7 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
               <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label>Specialization</label>
+              {/* <label>Specialization</label>
                 <input 
                 type="text" 
                 id="specialization" 
@@ -311,7 +327,23 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
                 value={formData.specialization|| ''}  onChange={handleChange} placeholder="e.g., Brakes, AC, Engine"
                 required={formData.role !== 'desk_employee'}
                 disabled={loading}
-              />
+              /> */}
+               <label htmlFor="role">Specilaization </label>
+              <select 
+                id="specialization" 
+                name="specialization" 
+                value={formData.specialization} 
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="mechanic">mechanic</option>
+                <option value="electrician">electrician</option>
+                <option value="bodywork">bodywork</option>
+                <option value="painter">painter</option>
+                <option value="general">general</option>
+              
+
+              </select>
             </div>
             <div className="form-group">
               <label>Hourly Rate</label>

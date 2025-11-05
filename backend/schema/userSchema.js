@@ -44,6 +44,7 @@ const userSchema = new mongoose.Schema({
   // For Worker specific fields
   specialization: {
     type: String,
+    enum: ['mechanic', 'electrician', 'bodywork', 'painter', 'general'],
     required: function() {
       return this.role === 'worker' || this.role === 'qa_qc'||this.role==="supervisor";
     }
