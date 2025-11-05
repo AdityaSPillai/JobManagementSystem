@@ -1,6 +1,6 @@
 import express from "express";
 import { isOwner } from "../middleware/middlewares.js";
-import { createEmployeeController,getEmployeeController,updateEmployeeController } from "../controllers/employeeController.js";
+import { createEmployeeController,deleteEmployeeController,getEmployeeController,updateEmployeeController } from "../controllers/employeeController.js";
 
 const router= express.Router();
 
@@ -15,6 +15,6 @@ router.get('/get/:empid',getEmployeeController)
 router.put('/updateEmployee/:empid',isOwner,updateEmployeeController)
 
 
-
+router.delete('/deleteEmployee/:empid',isOwner,deleteEmployeeController)
 
 export default router;

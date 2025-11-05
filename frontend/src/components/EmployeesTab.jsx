@@ -51,7 +51,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
       email: formData.email,
       role: formData.role,
       phone: formData.phone,
-      shopname: formData.shopname || userInfo?.shopname,
+      shopId: userInfo?.shopId,
       specialization: formData.specialization,
       hourlyRate: formData.hourlyRate,
       experience: formData.experience,
@@ -176,21 +176,10 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 <option value="desk_employee">Desk Employee</option>
               </select>
             </div>
+            
             <div className="form-group">
-              <label htmlFor="shopname">Shop Name (optional)</label>
-              <input 
-                type="text" 
-                id="shopname" 
-                name="shopname" 
-                value={formData.shopname} 
-                onChange={handleChange}
-                placeholder={userInfo?.shopname || "Enter shop name"}
-                disabled={loading}
-              />
-            </div>
-            <div className="form-group">
-              {/* <label htmlFor="specialization">Specialization {formData.role !== 'desk_employee' && '*'}</label> */}
-              {/* <input 
+              <label htmlFor="specialization">Specialization {formData.role !== 'desk_employee' && '*'}</label> 
+               <input 
                 type="text" 
                 id="specialization" 
                 name="specialization" 
@@ -199,25 +188,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 placeholder="e.g., Brakes, AC, Engine"
                 required={formData.role !== 'desk_employee'}
                 disabled={loading}
-              /> */}
-
-                   <label htmlFor="role">Specilaization </label>
-              <select 
-                id="specialization" 
-                name="specialization" 
-                value={formData.specialization} 
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="mechanic">mechanic</option>
-                <option value="electrician">electrician</option>
-                <option value="bodywork">bodywork</option>
-                <option value="painter">painter</option>
-                <option value="general">general</option>
-              
-
-              </select>
-
+              />
 
             </div>
             <div className="form-group">
@@ -288,7 +259,7 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
       
       if (response.data.success) {
         alert('✅ Employee updated successfully');
-        onUpdate(); // Refresh employee list
+        onUpdate(); 
         onClose();
       } else {
         setError(response.data.message || 'Failed to update employee');
@@ -333,13 +304,14 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
             </div>
             <div className="form-group">
               <label>Specialization</label>
-              <select name="specialization" value={formData.specialization || ''} onChange={handleChange}>
-                <option value="mechanic">Mechanic</option>
-                <option value="electrician">Electrician</option>
-                <option value="bodywork">Bodywork</option>
-                <option value="painter">Painter</option>
-                <option value="general">General</option>
-              </select>
+                <input 
+                type="text" 
+                id="specialization" 
+                name="specialization" 
+                value={formData.specialization|| ''}  onChange={handleChange} placeholder="e.g., Brakes, AC, Engine"
+                required={formData.role !== 'desk_employee'}
+                disabled={loading}
+              />
             </div>
             <div className="form-group">
               <label>Hourly Rate</label>
@@ -348,6 +320,22 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
             <div className="form-group">
               <label>Experience (Years)</label>
               <input type="number" name="experience" value={formData.experience || ''} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Role</label>
+              
+              <select 
+                id="role" 
+                name="role" 
+                value={formData.role} 
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="worker">Worker</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="qa_qc">QA/QC</option>
+                <option value="desk_employee">Desk Employee</option>
+              </select>
             </div>
           </div>
 

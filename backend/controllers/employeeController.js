@@ -4,12 +4,12 @@ import UserModel from "../schema/userSchema.js";
 
 export const createEmployeeController = async(req, res) => {
     try {
-        const {name, email, password, role, shopname, phone, specialization, hourlyRate, experience} = req.body;
+        const {name, email, password, role, shopId, phone, specialization, hourlyRate, experience} = req.body;
 
         // Basic validations
         if(!name) return res.status(400).send({success: false, message: "Name is Required"});
         if(!email) return res.status(400).send({success: false, message: "Email is Required"});
-        if(!shopname) return res.status(400).send({success: false, message: "Shopname is Required"});
+        if(!shopId) return res.status(400).send({success: false, message: "shopId is Required"});
         if(!role) return res.status(400).send({success: false, message: "Role is Required"});
         if(!phone) return res.status(400).send({success: false, message: "Phone is Required"}); // Fixed message
         if(!hourlyRate) return res.status(400).send({success: false, message: "Workers hourly salary is required"});
@@ -34,12 +34,11 @@ export const createEmployeeController = async(req, res) => {
         }
 
         // Check if shop exists 
-        const shop = await ShopModel.findOne({ shopName: shopname });
+        const shop = await ShopModel.findById(shopId);
         if (!shop) {
             return res.status(400).send({ success: false, message: "Shop was not found" });
         }
 
-        const shopId = shop._id;
 
         // Check if user already exists
         const existingWorker = await UserModel.findOne({ email });
@@ -129,13 +128,16 @@ export const updateEmployeeController= async(req,res)=>{
     try {
         
         const {empid}=req.params;
-        const {name,role,phone,isAvailable}=req.body
+        const {name,role,phone,isAvailable,specialization,hourlyRate,experience}=req.body
 
         const newEmployeeData={
         name,
         role,
         phone,
-        isAvailable
+        isAvailable,
+        specialization,
+        hourlyRate,
+        experience
         }
 
         const employee= await UserModel.findByIdAndUpdate(empid,newEmployeeData,{ new: true })
@@ -160,6 +162,36 @@ export const updateEmployeeController= async(req,res)=>{
         res.status(500).send({
             success: false, 
             message: "Unable to Update employee",
+            error: error.message
+        });
+    }
+};
+
+
+export const deleteEmployeeController= async(req,res)=>{
+    try {
+        const {empid}= req.params;
+
+        const res= await UserModel.findByIdAndDelete(empid);
+        if(!res)
+        {console.log("Error while Dleting employee");
+            return res.status(400).send({
+                success:false,
+                message:"unable to Delete employee"
+            })
+        }
+
+        res.status(200).send({
+            success:true,
+            message:"Employee Deleted Succesfully",
+            employee
+        })
+        
+    } catch (error) {
+        console.error("Error Deleting employee:", error);
+        res.status(500).send({
+            success: false, 
+            message: "Unable to Deleting employee",
             error: error.message
         });
     }

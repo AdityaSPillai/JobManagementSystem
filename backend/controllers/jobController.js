@@ -578,16 +578,16 @@ if(!workerFound){
 
 
 
-export const qualityCheckController = async(req,res)=>{
+export const qualityGoodController = async(req,res)=>{
   try {
-    const {jobId,userId,qualityStatus }= req.params;
-
+    const {jobId,userId }= req.params;
+   
     const job= await JobCardModel.findOneAndUpdate(
       {
         _id:jobId
       },{
         $set:{workVerified:userId,
-          qualityStatus,
+          qualityStatus:'good',
           status:'approved',
         }
         },{new:true}
@@ -616,3 +616,41 @@ export const qualityCheckController = async(req,res)=>{
   }
 };
 
+
+
+
+export const qualityBadController = async(req,res)=>{
+  try {
+    const {jobId,userId}= req.params;
+    const { notes } = req.body;
+    const job=await JobCardModel.findById(jobId)
+
+    job.status='rejected',
+    job.qualityStatus='need-work',
+    job.notes=notes,
+    job.workVerified=userId,
+    await job.save();
+
+    if (!job) {
+      return res.status(404).send({
+        success: false,
+        message: "Job or job item not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Status assigned successfully",
+      job
+    });
+
+    
+   } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Unable to assign Quality to job",
+      error,
+    });
+  }
+};

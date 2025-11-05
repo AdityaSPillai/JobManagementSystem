@@ -21,6 +21,8 @@
     const [qaReviewerName, setQaReviewerName] = useState(''); 
   const {userInfo}=useAuth();
     const [jobs, setJobs] = useState([]);
+const [showNotesPopup, setShowNotesPopup] = useState(false);
+const [notes, setNotes] = useState('');
 
 
 
@@ -130,12 +132,12 @@
     };
 
     // --- QA Action Handlers ---
-  const handleItemQualityChange = async (jobId, qualityStatus ) => {
+  const handleItemQualityGood = async (jobId, qualityStatus ) => {
   if (!selectedJob || selectedJob.status !== 'completed') return;
 
   try {
     const res = await axios.put(
-      `/jobs/qualityCheck/${jobId}/${userInfo.id}/${encodeURIComponent(qualityStatus )}`
+      `/jobs/qualityGood/${jobId}/${userInfo.id}`
     );
 
     if (!res.data?.success) {
@@ -159,6 +161,45 @@
     console.error(error.response?.data || error.message);
   }
 };
+const handleItemQualityBad = async (jobId, notes) => {
+  if (!selectedJob || selectedJob.status !== 'completed') return;
+
+  try {
+    const res = await axios.post(
+      `/jobs/qualityBad/${jobId}/${userInfo.id}`,
+      { notes }
+    );
+
+    if (!res.data?.success) {
+      console.log("Unable to assign quality status");
+    } else {
+      alert("Status updated successfully");
+    }
+
+    setJobs(prevJobs =>
+      prevJobs.map(job =>
+        job.id === jobId
+          ? { ...job, qualityStatus: 'need-work', status: 'rejected', notes }
+          : job
+      )
+    );
+
+    setSelectedJob(prev =>
+      prev && prev.id === jobId
+        ? { ...prev, qualityStatus: 'need-work', status: 'rejected', notes }
+        : prev
+    );
+
+    setShowNotesPopup(false);
+    setNotes('');
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+  }
+};
+
+
+
+
 
     const handleMarkQualityChecked = (jobId) => {
           if (!selectedJob || selectedJob.status !== 'completed') return;
@@ -330,18 +371,47 @@
           <div className="quality-buttons">
             <button
               className="btn-good"
-              onClick={() => handleItemQualityChange(selectedJob.id,  'Good')}
+              onClick={() => handleItemQualityGood(selectedJob.id,  'Good')}
               disabled={selectedJob.status !== 'completed'}
             >
               <img src={tickIcon} alt="Good" className="btn-icon small qa-icon" /> Good
             </button>
             <button
               className="btn-needs-work"
-              onClick={() => handleItemQualityChange(selectedJob.id, 'Needs Work')}
+                onClick={() => setShowNotesPopup(true)}
               disabled={selectedJob.status !== 'completed'}
             >
               <img src={infoIcon} alt="Needs Work" className="btn-icon small qa-icon" /> Needs Work
             </button>
+            {showNotesPopup && (
+  <div className="popup-overlay">
+    <div className="popup-container">
+      <h3>Enter Notes for "Needs Work"</h3>
+      <textarea
+        className="notes-textarea"
+        placeholder="Enter reason or notes here..."
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+      />
+      <div className="popup-buttons">
+        <button
+          className="btn-confirm"
+          onClick={() => handleItemQualityBad(selectedJob.id, notes)}
+          disabled={!notes.trim()}
+        >
+          Submit
+        </button>
+        <button
+          className="btn-cancel"
+          onClick={() => { setShowNotesPopup(false); setNotes(''); }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
           </div>
           </>
           )}
