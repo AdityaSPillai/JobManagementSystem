@@ -82,6 +82,7 @@ const getAllWorlers=async()=>{
     templateId: '68f50077a6d75c0ab83cd019',
     isVerifiedByUser: true,
     workVerified:null,
+    notes:null,
     shopId: userInfo?.shopId || '',
     formData: {
       customer_name: '',
@@ -156,6 +157,7 @@ const getAllJobs = async () => {
           minute: '2-digit'
         }),
         status: (job.status || 'Not Assigned').toLowerCase(),
+        notes: (job.notes || ''),
         totalEstimatedAmount: job.totalEstimatedAmount || 0,
         items: job.jobItems?.map(item => ({
           itemId: item._id,
@@ -329,8 +331,8 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
   const matchesFilter =
     statusFilter === 'all' ||
     (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'approved')) ||
-    (statusFilter === 'assigned' && (job.status === 'in_progress' || job.status === 'In Progress')) ||
-    (statusFilter === 'unassigned' && job.status === 'pending');
+    (statusFilter === 'assigned' && (job.status === 'in_progress' || job.status === 'In Progress' || job.status === 'Assigned')) ||
+    (statusFilter === 'unassigned' && (job.status === 'pending' || job.status === 'rejected'));
 
   return matchesSearch && matchesFilter;
 });
@@ -747,6 +749,7 @@ const handleJobTypeSelect = (index, serviceId) => {
                       job.status === 'In Progress' ? 'status-progress' : 
                       job.status === 'completed' ? 'status-completed' :
                       job.status === 'approved' ? 'status-approved' :
+                      job.status === 'rejected' ? 'status-rejected' :
                       job.status === 'Assigned' ? 'status-assigned-active' :
                       'status-assigned'
                     }`}>
@@ -821,7 +824,21 @@ const handleJobTypeSelect = (index, serviceId) => {
                                 <strong>Job #{index + 1}</strong>
                                 {item.jobType && <span className="item-type">({item.jobType})</span>}
                               </div>
-                              <div className="item-description">{item.description}</div>
+                              <div className="item-description-container">
+                                <div className="item-description">{item.description}</div>
+                                <div className="item-description">Priority: {item.priority}</div>
+                              </div>
+                              
+                              {/*Notes to be displayed here if Notes is not NULL*/}
+                              {selectedJob.notes && selectedJob.notes.trim() !== '' && (
+                                <div className="job-items-container">
+                                  <strong className="job-items-title">Notes:</strong>
+                                  <div className="full-width">
+                                    <p className="job-notes-text">{selectedJob.notes}</p>
+                                  </div>
+                                </div>
+                              )}
+
                               {item.machine.machineRequired && (
                                 <div className="job-items-container">
                                   <strong className="job-items-title">Machine Used:</strong>

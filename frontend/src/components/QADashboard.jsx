@@ -19,16 +19,10 @@
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedJob, setSelectedJob] = useState(null);
     const [qaReviewerName, setQaReviewerName] = useState(''); 
-  const {userInfo}=useAuth();
+    const {userInfo}=useAuth();
     const [jobs, setJobs] = useState([]);
-const [showNotesPopup, setShowNotesPopup] = useState(false);
-const [notes, setNotes] = useState('');
-
-
-
-
-
-
+    const [showNotesPopup, setShowNotesPopup] = useState(false);
+    const [notes, setNotes] = useState('');
 
     const getAllJobs = async () => {
     try {
@@ -390,6 +384,7 @@ const handleItemQualityBad = async (jobId, notes) => {
       <textarea
         className="notes-textarea"
         placeholder="Enter reason or notes here..."
+        required
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
       />

@@ -292,6 +292,11 @@
   color: #6620c9;
 }
 
+.status-rejected {
+  background: #dea8a1;
+  color: #ff0000;
+}
+
 .job-owner {
   margin: 0 0 8px 0;
   color: #4a5568;
@@ -424,6 +429,16 @@
   grid-column: 1 / -1;
 }
 
+.job-notes-text{
+  background-color: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 6px;
+  font-style: italic;
+  color: #444;
+  white-space: pre-wrap;
+}
+
 /* Employee Selector */
 .employee-select {
   width: 100%;
@@ -525,6 +540,11 @@
   color: #4a5568;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.item-description-container{
+  display: flex;
+  gap: 5vw;
 }
 
 .simple-item-row .item-description {
