@@ -8,7 +8,7 @@ export const createShop = async (req, res) => {
     const {
       shopName,
       ownerId,
-      categories,
+      // categories,
       contactInfo,
       address,
       services,
@@ -23,7 +23,7 @@ export const createShop = async (req, res) => {
 if (!Array.isArray(services) || services.length === 0) {
   return res.status(400).send({ success: false, message: "Services must be a non-empty array" });
 }
-if(!Array.isArray(categories)|| categories.length===0)   return res.status(400).send({ success: false, message: "categories must be a non-empty array" });
+// if(!Array.isArray(categories)|| categories.length===0)   return res.status(400).send({ success: false, message: "categories must be a non-empty array" });
 
 
 
@@ -62,7 +62,7 @@ const existingShop = await ShopModel.findOne({
       contactInfo,
       address,
       services,
-      categories
+     // categories
     });
 
     await shop.save();
@@ -610,5 +610,6 @@ export const getAllShopJobsController= async(req,res)=>{
     })
   }
 }
+
 
 
