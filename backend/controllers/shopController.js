@@ -8,6 +8,7 @@ export const createShop = async (req, res) => {
     const {
       shopName,
       ownerId,
+      categories,
       contactInfo,
       address,
       services,
@@ -22,6 +23,7 @@ export const createShop = async (req, res) => {
 if (!Array.isArray(services) || services.length === 0) {
   return res.status(400).send({ success: false, message: "Services must be a non-empty array" });
 }
+if(!Array.isArray(categories)|| categories.length===0)   return res.status(400).send({ success: false, message: "categories must be a non-empty array" });
 
 
 
@@ -59,8 +61,8 @@ const existingShop = await ShopModel.findOne({
       ownerId,
       contactInfo,
       address,
-      services
-    
+      services,
+      categories
     });
 
     await shop.save();
@@ -131,6 +133,63 @@ export const addNewService= async(req,res)=>{
 
 
 
+export const addNewCategoryController = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const { categories } = req.body;
+
+    if (!shopId)
+      return res
+        .status(400)
+        .json({ success: false, message: "Shop ID is required" });
+
+    if (!categories || !Array.isArray(categories))
+      return res
+        .status(400)
+        .json({ success: false, message: "Categories must be an array" });
+
+    const shop = await ShopModel.findById(shopId);
+    if (!shop)
+      return res
+        .status(404)
+        .json({ success: false, message: "Shop not found" });
+
+    const newCategories = categories.filter(
+      (cat) => !shop.categories.includes(cat)
+    );
+
+    shop.categories.push(...newCategories);
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Categories added successfully",
+      categories: shop.categories,
+    });
+  } catch (error) {
+    console.error("Error adding category:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding new category",
+      error: error.message,
+    });
+  }
+};
+
+
+// {
+//   "categories": [
+//     {
+//       "name": "General",
+//       "hourlyRate": 200
+//     }
+//   ]
+// }
+
+
+
+
+
 export const updateShopServices= async(req,res)=>{
   try {
     const { name, description, price,note} = req.body;
@@ -178,6 +237,158 @@ export const updateShopServices= async(req,res)=>{
 
 
 
+export const updateCategoryController=async(req,res)=>{
+ try {
+    const { name, hourlyRate} = req.body;
+    const {shopId,categoryId}=req.params;
+
+    if (!shopId|| !categoryId) return res.status(400).json({ success: false, message: "Shop ID  or Category Id is required" });
+
+    const shop = await ShopModel.findById(shopId);
+
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    const categories = shop.categories.id(categoryId);
+    if (!categories) return res.status(404).json({ success: false, message: "categories not found" });
+
+    if (name) categories.name = name;
+    if (hourlyRate) categories.hourlyRate = hourlyRate;
+  
+
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "categories updated successfully",
+      categories: shop.categories,
+    });
+
+    
+    
+   } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      success: false,
+      message: "Error updating Category ",
+      error: error.message
+    });
+  }
+};
+
+
+// {
+//       "name": "General",
+//       "hourlyRate": 250
+//     }
+ 
+
+
+
+
+export const deleteShopService = async (req, res) => {
+  try {
+    const { shopId, serviceId } = req.params;
+
+    if (!shopId || !serviceId) {
+      return res.status(400).send({
+        success: false,
+        message: "Shop ID or Service ID not provided",
+      });
+    }
+
+    // Find the shop
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) {
+      return res.status(404).send({
+        success: false,
+        message: "Shop not found",
+      });
+    }
+
+    // Find the service inside the shop
+    const service = shop.services.id(serviceId);
+    if (!service) {
+      return res.status(404).send({
+        success: false,
+        message: "Service not found in this shop",
+      });
+    }
+
+    // Remove the service
+    service.deleteOne();
+
+    // Save the shop after removal
+    await shop.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Service deleted successfully",
+      shop,
+    });
+  } catch (error) {
+    console.error("Error deleting service:", error);
+    res.status(500).send({
+      success: false,
+      message: "Unable to delete service",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
+export const deleteCategoryController= async(req,res)=>{
+  try {
+        const {shopId,categoryId}=req.params;
+      if(!shopId || !categoryId){
+        return res.status(404).send({
+          succes:false,
+          message:"Shop Id and category is required"
+        })
+      }
+       const shop = await ShopModel.findById(shopId);
+    if (!shop) {
+      return res.status(404).send({
+        success: false,
+        message: "Shop not found",
+      });
+    }
+
+    // Find the service inside the shop
+    const category = shop.categories.id(categoryId);
+    if (!category) {
+      return res.status(404).send({
+        success: false,
+        message: "category not found in this shop",
+      });
+    }
+    category.deleteOne();
+
+    // Save the shop after removal
+    await shop.save();
+
+    res.status(200).send({
+      success: true,
+      message: "category deleted successfully",
+      shop,
+    });
+
+    
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    res.status(500).send({
+      success: false,
+      message: "Unable to delete category",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
 export const allServices=async(req,res)=>{
     try {
 
@@ -214,6 +425,43 @@ export const allServices=async(req,res)=>{
   }
 }
 
+
+
+export const allCategories=async(req,res)=>{
+ try {
+
+    const {shopId}=req.params;
+     if (!shopId) {
+      return res.status(400).json({
+        success: false,
+        message: "Shop ID is required."
+      });
+    }
+      //check if shop is existing
+      const shop= await ShopModel.findById(shopId).select("-address -contactInfo -workers");
+      if(!shop)
+      {
+        console.log("Shop not exisiting");
+        return res.status(404).send({
+          succes:false,
+          message:"Unable to find the shop"
+        })
+      }
+
+      return res.status(200).send({
+        success:true,
+        message:"All Services Recieved",
+        categories:shop.categories,
+      });
+      
+  } catch (error) {
+    res.status(500).send({
+      success:false,
+      message:"Unable to Create Shop services",
+      error
+    })
+  }
+}
 
 
 
@@ -364,54 +612,3 @@ export const getAllShopJobsController= async(req,res)=>{
 }
 
 
-
-
-export const deleteShopService = async (req, res) => {
-  try {
-    const { shopId, serviceId } = req.params;
-
-    if (!shopId || !serviceId) {
-      return res.status(400).send({
-        success: false,
-        message: "Shop ID or Service ID not provided",
-      });
-    }
-
-    // Find the shop
-    const shop = await ShopModel.findById(shopId);
-    if (!shop) {
-      return res.status(404).send({
-        success: false,
-        message: "Shop not found",
-      });
-    }
-
-    // Find the service inside the shop
-    const service = shop.services.id(serviceId);
-    if (!service) {
-      return res.status(404).send({
-        success: false,
-        message: "Service not found in this shop",
-      });
-    }
-
-    // Remove the service
-    service.deleteOne();
-
-    // Save the shop after removal
-    await shop.save();
-
-    res.status(200).send({
-      success: true,
-      message: "Service deleted successfully",
-      shop,
-    });
-  } catch (error) {
-    console.error("Error deleting service:", error);
-    res.status(500).send({
-      success: false,
-      message: "Unable to delete service",
-      error: error.message,
-    });
-  }
-};

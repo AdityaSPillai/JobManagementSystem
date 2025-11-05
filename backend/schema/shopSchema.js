@@ -73,10 +73,20 @@ const shopSchema = new mongoose.Schema({
       type:Number,
       required:true
     },
-    manHours:Number,
     description:String,
     note:String,
   }],
+  
+  categories:[{
+      name:{
+        type:String,
+        required:true
+      },
+      hourlyRate:{
+        type:Number,
+        required:true,
+      }
+    }],
 
   workers: [{
     type: mongoose.Schema.Types.ObjectId,

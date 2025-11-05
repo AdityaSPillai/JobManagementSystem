@@ -1,5 +1,5 @@
 import express from "express"
-import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewService,updateShopServices,deleteShopService} from "../controllers/shopController.js";
+import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories} from "../controllers/shopController.js";
 import {isOwner} from "../middleware/middlewares.js";
 
 const router= express.Router();
@@ -9,14 +9,31 @@ router.post('/create',isOwner,createShop);
 // adding new services to shop;
 router.post('/addNewService/:shopId',isOwner,addNewService)
 
+//get all services
+router.get('/allServices/:shopId',allServices)
 
 //update shop servies
 router.put('/updateShopServices/:shopId/:serviceId',isOwner,updateShopServices)
 
+//delete service
+router.delete("/deleteShopService/:shopId/:serviceId",deleteShopService)
 
 
-//get all services
-router.get('/allServices/:shopId',allServices)
+
+// add new category
+router.post('/addNewCategory/:shopId',addNewCategoryController)
+
+//get all category
+router.get('/allCategories/:shopId',allCategories)
+
+//update category
+router.put('/updateCategory/:shopId/:categoryId',updateCategoryController)
+
+//delete Category
+router.delete('/deleteCategory/:shopId/:categoryId',deleteCategoryController)
+
+
+
 
 
 
@@ -34,7 +51,7 @@ router.get("/getAllJobs/:shopId",getAllShopJobsController);
 
 
 
-router.delete("/deleteShopService/:shopId/:serviceId",deleteShopService)
+
 
 
 export default router;
