@@ -118,10 +118,6 @@ const getAllWorlers=async()=>{
           materialsRequired: [],
           estimatedPrice: 0,
         },
-<<<<<<< Updated upstream
-=======
-       
->>>>>>> Stashed changes
         id:null
       },
     ],
