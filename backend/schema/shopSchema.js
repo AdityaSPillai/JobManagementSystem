@@ -77,16 +77,16 @@ const shopSchema = new mongoose.Schema({
     note:String,
   }],
   
-  categories:[{
-      name:{
-        type:String,
-        required:true
-      },
-      hourlyRate:{
-        type:Number,
-        required:true,
-      }
-    }],
+  //categories:[{
+     // name:{
+     //   type:String,
+      //  required:true
+    //  },
+    //  hourlyRate:{
+    //    type:Number,
+    //    required:true,
+   //   }
+ //   }],
 
   workers: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -116,4 +116,5 @@ const shopSchema = new mongoose.Schema({
 
 
 const ShopModel= await mongoose.model("Shop",shopSchema)
+
 export default ShopModel;
