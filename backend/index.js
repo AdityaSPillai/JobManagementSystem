@@ -58,7 +58,7 @@ app.use('/v1/jobs',jobRoutes)
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // ✅ Catch-all route for React Router
-app.get("/*", (req, res) => {
+app.get("/.*/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
