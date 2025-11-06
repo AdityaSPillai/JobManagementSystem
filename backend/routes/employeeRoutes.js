@@ -5,7 +5,8 @@ import { createEmployeeController,deleteEmployeeController,getEmployeeController
 const router= express.Router();
 
 //create a new employee
-router.post('/createEmployee',isOwner,createEmployeeController);
+// router.post('/createEmployee',isOwner,createEmployeeController);
+router.post('/createEmployee', createEmployeeController);
 
 // get single employee
 router.get('/get/:empid',getEmployeeController)

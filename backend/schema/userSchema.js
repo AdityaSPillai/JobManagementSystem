@@ -44,16 +44,10 @@ const userSchema = new mongoose.Schema({
   // For Worker specific fields
   specialization: {
     type: String,
-    enum: ['mechanic', 'electrician', 'bodywork', 'painter', 'general'],
     required: function() {
-      return this.role === 'worker' || this.role === 'qa_qc'||this.role==="supervisor";
-    }
-  },
-  hourlyRate: {
-    type: Number,
-    required: function() {
-      return this.role === 'worker' || this.role === 'qa_qc'|| this.role==='desk_employee'|| this.role==="supervisor";
-    }
+      return this.role === 'worker' || this.role === 'qa_qc' || this.role === 'supervisor';
+    },
+    trim: true
   },
   experience: {
     type: Number, // years of experience

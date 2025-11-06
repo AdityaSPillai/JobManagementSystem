@@ -12,7 +12,6 @@ export const SignupController = async(req, res) => {
             shopId,  
             phone,
             specialization,
-            hourlyRate,
             experience,
         } = req.body;
 
@@ -27,14 +26,12 @@ export const SignupController = async(req, res) => {
         if(['worker', 'qa_qc', 'supervisor'].includes(role)) {
             if(!shopId) return res.status(400).send({success: false, message: "Shop ID is Required"});
             if(!specialization) return res.status(400).send({success: false, message: "Specialization is Required"});
-            if(!hourlyRate) return res.status(400).send({success: false, message: "Hourly Rate is Required"});
             if(!experience) return res.status(400).send({success: false, message: "Experience is Required"});
         }
 
         // Desk employee validation
         if(role === 'desk_employee') {
             if(!shopId) return res.status(400).send({success: false, message: "Shop ID is Required"});
-            if(!hourlyRate) return res.status(400).send({success: false, message: "Hourly Rate is Required"});
         }
 
         // Check if user already exists
@@ -66,10 +63,6 @@ export const SignupController = async(req, res) => {
         if(['worker', 'qa_qc', 'supervisor'].includes(role)) {
             userData.specialization = specialization;
             userData.experience = experience;
-        }
-
-        if(['worker', 'qa_qc', 'supervisor', 'desk_employee'].includes(role)) {
-            userData.hourlyRate = hourlyRate;
         }
 
         const user = new UserModel(userData);

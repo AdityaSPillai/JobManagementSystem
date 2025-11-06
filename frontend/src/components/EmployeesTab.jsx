@@ -12,13 +12,30 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     phone: '',
     shopname: '',
     specialization: '',
-    hourlyRate: '',
     experience: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState([]);
 
   const { userInfo } = useAuth();
+
+  useEffect(() => {
+  const fetchCategories = async () => {
+      try {
+        const res = await axios.get(`/shop/allCategories/${userInfo?.shopId}`);
+        if (res.data?.categories?.length > 0) {
+          setCategories(res.data.categories);
+        } else {
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    if (userInfo?.shopId) fetchCategories();
+  }, [userInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,8 +47,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     e.preventDefault();
     
     // Validation
-    if (!formData.name || !formData.email || !formData.phone || 
-        !formData.hourlyRate || !formData.experience) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.experience) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -53,7 +69,6 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
       phone: formData.phone,
       shopId: userInfo?.shopId,
       specialization: formData.specialization,
-      hourlyRate: formData.hourlyRate,
       experience: formData.experience,
     };
 
@@ -86,7 +101,6 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
         phone: '',
         shopname: '',
         specialization: '',
-        hourlyRate: '',
         experience: '',
       });
       onClose();
@@ -178,48 +192,25 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
             </div>
             
             <div className="form-group">
-              {/* <label htmlFor="specialization">Specialization {formData.role !== 'desk_employee' && '*'}</label> 
-               <input 
-                type="text" 
-                id="specialization" 
-                name="specialization" 
-                value={formData.specialization} 
+              <label htmlFor="specialization">Specialization *</label>
+              <select
+                id="specialization"
+                name="specialization"
+                value={formData.specialization}
                 onChange={handleChange}
-                placeholder="e.g., Brakes, AC, Engine"
-                required={formData.role !== 'desk_employee'}
-                disabled={loading}
-              /> */}
-
-                       <label htmlFor="role">Specilaization </label>
-              <select 
-                id="specialization" 
-                name="specialization" 
-                value={formData.specialization} 
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="mechanic">mechanic</option>
-                <option value="electrician">electrician</option>
-                <option value="bodywork">bodywork</option>
-                <option value="painter">painter</option>
-                <option value="general">general</option>
-              
-
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="hourlyRate">Hourly Rate ($) *</label>
-              <input 
-                type="number" 
-                id="hourlyRate" 
-                name="hourlyRate" 
-                value={formData.hourlyRate} 
-                onChange={handleChange}
-                min="0"
-                step="0.01"
                 required
-                disabled={loading}
-              />
+                disabled={loading || categories.length === 0}
+              >
+                <option value="">-- Select Job Category --</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name} (₹{cat.hourlyRate}/hr)
+                  </option>
+                ))}
+              </select>
+              {categories.length === 0 && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>⚠️ No job categories available for this shop.</p>
+              )}
             </div>
             <div className="form-group">
               <label htmlFor="experience">Experience (Years) *</label>
@@ -249,13 +240,32 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
 }
 
 function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
+  const {userInfo} = useAuth();
   const [formData, setFormData] = useState(employee || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     setFormData(employee || {});
   }, [employee]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(`/shop/allCategories/${userInfo?.shopId}`);
+        if (res.data?.categories?.length > 0) {
+          setCategories(res.data.categories);
+        } else {
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    if (userInfo?.shopId) fetchCategories();
+  }, [userInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -319,35 +329,25 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
               <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              {/* <label>Specialization</label>
-                <input 
-                type="text" 
-                id="specialization" 
-                name="specialization" 
-                value={formData.specialization|| ''}  onChange={handleChange} placeholder="e.g., Brakes, AC, Engine"
-                required={formData.role !== 'desk_employee'}
-                disabled={loading}
-              /> */}
-               <label htmlFor="role">Specilaization </label>
-              <select 
-                id="specialization" 
-                name="specialization" 
-                value={formData.specialization} 
+              <label htmlFor="specialization">Specialization *</label>
+              <select
+                id="specialization"
+                name="specialization"
+                value={formData.specialization}
                 onChange={handleChange}
-                disabled={loading}
+                required
+                disabled={loading || categories.length === 0}
               >
-                <option value="mechanic">mechanic</option>
-                <option value="electrician">electrician</option>
-                <option value="bodywork">bodywork</option>
-                <option value="painter">painter</option>
-                <option value="general">general</option>
-              
-
+                <option value="">-- Select Job Category --</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name} (₹{cat.hourlyRate}/hr)
+                  </option>
+                ))}
               </select>
-            </div>
-            <div className="form-group">
-              <label>Hourly Rate</label>
-              <input type="number" name="hourlyRate" value={formData.hourlyRate || ''} onChange={handleChange} required />
+              {categories.length === 0 && (
+                <p style={{ color: "red", fontSize: "0.8rem" }}>⚠️ No job categories available for this shop.</p>
+              )}
             </div>
             <div className="form-group">
               <label>Experience (Years)</label>
@@ -488,9 +488,6 @@ function EmployeesTab() {
                 <p><strong>Phone:</strong> {emp.phone}</p>
                 {emp.specialization && (
                   <p><strong>Specialization:</strong> {emp.specialization}</p>
-                )}
-                {emp.hourlyRate && (
-                  <p><strong>Rate:</strong> ${emp.hourlyRate}/hr</p>
                 )}
                 {emp.experience && (
                   <p><strong>Experience:</strong> {emp.experience} years</p>

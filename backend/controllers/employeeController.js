@@ -4,7 +4,7 @@ import UserModel from "../schema/userSchema.js";
 
 export const createEmployeeController = async(req, res) => {
     try {
-        const {name, email, password, role, shopId, phone, specialization, hourlyRate, experience} = req.body;
+        const {name, email, password, role, shopId, phone, specialization, experience} = req.body;
 
         // Basic validations
         if(!name) return res.status(400).send({success: false, message: "Name is Required"});
@@ -12,7 +12,6 @@ export const createEmployeeController = async(req, res) => {
         if(!shopId) return res.status(400).send({success: false, message: "shopId is Required"});
         if(!role) return res.status(400).send({success: false, message: "Role is Required"});
         if(!phone) return res.status(400).send({success: false, message: "Phone is Required"}); // Fixed message
-        if(!hourlyRate) return res.status(400).send({success: false, message: "Workers hourly salary is required"});
         if(!experience) return res.status(400).send({success: false, message: "Experience is Required"});
 
         console.log(role);
@@ -26,6 +25,14 @@ export const createEmployeeController = async(req, res) => {
             return res.status(400).send({success: false, message: "Worker specialization is required"});
         }
 
+        const shop = await ShopModel.findById(shopId);
+        if (shop && !shop.categories.some(cat => cat.name === specialization)) {
+            return res.status(400).send({
+                success: false,
+                message: "Invalid specialization. Must match a Job Category name."
+            });
+        }
+
         let hashedPassword = null;
 
         // Hash the password only if provided
@@ -33,8 +40,6 @@ export const createEmployeeController = async(req, res) => {
             hashedPassword = await hashPassword(password);
         }
 
-        // Check if shop exists 
-        const shop = await ShopModel.findById(shopId);
         if (!shop) {
             return res.status(400).send({ success: false, message: "Shop was not found" });
         }
@@ -53,7 +58,6 @@ export const createEmployeeController = async(req, res) => {
             role,
             phone,
             shopId,
-            hourlyRate,
             experience,
         };
 
@@ -128,7 +132,7 @@ export const updateEmployeeController= async(req,res)=>{
     try {
         
         const {empid}=req.params;
-        const {name,role,phone,isAvailable,specialization,hourlyRate,experience}=req.body
+        const {name,role,phone,isAvailable,specialization,experience}=req.body
 
         const newEmployeeData={
         name,
@@ -136,7 +140,6 @@ export const updateEmployeeController= async(req,res)=>{
         phone,
         isAvailable,
         specialization,
-        hourlyRate,
         experience
         }
 
