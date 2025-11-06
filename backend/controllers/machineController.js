@@ -7,6 +7,7 @@ export const createMachineController = async (req, res) => {
       name,
       type,
       status,
+      hourlyRate,
       purchaseDate,
       lastMaintenanceDate,
       nextMaintenanceDate,
@@ -38,6 +39,7 @@ export const createMachineController = async (req, res) => {
     const machine = new MachineModel({
       name,
       type,
+      hourlyRate,
       status,
       purchaseDate,
       lastMaintenanceDate,
@@ -106,6 +108,7 @@ export const updateMachineController = async (req, res) => {
       name,
       type,
       status,
+      hourlyRate,
       purchaseDate,
       lastMaintenanceDate,
       nextMaintenanceDate,
@@ -120,6 +123,7 @@ export const updateMachineController = async (req, res) => {
     const machineData = {};
     if (name !== undefined) machineData.name = name;
     if (type !== undefined) machineData.type = type;
+    if (hourlyRate !== undefined) machineData.hourlyRate = hourlyRate;
     if (status !== undefined) machineData.status = status;
     if (purchaseDate) machineData.purchaseDate = purchaseDate;
     if (lastMaintenanceDate) machineData.lastMaintenanceDate = lastMaintenanceDate;

@@ -21,7 +21,6 @@ function EstimatorDashboard({ onLoginClick }) {
   const {userInfo, isAuthenticated, logout } = useAuth();
   const[employees,setEmployees]=useState([]);
   const[categories,setCategories]=useState([]);
-  const [machineCategories, setMachineCategories] = useState([]);
 
   const shopId = userInfo?.shopId;
 
@@ -83,19 +82,7 @@ const getAllCategory = async () => {
     }
   };
 
-  const getAllMachineCategories = async () => {
-    try {
-      const res = await axios.get(`/shop/allMachineCategories/${userInfo?.shopId}`);
-      if (res.data?.machineCategories?.length > 0) {
-        setMachineCategories(res.data.machineCategories);
-      } else {
-        console.log("No machine categories found for this shop");
-        setMachineCategories([]);
-      }
-    } catch (error) {
-      console.error("Error fetching machine categories:", error);
-    }
-  };
+ 
 
   useEffect(() => {
     if (!userInfo) return;
@@ -108,8 +95,11 @@ const getAllCategory = async () => {
     getAllJobs();
     getAllWorlers();
     getAllCategory();
-    getAllMachineCategories();
+
+
+
   }, [userInfo]);
+
 
   const [jobs, setJobs] = useState([])
 
@@ -503,53 +493,8 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
     }
   };
 
-const handleMachineRequiredChange = (itemIndex, machineId) => {
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    newJobItems[itemIndex] = {
-      ...newJobItems[itemIndex],
-      machine: {
-        ...newJobItems[itemIndex].machine,
-        machineRequired: machineId || null
-      }
-    };
-    return { ...prev, jobItems: newJobItems };
-  });
-};
 
-const handleMachineHoursChange = (itemIndex, hours) => {
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    const currentItem = newJobItems[itemIndex];
 
-    const machineId = currentItem.machine.machineRequired;
-    const selectedMachine = machines.find(m => m._id === machineId);
-
-    const machineCategoryName = selectedMachine?.type || null;
-    const categoryData = machineCategoryName
-      ? machineCategories.find(c => c.name === machineCategoryName)
-      : null;
-
-    const hourlyRate = categoryData?.hourlyRate || 0;
-    const hoursNum = parseFloat(hours) || 0;
-    const machineEstimatedCost = hoursNum * hourlyRate;
-
-    console.log("Machine Cost Debug:", {
-      hoursNum,
-      hourlyRate,
-      machineEstimatedCost
-    });
-
-    newJobItems[itemIndex] = {
-      ...currentItem,
-      machineHours: hoursNum,
-      machineHourlyRate: hourlyRate,
-      machineEstimatedCost
-    };
-
-    return { ...prev, jobItems: newJobItems };
-  });
-};
 
 const handleMaterialsChange = (itemIndex, materials, estimatedPrice) => {
   setFormData(prev => {
@@ -600,14 +545,43 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
   });
 };
 
-  const calculateFormTotal = () => {
-    const itemsTotal = formData.jobItems.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-    const machinesTotal = formData.jobItems.reduce((sum, item) => sum + (item.machineEstimatedCost || 0), 0);
-    const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
-    const materialsTotal = formData.jobItems.reduce((sum, item) => sum + (item.material.estimatedPrice || 0), 0); 
+  // const calculateFormTotal = () => {
+  //   const itemsTotal = formData.jobItems.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+  //   const machinesTotal = formData.jobItems.reduce((sum, item) => sum + (item.machineEstimatedCost || 0), 0);
+  //   const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
+  //   const materialsTotal = formData.jobItems.reduce((sum, item) => sum + (item.material.estimatedPrice || 0), 0); 
 
-    return itemsTotal + machinesTotal + consumablesTotal+materialsTotal;
-  };
+  //   return itemsTotal + machinesTotal + consumablesTotal+materialsTotal;
+  // };
+
+
+  const calculateFormTotal = () => {
+  const itemsTotal = formData.jobItems.reduce(
+    (sum, item) => sum + (item.estimatedPrice || 0), 
+    0
+  );
+
+  const machinesTotal = formData.jobItems.reduce(
+    (sum, item) => sum + (item.machineEstimatedCost || 0), 
+    0
+  );
+
+  const materialsTotal = formData.jobItems.reduce(
+    (sum, item) => sum + (item.material.estimatedPrice || 0), 
+    0
+  );
+
+  const consumablesTotal = formData.consumables.reduce(
+    (sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 
+    0
+  );
+
+  const total = itemsTotal + machinesTotal + materialsTotal + consumablesTotal;
+  console.log("💰 Form Total:", { itemsTotal, machinesTotal, materialsTotal, consumablesTotal, total });
+  return total;
+};
+
+
 
  const calculateJobTotal = (job) => {
   if (!job || !job.items) return 0;
@@ -659,9 +633,6 @@ const handleSaveJob = async () => {
       estimatedManHours:item.estimatedManHours,
       machine: {
         machineRequired: item.machine.machineRequired || null,
-        machineHours: item.machineHours || 0,
-        machineHourlyRate: item.machineHourlyRate || 0,
-        machineEstimatedCost: item.machineEstimatedCost || 0,
         startTime: item.machine.startTime || null,
         endTime: item.machine.endTime || null,
         actualDuration: item.machine.actualDuration || null
@@ -802,6 +773,72 @@ const handleJobCategorySelect = (index, categoryName) => {
     return { ...prev, jobItems: updatedJobItems };
   });
 };
+
+
+
+const handleMachineRequiredChange = (itemIndex, machineId) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const currentItem = newJobItems[itemIndex];
+
+    const selectedMachine = machines.find(m => m._id === machineId);
+    const hourlyRate = selectedMachine?.hourlyRate || 0;
+    const machineHours = currentItem.machineHours || 0;
+    const machineEstimatedCost = hourlyRate * machineHours;
+
+    newJobItems[itemIndex] = {
+      ...currentItem,
+      machine: {
+        ...currentItem.machine,
+        machineRequired: machineId || null
+      },
+      machineHourlyRate: hourlyRate,
+      machineEstimatedCost
+    };
+
+    console.log("✅ Machine Selected:", {
+      machine: selectedMachine?.name,
+      hourlyRate,
+      machineEstimatedCost
+    });
+
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+
+const handleMachineHoursChange = (itemIndex, hours) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const currentItem = newJobItems[itemIndex];
+
+    const machineId = currentItem.machine.machineRequired;
+    const selectedMachine = machines.find(m => m._id === machineId);
+
+    const hourlyRate = selectedMachine?.hourlyRate || currentItem.machineHourlyRate || 0;
+    const hoursNum = parseFloat(hours) || 0;
+    const machineEstimatedCost = hoursNum * hourlyRate;
+
+    newJobItems[itemIndex] = {
+      ...currentItem,
+      machineHours: hoursNum,
+      machineHourlyRate: hourlyRate,
+      machineEstimatedCost
+    };
+
+    console.log("✅ Machine Cost Calculated:", {
+      machineName: selectedMachine?.name,
+      hourlyRate,
+      hoursNum,
+      machineEstimatedCost
+    });
+
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+
+
 
 
   return (

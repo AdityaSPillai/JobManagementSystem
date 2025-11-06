@@ -7,6 +7,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
   const [formData, setFormData] = useState({
     name: '',
     type: '',
+    hourlyRate:0,
     status: 'true',  // Fixed: matches dropdown options
     purchaseDate: '',
     lastMaintenanceDate: '',
@@ -16,17 +17,26 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+    if (name === "type") {
+      const selectedCategory = machineCategories.find(cat => cat.name === value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        hourlyRate: selectedCategory?.hourlyRate || 0 
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+ const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(formData); 
     onClose();
-    // Reset form
     setFormData({
       name: '',
       type: '',
@@ -35,11 +45,11 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
       lastMaintenanceDate: '',
       nextMaintenanceDate: '',
       isActive: true,
+      hourlyRate: 0
     });
-  // window.location.reload();
   };
 
-  if (!isVisible) return null;
+ if (!isVisible) return null;
 
   return (
     <div className="modal-overlay">
@@ -54,33 +64,47 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
               <label htmlFor="name">Machine Name</label>
               <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
+
             <div className="form-group">
               <label htmlFor="type">Machine Type</label>
               <select id="type" name="type" value={formData.type} onChange={handleChange} required>
                 <option value="">-- Select Category --</option>
-                {machineCategories.map((cat) => (
+                {machineCategories.map(cat => (
                   <option key={cat._id} value={cat.name}>
                     {cat.name} (₹{cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>
             </div>
+
+            <div className="form-group">
+              <label>Hourly Rate (auto-filled)</label>
+              <input 
+                type="number" 
+                value={formData.hourlyRate || 0} 
+                readOnly 
+                style={{ backgroundColor: "#f3f3f3" }}
+              />
+            </div>
+
             <div className="form-group">
               <label htmlFor="status">Current Status</label>
               <select id="status" name="status" value={formData.status} onChange={handleChange}>
                 <option value={true}>Available</option>
                 <option value={false}>Offline</option>
-               
               </select>
             </div>
+
             <div className="form-group">
               <label htmlFor="purchaseDate">Purchase Date</label>
               <input type="date" id="purchaseDate" name="purchaseDate" value={formData.purchaseDate} onChange={handleChange} />
             </div>
+
             <div className="form-group">
               <label htmlFor="lastMaintenanceDate">Last Maintenance</label>
               <input type="date" id="lastMaintenanceDate" name="lastMaintenanceDate" value={formData.lastMaintenanceDate} onChange={handleChange} />
             </div>
+
             <div className="form-group">
               <label htmlFor="nextMaintenanceDate">Next Maintenance</label>
               <input type="date" id="nextMaintenanceDate" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} />
