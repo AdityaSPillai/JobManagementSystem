@@ -24,8 +24,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   const shopId = userInfo?.shopId;
 
 
-  
-
   const getAllServices = async () => {
     if (!shopId) return console.log("No shopId found");
     try {

@@ -612,4 +612,3 @@ export const getAllShopJobsController= async(req,res)=>{
 }
 
 
-
