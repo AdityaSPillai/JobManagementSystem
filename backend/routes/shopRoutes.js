@@ -1,5 +1,5 @@
 import express from "express"
-import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories} from "../controllers/shopController.js";
+import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories, getAllClient} from "../controllers/shopController.js";
 import {isOwner} from "../middleware/middlewares.js";
 
 const router= express.Router();
@@ -51,7 +51,7 @@ router.get("/getAllJobs/:shopId",getAllShopJobsController);
 
 
 
-
+router.get('/allClients/:shopId',getAllClient)
 
 
 export default router;

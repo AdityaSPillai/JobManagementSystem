@@ -612,7 +612,63 @@ export const getAllShopJobsController= async(req,res)=>{
 }
 
 
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
+
+
+export const getAllClient = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+
+    const jobs = await JobCardModel.find({ shopId });
+    console.log(jobs.length)
+
+    if (!jobs || jobs.length === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No jobs found for this shop"
+      });
+    }
+console.log(jobs.length)
+    // Extract customer info from each job
+      const allClients = jobs.map(job => {
+      const form = job.formData instanceof Map
+        ? Object.fromEntries(job.formData)
+        : job.formData || {};
+
+      return {
+        customer_name: form.customer_name || "Unknown",
+        contact_number: form.contact_number || "",
+        vehicle_number: form.vehicle_number || "",
+        vehicle_model: form.vehicle_model || ""
+      };
+    });
+
+    // Remove duplicates based on contact number (or name if you prefer)
+    const uniqueClients = [];
+    const seen = new Set();
+
+    for (const client of allClients) {
+      const key = client.contact_number || client.customer_name; // use unique field
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueClients.push(client);
+      }
+    }
+
+
+
+    return res.status(200).send({
+      success: true,
+      message: "Clients fetched successfully",
+      clients: uniqueClients
+    });
+
+  } catch (error) {
+    console.error("Error fetching clients:", error);
+    res.status(500).send({
+      success: false,
+      message: "Unable to fetch clients",
+      error
+    });
+  }
+};
