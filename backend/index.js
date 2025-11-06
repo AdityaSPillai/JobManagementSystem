@@ -10,9 +10,14 @@ import jobRoutes from "./routes/jobRoutes.js"
 import connectDB from "./model/model.js";
 import rateLimit from "express-rate-limit";
 import machineRouets from './routes/machineRouets.js'
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 const app= express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // const limiter = rateLimit({
 // 	windowMs: 15 * 60 * 1000, // 15 minutes
@@ -51,15 +56,12 @@ app.use('/v1/machine',machineRouets);
 app.use('/v1/template',templateRoutes)
 app.use('/v1/jobs',jobRoutes)
 
-app.get('/',(req,res)=>{
-  
-})
+app.use(express.static(path.join(__dirname, "frontend", "dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+});
 
-
-
-const PORT= process.env.PORT || 5000
-
-app.listen(PORT,()=>{
-    console.log(`App is listening on port ${PORT}`);
-
-})
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`App is listening on port ${PORT}`);
+});
