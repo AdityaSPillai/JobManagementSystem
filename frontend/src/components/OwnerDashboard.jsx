@@ -24,7 +24,6 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     pincode: '',
     services: [{
       name: '',
-      price: '',
       description: ''
     }],
     categories: [{
@@ -96,7 +95,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
   const addService = () => {
     setFormData(prev => ({
       ...prev,
-      services: [...prev.services, { name: '', price: '', description: '' }]
+      services: [...prev.services, { name: '', description: '' }]
     }));
   };
 
@@ -118,7 +117,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     
     // Validate services
     const hasEmptyService = formData.services.some(service => 
-      !service.name || !service.price || !service.description
+      !service.name || !service.description
     );
     if (hasEmptyService) {
       alert("Please fill in all service fields.");
@@ -151,7 +150,6 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
       },
       services: formData.services.map(service => ({
         name: service.name,
-        price: Number(service.price),
         description: service.description
       })),
       categories: formData.categories.map(category => ({
@@ -202,7 +200,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
       city: '',
       state: '',
       pincode: '',
-      services: [{ name: '', price: '', description: '' }],
+      services: [{ name: '', description: '' }],
       categories: [{ name: '', hourlyRate: '' }],
       machineCategory: [{ name: '', hourlyRate: '' }]
     });
@@ -273,18 +271,6 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                     value={service.name} 
                     onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
                     placeholder="e.g., Oil Change" 
-                    required 
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor={`service-price-${index}`}>Price</label>
-                  <input 
-                    type="number" 
-                    id={`service-price-${index}`}
-                    value={service.price} 
-                    onChange={(e) => handleServiceChange(index, 'price', e.target.value)}
-                    placeholder="0" 
-                    min="0"
                     required 
                   />
                 </div>

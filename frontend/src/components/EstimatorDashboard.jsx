@@ -362,6 +362,7 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
 
   const matchesFilter =
     statusFilter === 'all' ||
+    (statusFilter === 'waiting' && job.status === 'waiting') ||
     (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'approved')) ||
     (statusFilter === 'assigned' && (job.status === 'in_progress' || job.status === 'In Progress' || job.status === 'Assigned')) ||
     (statusFilter === 'unassigned' && (job.status === 'pending' || job.status === 'rejected'));
@@ -545,16 +546,6 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
     return { ...prev, jobItems: newJobItems };
   });
 };
-
-  // const calculateFormTotal = () => {
-  //   const itemsTotal = formData.jobItems.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-  //   const machinesTotal = formData.jobItems.reduce((sum, item) => sum + (item.machineEstimatedCost || 0), 0);
-  //   const consumablesTotal = formData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
-  //   const materialsTotal = formData.jobItems.reduce((sum, item) => sum + (item.material.estimatedPrice || 0), 0); 
-
-  //   return itemsTotal + machinesTotal + consumablesTotal+materialsTotal;
-  // };
-
 
   const calculateFormTotal = () => {
   const itemsTotal = formData.jobItems.reduce(
@@ -929,6 +920,12 @@ const handleRejectJob = async (jobId) => {
                   onClick={() => setStatusFilter('all')}
                 >
                   All
+                </button>
+                <button 
+                  className={`filter-btn ${statusFilter === 'waiting' ? 'active' : ''}`} 
+                  onClick={() => setStatusFilter('waiting')}
+                >
+                  Waiting
                 </button>
                 <button 
                   className={`filter-btn ${statusFilter === 'assigned' ? 'active' : ''}`} 
