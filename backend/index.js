@@ -10,8 +10,6 @@ import jobRoutes from "./routes/jobRoutes.js"
 import connectDB from "./model/model.js";
 import rateLimit from "express-rate-limit";
 import machineRouets from './routes/machineRouets.js'
-import path from "path";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 const app= express();
@@ -27,8 +25,6 @@ const app= express();
 
 // app.use(limiter)
 app.use(express.json());
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 app.use(morgan('dev'))
 app.use(cors({
@@ -55,15 +51,15 @@ app.use('/v1/machine',machineRouets);
 app.use('/v1/template',templateRoutes)
 app.use('/v1/jobs',jobRoutes)
 
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+app.get('/',(req,res)=>{
+  
+})
 
-// ✅ Catch-all route for React Router
-app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
 
-// ✅ Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`App is listening on port ${PORT}`);
-});
+
+const PORT= process.env.PORT || 5000
+
+app.listen(PORT,()=>{
+    console.log(`App is listening on port ${PORT}`);
+
+})
