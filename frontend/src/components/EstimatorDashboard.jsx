@@ -105,7 +105,7 @@ const getAllCategory = async () => {
 
   const [formData, setFormData] = useState({
     templateId: '68f50077a6d75c0ab83cd019',
-    isVerifiedByUser: true,
+    isVerifiedByUser: false,
     workVerified:null,
     notes:null,
     shopId: userInfo?.shopId || '',
@@ -853,6 +853,45 @@ const handleMachineHoursChange = async (itemIndex, hours) => {
 };
 
 
+
+
+const handleVerifyJob = async (jobId) => {
+  if (!window.confirm("Are you sure you want to approve this job?")) return;
+  try {
+    const res = await axios.post(`/jobs/verifyJob/${jobId}`);
+    if (res.data?.success) {
+      alert("✅ Job approved successfully!");
+      await getAllJobs();
+      setShowJobDetails(false);
+      setSelectedJob(null);
+    } else {
+      alert("Failed to approve job.");
+    }
+  } catch (error) {
+    console.error("Error approving job:", error);
+    alert("Error while approving job. Please try again.");
+  }
+};
+
+const handleRejectJob = async (jobId) => {
+  if (!window.confirm("Are you sure you want to reject this job?")) return;
+  try {
+    const res = await axios.delete(`/jobs/delete-job/${jobId}`);
+    if (res.data?.success) {
+      alert("❌ Job rejected and deleted successfully!");
+      await getAllJobs();
+      setShowJobDetails(false);
+      setSelectedJob(null);
+    } else {
+      alert("Failed to reject job.");
+    }
+  } catch (error) {
+    console.error("Error rejecting job:", error);
+    alert("Error while rejecting job. Please try again.");
+  }
+};
+
+
   return (
     <div className="estimator-dashboard">
       <Header 
@@ -1100,6 +1139,7 @@ const handleMachineHoursChange = async (itemIndex, hours) => {
                                 selectedJob.status.toLowerCase() === 'in_progress' ||
                                 selectedJob.status.toLowerCase() === 'completed' ||
                                 selectedJob.status.toLowerCase() === 'approved' ||
+                                selectedJob.status.toLowerCase()==='waiting' ||
                                 item.itemStatus === 'running' ||
                                 item.itemStatus === 'completed'
                               }
@@ -1123,6 +1163,23 @@ const handleMachineHoursChange = async (itemIndex, hours) => {
                     </strong>
                   </div>
                 </div>
+
+                {selectedJob.status.toLowerCase() === 'waiting' && (
+                    <div className="approve-reject-section">
+                      <button 
+                        className="btn-approve"
+                        onClick={() => handleVerifyJob(selectedJob.id)}
+                      >
+                        ✅ Approve
+                      </button>
+                      <button 
+                        className="btn-reject"
+                        onClick={() => handleRejectJob(selectedJob.id)}
+                      >
+                        ❌ Reject
+                      </button>
+                    </div>
+                  )}
               </div>
             )}
             {showCreateJob && (

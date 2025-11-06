@@ -974,6 +974,39 @@
   color: black;
 }
 
+
+
+.approve-reject-section {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-approve {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-reject {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-approve:hover { background-color: #218838; }
+.btn-reject:hover { background-color: #c82333; }
+
+
 /* Responsive Design */
 @media (max-width: 1400px) {
   .dashboard-grid {

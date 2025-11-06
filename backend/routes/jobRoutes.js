@@ -10,7 +10,8 @@ import { createJobCard,
     endWorkerTimer,
     assignWorkerController,
     qualityGoodController,
-    qualityBadController
+    qualityBadController,
+    verifyJobController
     } from "../controllers/jobController.js";
 
 const router= express.Router();
@@ -51,8 +52,8 @@ router.put('/end-worker-timer/:jobId/:userId',endWorkerTimer)
 router.put('/qualityGood/:jobId/:userId',qualityGoodController)
 router.post('/qualityBad/:jobId/:userId',qualityBadController)
 
-
-
+//vuser verification of job
+router.post('/verifyJob/:jobId',verifyJobController)
 
 
 

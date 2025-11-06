@@ -21,12 +21,6 @@ export const createJobCard = async (req, res) => {
       });
     }
 
-    if(!isVerifiedByUser){
-      return res.status(400).json({
-        success: false,
-        message: "User has not verified the data"
-      });
-    }
     
     // Calculate total estimated amount (including material costs)
     const totalEstimatedAmount = jobItems.reduce(
@@ -47,7 +41,7 @@ export const createJobCard = async (req, res) => {
       jobCardNumber,
       templateId,
       shopId,
-      isVerifiedByUser,
+      isVerifiedByUser:false,
       workVerified,
       formData: new Map(Object.entries(formData)),
       jobItems: jobItems.map(item => ({
@@ -59,6 +53,7 @@ export const createJobCard = async (req, res) => {
         worker: item.worker || {},
         material: item.material || {}
       })),
+      status:'waiting',
       totalEstimatedAmount,
       createdBy: req.user?._id
     });
@@ -659,3 +654,45 @@ export const qualityBadController = async(req,res)=>{
     });
   }
 };
+
+
+
+export const verifyJobController =async(req,res)=>{
+ 
+     try {
+    const { jobId } = req.params;
+  if (!jobId ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide valid jobId and ",
+      });
+    } 
+
+    const jobItem = await JobCardModel.findById(jobId);
+    if (!jobItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Job item not found",
+      });
+    } 
+
+    console.log(jobItem)
+    jobItem.isVerifiedByUser=true;
+    jobItem.status='pending';
+    await jobItem.save();
+    res.status(200).send({
+      success:true,
+      message:"Job verified succesfylly",
+      jobItem
+    })
+
+    
+    } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Unable to Verify job as user agreed",
+      error,
+    });
+  }
+}
