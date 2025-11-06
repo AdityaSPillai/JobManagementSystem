@@ -69,10 +69,6 @@ const shopSchema = new mongoose.Schema({
       type:String,
       required:true
     },
-    price:{
-      type:Number,
-      required:true
-    },
     description:String,
     note:String,
   }],

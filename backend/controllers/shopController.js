@@ -612,3 +612,7 @@ export const getAllShopJobsController= async(req,res)=>{
 }
 
 
+<<<<<<< Updated upstream
+
+=======
+>>>>>>> Stashed changes
