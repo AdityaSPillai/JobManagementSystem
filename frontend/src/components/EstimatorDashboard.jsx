@@ -1250,7 +1250,7 @@ const handleRejectJob = async (jobId) => {
         </div>
 
         <div className="form-group">
-            <label>Job Category</label>
+            <label>Employee Category</label>
          <select 
             value={item.category || ''} 
             onChange={(e) => handleJobCategorySelect(index, e.target.value)}
