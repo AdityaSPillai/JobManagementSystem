@@ -3,6 +3,7 @@ import Header from './Header';
 import playIcon from '../assets/play.svg';
 import useAuth from '../context/context.js';
 import tickIcon from '../assets/tick.svg';
+import crossIcon from '../assets/cross.svg';
 import axios from '../utils/axios.js';
 import clipboardIcon from '../assets/clipboard.svg';
 import workerIcon from '../assets/worker.svg';
@@ -1170,13 +1171,13 @@ const handleRejectJob = async (jobId) => {
                         className="btn-approve"
                         onClick={() => handleVerifyJob(selectedJob.id)}
                       >
-                       <img src={tickIcon} alt="Completed" className="btn-icon" /> Approve
+                       <img src={tickIcon} alt="Completed" className="btn-icon"/> Approve
                       </button>
                       <button 
                         className="btn-reject"
                         onClick={() => handleRejectJob(selectedJob.id)}
                       >
-                        ❌ Reject
+                        <img src={crossIcon} alt="Completed" className="btn-icon"/> Reject
                       </button>
                     </div>
                   )}
