@@ -642,7 +642,8 @@ console.log(jobs.length)
         customer_name: form.customer_name || "Unknown",
         contact_number: form.contact_number || "",
         vehicle_number: form.vehicle_number || "",
-        vehicle_model: form.vehicle_model || ""
+        vehicle_model: form.vehicle_model || "",
+        status:job.status || '',
       };
     });
 

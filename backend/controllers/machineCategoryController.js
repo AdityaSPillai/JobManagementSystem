@@ -105,3 +105,31 @@ export const deleteMachineCategoryController = async (req, res) => {
     res.status(500).json({ success: false, message: "Error deleting machine category", error: error.message });
   }
 };
+
+
+
+export const getHourlyRateController= async(req,res)=>{
+  try {
+    const{type,shopId}=req.params;
+    if(!type|| !shopId)
+    {
+      console.log("Category and  shopId type is required");
+    }
+    const shop= await ShopModel.findById(shopId);
+    if(!shop){
+      console.log("Shop not found");
+    }
+
+    const category= shop.machineCategory.find(cat=>cat.name===type);
+    const rate= category?category.hourlyRate:null;
+
+    res.status(200).send({
+      success:true,
+      message:"Rate revieved succesfully",
+      rate,
+    })
+    
+  } catch (error) {
+    
+  }
+}

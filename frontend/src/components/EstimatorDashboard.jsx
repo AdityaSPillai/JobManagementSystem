@@ -577,7 +577,6 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
   );
 
   const total = itemsTotal + machinesTotal + materialsTotal + consumablesTotal;
-  console.log("💰 Form Total:", { itemsTotal, machinesTotal, materialsTotal, consumablesTotal, total });
   return total;
 };
 
@@ -774,71 +773,84 @@ const handleJobCategorySelect = (index, categoryName) => {
   });
 };
 
+// ✅ Utility function to fetch rate
+const fetchHourlyRate = async (type) => {
+  try {
+    console.log("Fetching rate for type:", type);
+    const res = await axios.get(`/shop/getHourlyRate/${userInfo?.shopId}/${type}`);
+    console.log("Rate Response:", res.data);
+    return res.data?.rate || 0; // ✅ Only return numeric rate
+  } catch (error) {
+    console.error("Error fetching hourly rate:", error);
+    return 0;
+  }
+};
 
+// ✅ When a machine is selected
+const handleMachineRequiredChange = async (itemIndex, machineId) => {
+  const selectedMachine = machines.find(m => m._id === machineId);
+  if (!selectedMachine) return;
 
-const handleMachineRequiredChange = (itemIndex, machineId) => {
+  const type = selectedMachine.type;
+  const hourlyRate = await fetchHourlyRate(type); // ✅ Wait for rate
+  const machineHours = formData.jobItems[itemIndex]?.machineHours || 0;
+  const machineEstimatedCost = hourlyRate * machineHours;
+
   setFormData(prev => {
     const newJobItems = [...prev.jobItems];
-    const currentItem = newJobItems[itemIndex];
-
-    const selectedMachine = machines.find(m => m._id === machineId);
-    const hourlyRate = selectedMachine?.hourlyRate || 0;
-    const machineHours = currentItem.machineHours || 0;
-    const machineEstimatedCost = hourlyRate * machineHours;
-
     newJobItems[itemIndex] = {
-      ...currentItem,
+      ...newJobItems[itemIndex],
       machine: {
-        ...currentItem.machine,
-        machineRequired: machineId || null
+        ...newJobItems[itemIndex].machine,
+        machineRequired: machineId || null,
       },
       machineHourlyRate: hourlyRate,
       machineEstimatedCost
     };
-
-    console.log("✅ Machine Selected:", {
-      machine: selectedMachine?.name,
-      hourlyRate,
-      machineEstimatedCost
-    });
-
     return { ...prev, jobItems: newJobItems };
+  });
+
+  console.log("✅ Machine Selected:", {
+    machine: selectedMachine.name,
+    type,
+    hourlyRate,
+    machineHours,
+    machineEstimatedCost
   });
 };
 
+// ✅ When machine hours are updated
+const handleMachineHoursChange = async (itemIndex, hours) => {
+  const newHours = parseFloat(hours) || 0;
+  const currentItem = formData.jobItems[itemIndex];
+  const machineId = currentItem.machine.machineRequired;
 
-const handleMachineHoursChange = (itemIndex, hours) => {
+  if (!machineId) return;
+
+  const selectedMachine = machines.find(m => m._id === machineId);
+  const type = selectedMachine?.type;
+  const hourlyRate = await fetchHourlyRate(type); // ✅ Wait for rate
+
+  const machineEstimatedCost = newHours * hourlyRate;
+
   setFormData(prev => {
     const newJobItems = [...prev.jobItems];
-    const currentItem = newJobItems[itemIndex];
-
-    const machineId = currentItem.machine.machineRequired;
-    const selectedMachine = machines.find(m => m._id === machineId);
-
-    const hourlyRate = selectedMachine?.hourlyRate || currentItem.machineHourlyRate || 0;
-    const hoursNum = parseFloat(hours) || 0;
-    const machineEstimatedCost = hoursNum * hourlyRate;
-
     newJobItems[itemIndex] = {
-      ...currentItem,
-      machineHours: hoursNum,
+      ...newJobItems[itemIndex],
+      machineHours: newHours,
       machineHourlyRate: hourlyRate,
       machineEstimatedCost
     };
-
-    console.log("✅ Machine Cost Calculated:", {
-      machineName: selectedMachine?.name,
-      hourlyRate,
-      hoursNum,
-      machineEstimatedCost
-    });
-
     return { ...prev, jobItems: newJobItems };
   });
+
+  console.log("✅ Machine Cost Calculated:", {
+    machineName: selectedMachine?.name,
+    hourlyRate,
+    hoursNum: newHours,
+    machineEstimatedCost
+  });
 };
-
-
-
 
 
   return (
