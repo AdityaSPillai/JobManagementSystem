@@ -52,6 +52,8 @@ export const createJobCard = async (req, res) => {
       formData: new Map(Object.entries(formData)),
       jobItems: jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
+        category:item.category,
+        estimatedManHours:item.estimatedManHours,
         estimatedPrice: item.estimatedPrice || 0,
         machine: item.machine || {},
         worker: item.worker || {},
@@ -156,6 +158,8 @@ export const updateJobSettings = async (req, res) => {
       updateData.jobItems = jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
         estimatedPrice: item.estimatedPrice || 0,
+        category:item.category,
+        estimatedManHours:item.estimatedManHours,
         machine: item.machine || {},
         worker: item.worker || {},
         material: item.material || {}

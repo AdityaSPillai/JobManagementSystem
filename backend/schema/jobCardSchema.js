@@ -41,6 +41,14 @@ const JobCardSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
+    category:{
+      type:String,
+      required:true
+    },
+    estimatedManHours:{
+      type:Number,
+      required:true
+    },
     machine: {
       machineRequired: {
         type: mongoose.Schema.Types.ObjectId,

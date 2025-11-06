@@ -18,8 +18,10 @@ function EstimatorDashboard({ onLoginClick }) {
   const [selectedJob, setSelectedJob] = useState(null);
   const [services, setServices] = useState([]);
   const [machines, setMachines] = useState([]);
-  const { userInfo, isAuthenticated, logout } = useAuth();
+  const {userInfo, isAuthenticated, logout } = useAuth();
   const[employees,setEmployees]=useState([]);
+  const[categories,setCategories]=useState([]);
+
   const shopId = userInfo?.shopId;
 
   const getAllServices = async () => {
@@ -64,6 +66,23 @@ const getAllWorlers=async()=>{
     }
   };
 
+
+const getAllCategory = async () => {
+    if (!shopId) return console.log("No shopId found");
+    try {
+      const res = await axios.get(`/shop/allCategories/${userInfo?.shopId}`);
+      if (res.data?.categories?.length > 0) {
+        setCategories(res.data.categories);
+      } else {
+        console.log("No services found for this shop");
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  };
+
+
   useEffect(() => {
     if (!userInfo) return;
     if (!userInfo.shopId) {
@@ -74,6 +93,7 @@ const getAllWorlers=async()=>{
     getAllMachines();
     getAllJobs();
     getAllWorlers();
+    getAllCategory();
   }, [userInfo]);
 
   const [jobs, setJobs] = useState([])
@@ -99,6 +119,8 @@ const getAllWorlers=async()=>{
           priority: '',
         },
         estimatedPrice: 0,
+        category:'',
+        estimatedManHours:0,
         machine: {
           machineRequired: {
             _id:null,
@@ -164,6 +186,8 @@ const getAllJobs = async () => {
           description: item.itemData?.description || '',
           priority: item.itemData?.priority || '',
           estimatedPrice: item.estimatedPrice || 0,
+          category:item.category,
+          estimatedManHours:item.estimatedManHours,
           itemStatus: (item.itemStatus || 'stopped').toLowerCase(),
           machine: {
             machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
@@ -378,13 +402,43 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
     });
   };
 
-  const handleJobItemChange = (index, field, value) => {
-    if (field === 'job_type' || field === 'description' || field === 'priority') {
-      updateJobItemField(index, field, value, 'itemData');
-    } else if (field === 'estimatedPrice') {
-      updateJobItemField(index, field, value);
+ const handleJobItemChange = (index, field, value) => {
+  setFormData(prev => {
+    const updatedJobItems = [...prev.jobItems];
+    const currentItem = updatedJobItems[index];
+    let updatedItem = { ...currentItem };
+
+    if (field === 'estimatedManHours') {
+      const manHours = parseFloat(value) || 0;
+      const hourlyRate = currentItem.hourlyRate || 0;
+
+      updatedItem = {
+        ...currentItem,
+        estimatedManHours: manHours,
+        estimatedPrice: manHours * hourlyRate
+      };
+    } 
+    else if (field === 'job_type' || field === 'description' || field === 'priority') {
+      updatedItem = {
+        ...currentItem,
+        itemData: {
+          ...currentItem.itemData,
+          [field]: value
+        }
+      };
+    } 
+    else {
+      updatedItem = { ...currentItem, [field]: value };
     }
-  };
+
+    updatedJobItems[index] = updatedItem;
+    return { ...prev, jobItems: updatedJobItems };
+  });
+};
+
+
+
+
 
   const addJobItem = () => {
     setFormData(prev => ({
@@ -398,6 +452,8 @@ const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
             priority: '',
           },
           estimatedPrice: 0,
+           category:'',
+           estimatedManHours:0,
           machine: {
             machineRequired: null,
             startTime: null,
@@ -544,6 +600,8 @@ const handleSaveJob = async () => {
         priority: item.itemData.priority || 'Medium'
       },
       estimatedPrice: item.estimatedPrice,
+       category:item.category,
+      estimatedManHours:item.estimatedManHours,
       machine: {
         machineRequired: item.machine.machineRequired || null,
         startTime: item.machine.startTime || null,
@@ -586,6 +644,8 @@ const handleSaveJob = async () => {
           jobType: item.itemData.job_type || '',
           description: item.itemData.description,
           estimatedPrice: item.estimatedPrice,
+          category:item.category,
+          estimatedManHours:item.estimatedManHours,
           itemStatus: 'stopped'
         })),
         machines: [],
@@ -613,6 +673,8 @@ const handleSaveJob = async () => {
               priority: '',
             },
             estimatedPrice: 0,
+             category:'',
+        estimatedManHours:0,
             machine: {
               machineRequired: null,
               startTime: null,
@@ -661,6 +723,25 @@ const handleJobTypeSelect = (index, serviceId) => {
     return { ...prev, jobItems: updatedJobItems };
   });
 };
+
+const handleJobCategorySelect = (index, categoryName) => {
+  const selectedCategory = categories.find(c => c.name === categoryName);
+  setFormData(prev => {
+    const updatedJobItems = [...prev.jobItems];
+    const currentItem = updatedJobItems[index];
+    const hourlyRate = selectedCategory?.hourlyRate || 0;
+    
+    updatedJobItems[index] = {
+      ...currentItem,
+      category: categoryName,
+      hourlyRate: hourlyRate,
+      // Recalculate price if man-hours already exist
+      estimatedPrice: (currentItem.estimatedManHours || 0) * hourlyRate
+    };
+    return { ...prev, jobItems: updatedJobItems };
+  });
+};
+
 
   return (
     <div className="estimator-dashboard">
@@ -999,13 +1080,29 @@ const handleJobTypeSelect = (index, serviceId) => {
             ))}
           </select>
         </div>
+
         <div className="form-group">
-          <label>Estimated Price (₹) *</label>
+            <label>Job Category</label>
+         <select 
+            value={item.category || ''} 
+            onChange={(e) => handleJobCategorySelect(index, e.target.value)}
+          >
+            <option value="">-- Select Category --</option>
+            {categories.map(category => (
+              <option key={category._id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          </div>
+
+        <div className="form-group">
+          <label>Estimated Man-Hours </label>
           <input 
             type="number" 
             placeholder="0" 
-            value={item.estimatedPrice || ''} 
-            onChange={(e) => handleJobItemChange(index, 'estimatedPrice', e.target.value)}
+            value={item.estimatedManHours || ''} 
+            onChange={(e) => handleJobItemChange(index, 'estimatedManHours', e.target.value)}
           />
         </div>
       </div>
