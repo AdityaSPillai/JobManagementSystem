@@ -489,6 +489,10 @@
   background: #dd6b20;
 }
 
+.error-text{
+  color: #c53030; 
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .stats-cards {

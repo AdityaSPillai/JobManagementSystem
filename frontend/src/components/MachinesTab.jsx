@@ -15,10 +15,10 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
@@ -36,6 +36,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
       nextMaintenanceDate: '',
       isActive: true,
     });
+  window.location.reload();
   };
 
   if (!isVisible) return null;
@@ -86,10 +87,6 @@ function AddMachineModal({ isVisible, onClose, onSubmit }) {
               <label htmlFor="nextMaintenanceDate">Next Maintenance</label>
               <input type="date" id="nextMaintenanceDate" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} />
             </div>
-          </div>
-          <div className="form-group-checkbox">
-            <input type="checkbox" id="isActive" name="isActive" checked={formData.isActive} onChange={handleChange} />
-            <label htmlFor="isActive">Machine is Active</label>
           </div>
           <button type="submit" className="btn-submit">Add Machine</button>
         </form>

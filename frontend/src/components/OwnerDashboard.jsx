@@ -7,6 +7,7 @@ import MachinesTab from './MachinesTab';
 import useAuth from "../context/context.js";
 import axios from "../utils/axios.js"
 import JobTypeTab from './JobTypeTab.jsx';
+import JobCategoryTab from './JobCategoryTab.jsx';
 
 // --- Shop Creation Modal Component ---
 function ShopCreationModal({ isVisible, onClose, onSubmit }) {
@@ -19,10 +20,14 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     city: '',
     state: '',
     pincode: '',
-    services:[{
-      name:'',
-      price:'',
-      description:''
+    services: [{
+      name: '',
+      price: '',
+      description: ''
+    }],
+    categories: [{
+      name: '',
+      hourlyRate: ''
     }]
   });
 
@@ -36,6 +41,29 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     updatedServices[index][field] = value;
     setFormData(prev => ({ ...prev, services: updatedServices }));
   };
+
+  const handleCategoryChange = (index, field, value) => {
+    const updatedCategories = [...formData.categories];
+    updatedCategories[index][field] = value;
+    setFormData(prev => ({ ...prev, categories: updatedCategories }));
+  };
+
+  const addCategory = () => {
+    setFormData(prev => ({
+      ...prev,
+      categories: [...prev.categories, { name: '', hourlyRate: '' }]
+    }));
+  };
+
+  const removeCategory = (index) => {
+    if (formData.categories.length === 1) {
+      alert("At least one category is required");
+      return;
+    }
+    const updatedCategories = formData.categories.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, categories: updatedCategories }));
+  };
+
 
   const addService = () => {
     setFormData(prev => ({
@@ -69,6 +97,14 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
       return;
     }
 
+    const hasEmptyCategory = formData.categories.some(category =>
+      !category.name || !category.hourlyRate
+    );
+    if (hasEmptyCategory) {
+      alert("Please fill in all category fields.");
+      return;
+    }
+
     // Format data to match your API structure
     const shopData = {
       shopName: formData.shopName,
@@ -81,6 +117,10 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
         name: service.name,
         price: Number(service.price),
         description: service.description
+      })),
+      categories: formData.categories.map(category => ({
+        name: category.name,
+        hourlyRate: Number(category.hourlyRate)
       })),
       address: {
         street: formData.street,
@@ -107,7 +147,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
   localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
   
     alert("Shop added successfully!");
-    
+    window.location.reload();
     if (onSubmit) {
       onSubmit(response.data.shop || formData);
     }
@@ -115,14 +155,15 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
 
     // Reset form
     setFormData({
-      shopName: '', 
-      phone: '', 
-      email: '', 
-      street: '', 
-      city: '', 
-      state: '', 
+      shopName: '',
+      phone: '',
+      email: '',
+      street: '',
+      city: '',
+      state: '',
       pincode: '',
-      services: [{ name: '', price: '', description: '' }]
+      services: [{ name: '', price: '', description: '' }],
+      categories: [{ name: '', hourlyRate: '' }]
     });
   onClose();
     
@@ -232,6 +273,51 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
           <button type="button" className="btn-add-service" onClick={addService}>
             + Add Another Service
           </button>
+
+          <label className="form-label-group">Job Categories</label>
+            {formData.categories.map((category, index) => (
+              <div key={index} className="service-item">
+                <div className="form-grid cols-2">
+                  <div className="form-group">
+                    <label htmlFor={`category-name-${index}`}>Category Name</label>
+                    <input
+                      type="text"
+                      id={`category-name-${index}`}
+                      value={category.name}
+                      onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
+                      placeholder="e.g., General, Painting, Electrical"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor={`category-rate-${index}`}>Hourly Rate (₹)</label>
+                    <input
+                      type="number"
+                      id={`category-rate-${index}`}
+                      value={category.hourlyRate}
+                      onChange={(e) => handleCategoryChange(index, 'hourlyRate', e.target.value)}
+                      placeholder="Enter rate"
+                      min="0"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {formData.categories.length > 1 && (
+                  <button
+                    type="button"
+                    className="btn-remove-service"
+                    onClick={() => removeCategory(index)}
+                  >
+                    ✕ Remove Category
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" className="btn-add-service" onClick={addCategory}>
+              + Add Another Category
+            </button>
           
           <button type="submit" className="btn-submit">Submit</button>
         </form>
@@ -336,6 +422,7 @@ function OwnerDashboard({ onLogout }) {
           <button className={`tab-btn ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}>👥 Employees</button>
           <button className={`tab-btn ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}>🔧 Machinery</button>
           <button className={`tab-btn ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
+          <button className={`tab-btn ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}>🦺 Job Category</button>
         </div>
 
         <div className="tab-content">
@@ -343,6 +430,7 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
           {activeTab === 'jobTypes' && <JobTypeTab/> }
+          {activeTab === 'jobCategory' && <JobCategoryTab/> }
         </div>
       </div>
       
