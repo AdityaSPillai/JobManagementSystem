@@ -195,7 +195,7 @@ export const addNewCategoryController = async (req, res) => {
 
 export const updateShopServices= async(req,res)=>{
   try {
-    const { name, description, price,note} = req.body;
+    const { name, description, note} = req.body;
     const {shopId,serviceId}=req.params;
 
     if (!shopId|| !serviceId) return res.status(400).json({ success: false, message: "Shop ID  or Serive Id is required" });
@@ -209,7 +209,6 @@ export const updateShopServices= async(req,res)=>{
 
     if (name) service.name = name;
     if (description) service.description = description;
-    if (price !== undefined) service.price = price;
     if(note) service.note=note;
 
     await shop.save();

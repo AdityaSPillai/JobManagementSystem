@@ -7,7 +7,6 @@ function AddJobModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
     note: '',
   });
 
@@ -20,7 +19,7 @@ function AddJobModal({ isVisible, onClose, onSubmit }) {
     e.preventDefault();
     onSubmit(formData);
     onClose();
-    setFormData({ name: '', description: '', price: '', note: '' });
+    setFormData({ name: '', description: '', note: '' });
   };
 
   if (!isVisible) return null;
@@ -37,10 +36,6 @@ function AddJobModal({ isVisible, onClose, onSubmit }) {
             <div className="form-group">
               <label htmlFor="name">Job Name</label>
               <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label htmlFor="price">Price (₹)</label>
-              <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required />
             </div>
             <div className="form-group full-width">
               <label htmlFor="description">Description</label>
@@ -63,7 +58,6 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
     note: '',
   });
 
@@ -73,7 +67,6 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
       setFormData({
         name: jobData.name || '',
         description: jobData.description || '',
-        price: jobData.price || '',
         note: jobData.note || '',
       });
     }
@@ -113,17 +106,6 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
                 style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
               />
               <small style={{ color: '#666', fontSize: '0.75rem' }}>Job name cannot be changed</small>
-            </div>
-            <div className="form-group">
-              <label htmlFor="edit-price">Price (₹)</label>
-              <input 
-                type="number" 
-                id="edit-price" 
-                name="price" 
-                value={formData.price} 
-                onChange={handleChange} 
-                required 
-              />
             </div>
             <div className="form-group full-width">
               <label htmlFor="edit-description">Description</label>
@@ -211,9 +193,8 @@ function JobTypeTab() {
   // Edit job type
   const handleEditJob = async (jobData) => {
     try {
-      // Format data according to backend requirements (only price and description)
+      // Format data according to backend requirements (only description)
       const payload = {
-        price: Number(jobData.price),
         description: jobData.description,
         ...(jobData.note && { note: jobData.note }) // Include note if it exists
       };
@@ -280,7 +261,6 @@ function JobTypeTab() {
             <div key={job._id} className="data-card">
               <div className="data-card-header">
                 <h4>{job.name}</h4>
-                <span className="data-card-status status-available">₹{job.price}</span>
               </div>
               <div className="data-card-body">
                 <p><strong>Description:</strong> {job.description || 'N/A'}</p>
