@@ -4,6 +4,7 @@ import Header from './Header';
 import OverviewTab from './OverviewTab';
 import EmployeesTab from './EmployeesTab';
 import MachinesTab from './MachinesTab';
+import CustomerTab from './CustomerTab';
 import MachineCategoryTab from './MachineCategoryTab.jsx';
 import useAuth from "../context/context.js";
 import axios from "../utils/axios.js"
@@ -507,6 +508,7 @@ function OwnerDashboard({ onLogout }) {
           <button className={`tab-btn ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
           <button className={`tab-btn ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}>🦺 Job Category</button>
           <button className={`tab-btn ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}>⚙️ Machine Type</button>
+          <button className={`tab-btn ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}>👤 Customers</button>
         </div>
 
         <div className="tab-content">
@@ -516,6 +518,7 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'jobTypes' && <JobTypeTab/> }
           {activeTab === 'jobCategory' && <JobCategoryTab/> }
           {activeTab === 'machineCategory' && <MachineCategoryTab />}
+          {activeTab === 'customers' && <CustomerTab />}
         </div>
       </div>
       
