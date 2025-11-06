@@ -17,6 +17,67 @@ import axios from "../utils/axios.js"
 function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete }) {
   const [selectedJobIdInternal, setSelectedJobIdInternal] = useState('');
   const [editFormData, setEditFormData] = useState(null);
+  const [services, setServices] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const { userInfo} = useAuth();
+  const[employees,setEmployees]=useState([]);
+  const shopId = userInfo?.shopId;
+
+
+  
+
+  const getAllServices = async () => {
+    if (!shopId) return console.log("No shopId found");
+    try {
+      const res = await axios.get(`/shop/allServices/${userInfo?.shopId}`);
+      if (res.data?.shop?.services?.length > 0) {
+        setServices(res.data.shop.services);
+      } else {
+        console.log("No services found for this shop");
+        setServices([]);
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  };
+
+  const getAllMachines = async () => {
+    try {
+      const res = await axios.get(`/shop/getAllMachines/${userInfo.shopId}`);
+      if (res.data?.machines?.length > 0) {
+        setMachines(res.data.machines);
+      } else {
+        console.log("No machines found for this shop");
+        setMachines([]);
+      }
+    } catch (error) {
+      console.error("Error fetching machines:", error);
+    }
+  };
+
+
+const getAllWorlers=async()=>{
+  try {
+    const res= await axios.get(`/shop/getAllWorkers/${userInfo?.shopId}`);
+    if(res.data?.users?.length>0){
+      setEmployees(res.data.users)
+    }
+    
+  } catch (error) {
+      console.error("Error fetching Workers:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!userInfo) return;
+    if (!userInfo.shopId) {
+      console.log("⚠️ User info loaded but no shopId found");
+      return;
+    }
+    getAllServices();
+    getAllMachines();
+    getAllWorlers();
+  }, [userInfo]);
 
   useEffect(() => {
     if (isOpen && initialJobData) {
@@ -36,6 +97,14 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     } else {
       setEditFormData(null);
     }
+  };
+
+  // ADD THIS MISSING FUNCTION
+  const handleFormChange = (field, value) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleClose = () => {
@@ -72,6 +141,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   };
   
   const handleStatusChange = (e) => setEditFormData(prev => ({ ...prev, status: e.target.value }));
+  
   const handleResetTimers = () => {
     if (window.confirm('Are you sure you want to reset all task statuses to "stopped" for this job?')) {
       setEditFormData(prev => ({ ...prev, items: prev.items.map(item => ({ ...item, itemStatus: 'stopped' })) }));
@@ -79,24 +149,63 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     }
   };
 
-  const handleDeleteClick = () => {
-    if (window.confirm(`Are you sure you want to permanently delete Job ${editFormData.id}? This action cannot be undone.`)) {
-      onDelete(editFormData.id);
+  const handleDeleteClick = async (jobId) => {
+    console.log(jobId)
+    if (window.confirm(`Are you sure you want to permanently delete Job ${editFormData.id}? This action cannot be undone.`)){
+      try {
+      const jobs=await axios.delete(`/jobs/delete-job/${jobId}`);
+      if(!jobs.data.success){
+        return console.error("unable to delete suer")
+      }
+      alert("job deleted succesfully");
       handleClose();
+        }
+     catch (error) {
+      console.log(error,error.message)
     }
+    } 
   };
 
-  const handleSubmit = (e) => { e.preventDefault(); onSave(editFormData); handleClose(); };
+  const handleSubmit = (e) => { 
+    e.preventDefault(); 
+    onSave(editFormData); 
+    handleClose(); 
+  };
 
   const calculateTotal = () => {
     if (!editFormData) return 0;
-    const itemsTotal = editFormData.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-    const machinesTotal = editFormData.machines.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-    const consumablesTotal = editFormData.consumables.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0);
+    const itemsTotal = editFormData.items?.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0) || 0;
+    const machinesTotal = editFormData.machines?.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0) || 0;
+    const consumablesTotal = editFormData.consumables?.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0) || 0;
     return itemsTotal + machinesTotal + consumablesTotal;
-   };
+  };
 
   if (!isOpen) return null;
+
+
+
+
+
+const handleJobTypeSelect = (index, serviceId) => {
+  const selectedService = services.find(service => service._id === serviceId);
+  setFormData(prev => {
+    const updatedJobItems = [...prev.jobItems];
+
+    updatedJobItems[index] = {
+      ...updatedJobItems[index],
+      itemData: {
+        ...updatedJobItems[index].itemData,
+        job_type: selectedService?.name || '',
+        job_type_id: serviceId,
+        description: selectedService?.description || ''
+      },
+      estimatedPrice: selectedService?.price || 0
+    };
+
+    return { ...prev, jobItems: updatedJobItems };
+  });
+};
+
 
   return (
     <div className="modal-overlay">
@@ -124,14 +233,29 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
             {!initialJobData && (<button type="button" className="btn-back" onClick={() => handleJobSelect('')}>&larr; Back to Job Selection</button>)}
             
             <div className="form-row">
-              <div className="form-group"><label>Customer Name *</label><input type="text" value={editFormData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} /></div>
-              <div className="form-group"><label>Contact Number *</label><input type="tel" value={editFormData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} /></div>
+              <div className="form-group">
+                <label>Customer Name *</label>
+                <input type="text" value={editFormData.customer_name || ''} onChange={(e) => handleFormChange('customer_name', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Contact Number *</label>
+                <input type="tel" value={editFormData.contact_number || ''} onChange={(e) => handleFormChange('contact_number', e.target.value)} required />
+              </div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label>Vehicle Number *</label><input type="text" value={editFormData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} /></div>
-              <div className="form-group"><label>Vehicle Model</label><input type="text" value={editFormData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} /></div>
+              <div className="form-group">
+                <label>Vehicle Number *</label>
+                <input type="text" value={editFormData.vehicle_number || ''} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Vehicle Model</label>
+                <input type="text" value={editFormData.vehicle_model || ''} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
+              </div>
             </div>
-            <div className="form-group"><label>Engine Number</label><input type="text" value={editFormData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} /></div>
+            <div className="form-group">
+              <label>Engine Number</label>
+              <input type="text" value={editFormData.engine_number || ''} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
+            </div>
 
             <div className="job-items-section supervisor-actions">
               <div className="section-title"><h4>Supervisor Actions</h4></div>
@@ -139,7 +263,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                 <div className="form-group">
                   <label>Job Status</label>
                   <select className="employee-select" value={editFormData.status} onChange={handleStatusChange}>
-                    <option value={editFormData.status}>{editFormData.status}</option>
                     <option value="Not Assigned">Not Assigned</option>
                     <option value="Assigned">Assigned</option>
                     <option value="In Progress">In Progress</option>
@@ -155,45 +278,88 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
 
             <div className="job-items-section">
               <div className="section-title"><h4>Job Tasks</h4><button type="button" className="btn-add-job" onClick={() => addItem('items')}>+ Add Task</button></div>
-              {editFormData.items.map((item, index) => (
+              {editFormData.items?.map((item, index) => (
                 <div key={index} className="job-item-row job-item-row-tasks">
                    <div className="job-item-field"><label>Task #{index + 1}</label></div>
-                   <div className="job-item-field"><label>Job Type</label><input type="text" value={item.jobType} onChange={(e) => handleItemChange(index, 'jobType', e.target.value, 'items')} /></div>
-                   <div className="job-item-field"><label>Description *</label><input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'items')} /></div>
-                   <div className="job-item-field"><label>Est. Price (₹)*</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'items')} /></div>
-                   <button type="button" className="btn-remove" onClick={() => removeItem(index, 'items')} disabled={editFormData.items.length === 1}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
+                   <div className="form-group">
+                     <label>Job Type</label>
+                      <select 
+                            value={item.jobType|| ''} 
+                            onChange={(e) => handleJobTypeSelect(index, e.target.value)}
+                          >
+                            <option value="">--Select job--</option>
+                            {services.map((service) => (
+                              <option key={service._id} value={service._id}>
+                                {service.name} 
+                              </option>
+                            ))}
+                          </select>
+                   </div>
+                   <div className="job-item-field">
+                     <label>Description *</label>
+                     <input type="text" value={item.description || ''} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'items')} required />
+                   </div>
+                   <div className="job-item-field">
+                     <label>Est. Price (₹)*</label>
+                     <input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'items')} required />
+                   </div>
+                   <button type="button" className="btn-remove" onClick={() => removeItem(index, 'items')} disabled={editFormData.items.length === 1}>
+                     <img src={deleteIcon} alt="Remove" className="btn-icon small" />
+                   </button>
                 </div>
               ))}
             </div>
 
             <div className="job-items-section">
               <div className="section-title"><h4>Machine Usage (Optional)</h4><button type="button" className="btn-add-job" onClick={() => addItem('machines')}>+ Add Machine</button></div>
-              {editFormData.machines.map((item, index) => (
+              {editFormData.machines?.map((item, index) => (
                 <div key={index} className="job-item-row job-item-row-machines">
                    <div className="job-item-field"><label>Machine #{index + 1}</label></div>
-                   <div className="job-item-field"><label>Machine Type</label><input type="text" value={item.machine.machineRequired} onChange={(e) => handleItemChange(index, 'machineType', e.target.value, 'machines')} /></div>
-                   <div className="job-item-field"><label>Description</label><input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'machines')} /></div>
-                   <div className="job-item-field"><label>Est. Price (₹)</label><input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'machines')} /></div>
-                   <button type="button" className="btn-remove" onClick={() => removeItem(index, 'machines')}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
+                   <div className="job-item-field">
+                     <label>Machine Type</label>
+                     <input type="text" value={item.machineType || ''} onChange={(e) => handleItemChange(index, 'machineType', e.target.value, 'machines')} />
+                   </div>
+                   <div className="job-item-field">
+                     <label>Description</label>
+                     <input type="text" value={item.description || ''} onChange={(e) => handleItemChange(index, 'description', e.target.value, 'machines')} />
+                   </div>
+                   <div className="job-item-field">
+                     <label>Est. Price (₹)</label>
+                     <input type="number" value={item.estimatedPrice || ''} onChange={(e) => handleItemChange(index, 'estimatedPrice', e.target.value, 'machines')} />
+                   </div>
+                   <button type="button" className="btn-remove" onClick={() => removeItem(index, 'machines')}>
+                     <img src={deleteIcon} alt="Remove" className="btn-icon small" />
+                   </button>
                 </div>
               ))}
             </div>
 
             <div className="job-items-section">
               <div className="section-title"><h4>Consumables (Optional)</h4><button type="button" className="btn-add-job" onClick={() => addItem('consumables')}>+ Add Consumable</button></div>
-              {editFormData.consumables.map((item, index) => (
+              {editFormData.consumables?.map((item, index) => (
                 <div key={index} className="job-item-row job-item-row-consumables">
                    <div className="job-item-field"><label>Item #{index + 1}</label></div>
-                   <div className="job-item-field"><label>Name of Consumable</label><input type="text" value={item.name} onChange={(e) => handleItemChange(index, 'name', e.target.value, 'consumables')} /></div>
-                   <div className="job-item-field"><label>Quantity</label><input type="number" value={item.quantity || ''} onChange={(e) => handleItemChange(index, 'quantity', e.target.value, 'consumables')} /></div>
-                   <div className="job-item-field"><label>Price Per Piece (₹)</label><input type="number" value={item.perPiecePrice || ''} onChange={(e) => handleItemChange(index, 'perPiecePrice', e.target.value, 'consumables')} /></div>
-                   <button type="button" className="btn-remove" onClick={() => removeItem(index, 'consumables')}><img src={deleteIcon} alt="Remove" className="btn-icon small" /></button>
+                   <div className="job-item-field">
+                     <label>Name of Consumable</label>
+                     <input type="text" value={item.name || ''} onChange={(e) => handleItemChange(index, 'name', e.target.value, 'consumables')} />
+                   </div>
+                   <div className="job-item-field">
+                     <label>Quantity</label>
+                     <input type="number" value={item.quantity || ''} onChange={(e) => handleItemChange(index, 'quantity', e.target.value, 'consumables')} />
+                   </div>
+                   <div className="job-item-field">
+                     <label>Price Per Piece (₹)</label>
+                     <input type="number" value={item.perPiecePrice || ''} onChange={(e) => handleItemChange(index, 'perPiecePrice', e.target.value, 'consumables')} />
+                   </div>
+                   <button type="button" className="btn-remove" onClick={() => removeItem(index, 'consumables')}>
+                     <img src={deleteIcon} alt="Remove" className="btn-icon small" />
+                   </button>
                 </div>
               ))}
             </div>
 
             <div className="form-footer edit-footer">
-              <button type="button" className="btn-delete-job" onClick={handleDeleteClick}>Delete Job</button>
+              <button type="button" className="btn-delete-job" onClick={(e)=>{handleDeleteClick(editFormData.id)}}>Delete Job</button>
               <div className="footer-right">
                 <div className="total-amount"><span>Total Est. Amount:</span><span className="amount">₹{calculateTotal().toFixed(2)}</span></div>
                 <button type="submit" className="btn-save-job">Save Changes</button>
@@ -213,11 +379,7 @@ function SupervisorDashboard({ onLogout }) {
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobToEdit, setJobToEdit] = useState(null);
   const {userInfo}=useAuth();
-  
-  const employees = [
-    { id: 'EMP001', name: 'John Doe' }, { id: 'EMP002', name: 'Jane Smith' }, { id: 'EMP003', name: 'Mike Johnson' }, { id: 'EMP004', name: 'Sarah Williams' }, { id: 'EMP005', name: 'David Brown' }
-   ];
-
+  const [employeeNames, setEmployeeNames] = useState({});
   const [jobs, setJobs] = useState([]);
 
 const [formData, setFormData] = useState({
@@ -427,7 +589,6 @@ useEffect(() => {
       setSelectedJob(null);
   };
 
-const [employeeNames, setEmployeeNames] = useState({});
 
  const getSingleUser = async (userId) => {
   if (!userId) return null;
@@ -543,12 +704,7 @@ useEffect(() => {
                    <div className="job-info-grid">
                      <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div><div><strong>Contact:</strong> <span>{selectedJob.contact_number}</span></div><div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div><div><strong>Model:</strong> <span>{selectedJob.vehicle_model || 'N/A'}</span></div><div><strong>Engine:</strong> <span>{selectedJob.engine_number || 'N/A'}</span></div><div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
                      <div><strong>Status:</strong><span className={`status-badge ${ selectedJob.status === 'In Progress' ? 'status-progress' : selectedJob.status === 'Completed' ? 'status-completed' : selectedJob.status === 'Assigned' ? 'status-assigned-active' : 'status-assigned' }`}>{selectedJob.status}</span></div>
-                     <div className="full-width">
-                       <strong>Assigned Employee:</strong>
-                       <select className="employee-select" value={selectedJob.assignedEmployee?.id || ''} onChange={(e) => handleEmployeeSelect(selectedJob.id, e.target.value)} disabled={selectedJob.status === 'Completed'}>
-                         <option value="">Select Employee</option>{employees.map(emp => (<option key={emp.id} value={emp.id}>{emp.name} ({emp.id})</option>))}
-                       </select>
-                     </div>
+                     
                    </div>
                    {/* Job Tasks */}
                    <div className="job-items-container">

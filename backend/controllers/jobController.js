@@ -250,8 +250,9 @@ export const deleteJobController= async(req,res)=>{
     }
     
     res.status(200).send({
-      success:false,
+      success:true,
       message:"Job deleted Succesfully",
+      job
       
     })
    } catch (error) {

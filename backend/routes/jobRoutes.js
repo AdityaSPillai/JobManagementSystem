@@ -52,4 +52,8 @@ router.put('/qualityGood/:jobId/:userId',qualityGoodController)
 router.post('/qualityBad/:jobId/:userId',qualityBadController)
 
 
+
+
+
+
 export default router;
