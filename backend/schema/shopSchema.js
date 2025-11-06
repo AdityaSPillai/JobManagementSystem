@@ -84,6 +84,17 @@ const shopSchema = new mongoose.Schema({
      }
    }],
 
+  machineCategory:[{
+    name:{
+      type:String,
+      required:true
+    },
+    hourlyRate:{
+      type:Number,
+      required:true
+    }
+  }],
+
   workers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

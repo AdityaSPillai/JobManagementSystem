@@ -1,86 +1,70 @@
 import MachineModel from "../schema/machieneModel.js";
 import ShopModel from "../schema/shopSchema.js";
 
-export const createMachineController =async(req,res)=>{
-    try {
-        const{
-            name,
-            type,
-            status,
-            purchaseDate,
-            lastMaintenanceDate,
-            nextMaintenanceDate,
-            isActive,
-            startTime,
-            endTime,
-            actualDuration,
-            }= req.body;
+export const createMachineController = async (req, res) => {
+  try {
+    const {
+      name,
+      type,
+      status,
+      purchaseDate,
+      lastMaintenanceDate,
+      nextMaintenanceDate,
+      isActive,
+      startTime,
+      endTime,
+      actualDuration,
+      userId, // owner id
+      shopId // new: directly send shopId from frontend
+    } = req.body;
 
-
-
-            if(!name) return res.status(400).send({succcess:false, message:"Machiene name is Requied"})
-            if(!type) return res.status(400).send({succcess:false, message:"Machiene Type is Requied"})
-            if(!status) return res.status(400).send({succcess:false, message:"Machiene status is Requied"})
-            if(!purchaseDate) return res.status(400).send({succcess:false, message:"Machiene purchaseDate is Requied"})
-            if(!lastMaintenanceDate) return res.status(400).send({succcess:false, message:"Machiene lastMaintenanceDate is Requied"})
-            if(!nextMaintenanceDate) return res.status(400).send({succcess:false, message:"Machiene nextMaintenanceDate is Requied"})
-            if(!isActive) return res.status(400).send({succcess:false, message:"Machiene isActive is Requied"})
-
-
-        
-            
-            
-            // check if already existing
-           
-                const ownerId= req.body.userId;
-                const shop=await ShopModel.findOne({ownerId})
-                if(!shop)
-                {
-                    console.log("Couldnt find shop ");
-                    return res.status(400).send({
-                        succcess:false,
-                        message:"Couldnt find the Shop to add the machiene to"
-                    })
-                }
-                const shopId= shop._id;
-              
-                const machineData={
-                   name,
-                    type,
-                    status,
-                    purchaseDate,
-                    shopId,
-                    lastMaintenanceDate,
-                    nextMaintenanceDate,
-                    isActive,
-                    startTime,
-                    endTime,
-                    actualDuration,
-                }
-                
-            const machiene= new MachineModel(machineData);
-            if(!machiene)
-            {
-                console.log("Error ehile adding the machiene data to the database");
-                return res.status(404).send({
-                    succcess:false,
-                    message:"Error ehile adding the machiene data to the database"
-                })
-            }
-            
-            await machiene.save();
-
-            res.status(200).send({
-                succcess:true,
-                message:"Machiene added succesfully",
-            })
-          
-
-        
-    } catch (error) {
-        console.log(error)
+    if (!name || !type) {
+      return res.status(400).json({ success: false, message: "Name and type are required" });
     }
-}
+
+    // ✅ find the shop by shopId (not ownerId)
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) {
+      return res.status(404).json({ success: false, message: "Shop not found" });
+    }
+
+    // ✅ optional: check if type matches one of shop's machineCategory
+    const validCategory = shop.machineCategory.find(cat => cat.name === type);
+    if (!validCategory) {
+      return res.status(400).json({ success: false, message: "Invalid machine category selected" });
+    }
+
+    // ✅ create new machine entry
+    const machine = new MachineModel({
+      name,
+      type,
+      status,
+      purchaseDate,
+      lastMaintenanceDate,
+      nextMaintenanceDate,
+      isActive,
+      shopId,
+      startTime,
+      endTime,
+      actualDuration,
+    });
+
+    await machine.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Machine added successfully",
+      machine,
+    });
+  } catch (error) {
+    console.error("❌ Error creating machine:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding machine",
+      error: error.message,
+    });
+  }
+};
 
 
 export const getSingleMachineController= async(req,res)=>{
@@ -110,58 +94,88 @@ export const getSingleMachineController= async(req,res)=>{
 };
 
 
-export const updateMachineController= async(req,res)=>{
-    try {
-        const{
-            name,
-            type,
-            status,
-            purchaseDate,
-            lastMaintenanceDate,
-            nextMaintenanceDate,
-            isActive
-            }= req.body;
-            
-
-            const {id}=req.params
-
-
-            const machineData={
-                   name,
-                    type,
-                    status,
-                    purchaseDate,
-                    lastMaintenanceDate,
-                    nextMaintenanceDate,
-                    isActive
-                }
-        
-
-        const machine=await MachineModel.findByIdAndUpdate(id,machineData,{ new: true });
-
-        if(!machine)
-        {
-            console.log("Could not update Machine");
-            return res.status(400).send({
-                success:false,
-                message:"Could not update Machine"
-            })
-        }
-
-        res.status(200).send({
-            success:true,
-            message:"Machine Updated Succesfully",
-            machine
-        })
-
-
-    } catch (error) {
-
-         console.log("Could not update Machine");
-            return res.status(500).send({
-                succcess:false,
-                message:"Could not update Machine"
-            })
-        
+export const updateMachineController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Machine ID is required" });
     }
-}
+
+    // ✅ Normalize input safely
+    let {
+      name,
+      type,
+      status,
+      purchaseDate,
+      lastMaintenanceDate,
+      nextMaintenanceDate,
+      isActive
+    } = req.body;
+
+    // Convert string booleans → real booleans
+    if (typeof status === "string") status = status === "true";
+    if (typeof isActive === "string") isActive = isActive === "true";
+
+    // Build update object — only include defined fields
+    const machineData = {};
+    if (name !== undefined) machineData.name = name;
+    if (type !== undefined) machineData.type = type;
+    if (status !== undefined) machineData.status = status;
+    if (purchaseDate) machineData.purchaseDate = purchaseDate;
+    if (lastMaintenanceDate) machineData.lastMaintenanceDate = lastMaintenanceDate;
+    if (nextMaintenanceDate) machineData.nextMaintenanceDate = nextMaintenanceDate;
+    if (isActive !== undefined) machineData.isActive = isActive;
+
+    // ✅ Perform the update
+    const updatedMachine = await MachineModel.findByIdAndUpdate(id, machineData, { new: true, runValidators: true });
+
+    if (!updatedMachine) {
+      console.log("❌ Could not find machine to update");
+      return res.status(404).json({ success: false, message: "Machine not found" });
+    }
+
+    console.log("✅ Machine updated successfully:", updatedMachine._id);
+
+    res.status(200).json({
+      success: true,
+      message: "Machine updated successfully",
+      machine: updatedMachine
+    });
+  } catch (error) {
+    console.error("❌ Error updating machine:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating machine",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteMachineController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Machine ID is required" });
+    }
+
+    const deletedMachine = await MachineModel.findByIdAndDelete(id);
+
+    if (!deletedMachine) {
+      return res.status(404).json({ success: false, message: "Machine not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Machine deleted successfully",
+      deletedMachine
+    });
+  } catch (error) {
+    console.error("❌ Error deleting machine:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting machine",
+      error: error.message,
+    });
+  }
+};

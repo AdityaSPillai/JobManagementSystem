@@ -4,6 +4,7 @@ import Header from './Header';
 import OverviewTab from './OverviewTab';
 import EmployeesTab from './EmployeesTab';
 import MachinesTab from './MachinesTab';
+import MachineCategoryTab from './MachineCategoryTab.jsx';
 import useAuth from "../context/context.js";
 import axios from "../utils/axios.js"
 import JobTypeTab from './JobTypeTab.jsx';
@@ -28,6 +29,10 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     categories: [{
       name: '',
       hourlyRate: ''
+    }],
+    machineCategory: [{
+      name: '',
+      hourlyRate: ''
     }]
   });
 
@@ -46,6 +51,28 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     const updatedCategories = [...formData.categories];
     updatedCategories[index][field] = value;
     setFormData(prev => ({ ...prev, categories: updatedCategories }));
+  };
+
+  const handleMachineCategoryChange = (index, field, value) => {
+    const updated = [...formData.machineCategory];
+    updated[index][field] = value;
+    setFormData(prev => ({ ...prev, machineCategory: updated }));
+  };
+
+  const addMachineCategory = () => {
+    setFormData(prev => ({
+      ...prev,
+      machineCategory: [...prev.machineCategory, { name: '', hourlyRate: '' }]
+    }));
+  };
+
+  const removeMachineCategory = (index) => {
+    if (formData.machineCategory.length === 1) {
+      alert("At least one machine category is required");
+      return;
+    }
+    const updated = formData.machineCategory.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, machineCategory: updated }));
   };
 
   const addCategory = () => {
@@ -105,6 +132,14 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
       return;
     }
 
+    const hasEmptyMachineCategory = formData.machineCategory.some(mc =>
+      !mc.name || !mc.hourlyRate
+    );
+    if (hasEmptyMachineCategory) {
+      alert("Please fill in all machine category fields.");
+      return;
+    }
+
     // Format data to match your API structure
     const shopData = {
       shopName: formData.shopName,
@@ -121,6 +156,10 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
       categories: formData.categories.map(category => ({
         name: category.name,
         hourlyRate: Number(category.hourlyRate)
+      })),
+      machineCategory: formData.machineCategory.map(mc => ({
+        name: mc.name,
+        hourlyRate: Number(mc.hourlyRate)
       })),
       address: {
         street: formData.street,
@@ -163,7 +202,8 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
       state: '',
       pincode: '',
       services: [{ name: '', price: '', description: '' }],
-      categories: [{ name: '', hourlyRate: '' }]
+      categories: [{ name: '', hourlyRate: '' }],
+      machineCategory: [{ name: '', hourlyRate: '' }]
     });
   onClose();
     
@@ -318,6 +358,49 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
             <button type="button" className="btn-add-service" onClick={addCategory}>
               + Add Another Category
             </button>
+
+            <label className="form-label-group">Machine Categories</label>
+              {formData.machineCategory.map((mc, index) => (
+                <div key={index} className="service-item">
+                  <div className="form-grid cols-2">
+                    <div className="form-group">
+                      <label htmlFor={`mc-name-${index}`}>Machine Category Name</label>
+                      <input
+                        type="text"
+                        id={`mc-name-${index}`}
+                        value={mc.name}
+                        onChange={(e) => handleMachineCategoryChange(index, 'name', e.target.value)}
+                        placeholder="e.g., Heavy, Diagnostic, Painting"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor={`mc-rate-${index}`}>Hourly Rate (₹)</label>
+                      <input
+                        type="number"
+                        id={`mc-rate-${index}`}
+                        value={mc.hourlyRate}
+                        onChange={(e) => handleMachineCategoryChange(index, 'hourlyRate', e.target.value)}
+                        placeholder="Enter rate"
+                        min="0"
+                        required
+                      />
+                    </div>
+                  </div>
+                  {formData.machineCategory.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn-remove-service"
+                      onClick={() => removeMachineCategory(index)}
+                    >
+                      ✕ Remove Machine Category
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" className="btn-add-service" onClick={addMachineCategory}>
+                + Add Another Machine Category
+              </button>
           
           <button type="submit" className="btn-submit">Submit</button>
         </form>
@@ -423,6 +506,7 @@ function OwnerDashboard({ onLogout }) {
           <button className={`tab-btn ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}>🔧 Machinery</button>
           <button className={`tab-btn ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
           <button className={`tab-btn ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}>🦺 Job Category</button>
+          <button className={`tab-btn ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}>⚙️ Machine Type</button>
         </div>
 
         <div className="tab-content">
@@ -431,6 +515,7 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'machines' && <MachinesTab />}
           {activeTab === 'jobTypes' && <JobTypeTab/> }
           {activeTab === 'jobCategory' && <JobCategoryTab/> }
+          {activeTab === 'machineCategory' && <MachineCategoryTab />}
         </div>
       </div>
       

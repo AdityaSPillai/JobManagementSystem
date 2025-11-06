@@ -12,6 +12,7 @@ export const createShop = async (req, res) => {
       contactInfo,
       address,
       services,
+      machineCategory,
     } = req.body;
 
     // Validation
@@ -24,6 +25,7 @@ if (!Array.isArray(services) || services.length === 0) {
   return res.status(400).send({ success: false, message: "Services must be a non-empty array" });
 }
 if(!Array.isArray(categories)|| categories.length===0)   return res.status(400).send({ success: false, message: "categories must be a non-empty array" });
+if(!Array.isArray(machineCategory)|| machineCategory.length===0)   return res.status(400).send({ success: false, message: "Machine categories must be a non-empty array" });
 
 
 
@@ -63,6 +65,7 @@ const existingShop = await ShopModel.findOne({
       address,
       services,
       categories,
+      machineCategory,
     });
 
     await shop.save();

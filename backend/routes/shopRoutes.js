@@ -1,6 +1,7 @@
 import express from "express"
 import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories, getAllClient} from "../controllers/shopController.js";
 import {isOwner} from "../middleware/middlewares.js";
+import { addMachineCategoryController, deleteMachineCategoryController, getAllMachineCategoryController, updateMachineCategoryController } from "../controllers/machineCategoryController.js";
 
 const router= express.Router();
 
@@ -17,6 +18,20 @@ router.put('/updateShopServices/:shopId/:serviceId',isOwner,updateShopServices)
 
 //delete service
 router.delete("/deleteShopService/:shopId/:serviceId",deleteShopService)
+
+
+
+//add new machine category
+router.post("/addMachineCategory/:shopId",addMachineCategoryController)
+
+//get all machine category
+router.get("/allMachineCategory/:shopId",getAllMachineCategoryController)
+
+//update machine category
+router.put("/updateMachineCategory/:shopId/:categoryId",updateMachineCategoryController)
+
+//delete machine category
+router.delete("/deleteMachineCategory/:shopId/:categoryId",deleteMachineCategoryController)
 
 
 

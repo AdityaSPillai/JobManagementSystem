@@ -12,7 +12,10 @@ const machineSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        enum: ['diagnostic', 'repair','lift', 'cleaning', 'painting', 'welding', 'other'] 
+    },
+    hourlyRate: {
+        type: Number,
+        required: false
     },
     status: {
         type: Boolean,
