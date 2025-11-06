@@ -69,6 +69,7 @@ function CustomerTab() {
             <div className="radio-inputs filter-customer-dropdown">
                 {[
                     { value: "All", label: "All" },
+                    { value: "waiting", label: "Waiting" },
                     { value: "in_progress", label: "In Progress" },
                     { value: "pending", label: "Pending" },
                     { value: "completed", label: "Completed" },
