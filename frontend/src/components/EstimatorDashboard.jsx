@@ -1170,7 +1170,7 @@ const handleRejectJob = async (jobId) => {
                         className="btn-approve"
                         onClick={() => handleVerifyJob(selectedJob.id)}
                       >
-                        ✅ Approve
+                       <img src={tickIcon} alt="Completed" className="btn-icon" /> Approve
                       </button>
                       <button 
                         className="btn-reject"
