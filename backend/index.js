@@ -16,9 +16,6 @@ import { fileURLToPath } from "url";
 dotenv.config();
 const app= express();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // const limiter = rateLimit({
 // 	windowMs: 15 * 60 * 1000, // 15 minutes
 // 	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
@@ -30,6 +27,8 @@ const __dirname = path.dirname(__filename);
 
 // app.use(limiter)
 app.use(express.json());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(morgan('dev'))
 app.use(cors({
@@ -56,11 +55,14 @@ app.use('/v1/machine',machineRouets);
 app.use('/v1/template',templateRoutes)
 app.use('/v1/jobs',jobRoutes)
 
-app.use(express.static(path.join(__dirname, "frontend", "dist")));
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+// ✅ Catch-all route for React Router
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`App is listening on port ${PORT}`);
