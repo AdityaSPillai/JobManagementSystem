@@ -19,6 +19,7 @@ function EstimatorDashboard({ onLoginClick }) {
   const [selectedJob, setSelectedJob] = useState(null);
   const [services, setServices] = useState([]);
   const [machines, setMachines] = useState([]);
+  const [consumables, setConsumables] = useState([]);
   const {userInfo, isAuthenticated, logout } = useAuth();
   const[employees,setEmployees]=useState([]);
   const[categories,setCategories]=useState([]);
@@ -53,6 +54,20 @@ function EstimatorDashboard({ onLoginClick }) {
       console.error("Error fetching machines:", error);
     }
   };
+
+  const getAllConsumables = async () => {
+  try {
+    const res = await axios.get(`/shop/allConsumables/${userInfo?.shopId}`);
+    if (res.data?.consumables?.length > 0) {
+      setConsumables(res.data.consumables);
+    } else {
+      console.log("No consumables found for this shop");
+      setConsumables([]);
+    }
+  } catch (error) {
+    console.error("Error fetching consumables:", error);
+  }
+};
 
 
 const getAllWorlers=async()=>{
@@ -96,6 +111,7 @@ const getAllCategory = async () => {
     getAllJobs();
     getAllWorlers();
     getAllCategory();
+    getAllConsumables();
 
 
 
@@ -211,9 +227,10 @@ const getAllJobs = async () => {
             endTime: item.worker?.endTime || null,
             actualDuration: item.worker?.actualDuration || null
           },
-          materials: {
-            materialsRequired: item.material?.materialsRequired || [],
-            estimatedPrice: item.material?.estimatedPrice || 0
+          consumable: {
+            name: item.consumable?.name || '',
+            price: item.consumable?.price || 0,
+            available: item.consumable?.available ?? true
           }
         })) || []
       }));
@@ -563,12 +580,16 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
     0
   );
 
-  const consumablesTotal = formData.consumables.reduce(
-    (sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 
-    0
-  );
+  const consumablesTotal = formData.jobItems.reduce((sum, item) => {
+    if (item.selectedConsumableId === "manual") {
+      return sum + (item.manualConsumable?.price || 0);
+    } else if (item.selectedConsumableId) {
+      return sum + (item.consumablePrice || 0);
+    }
+    return sum;
+  }, 0);
 
-  const total = itemsTotal + machinesTotal + materialsTotal + consumablesTotal;
+  const total = itemsTotal + machinesTotal + consumablesTotal;
   return total;
 };
 
@@ -577,13 +598,22 @@ const handleRemoveMaterialFromJobItem = (itemIndex, materialIndex) => {
  const calculateJobTotal = (job) => {
   if (!job || !job.items) return 0;
 
-  const itemsTotal = job.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
-
-  const materialsTotal = job.items.reduce((sum, item) => 
-    sum + (item.materials?.estimatedPrice || 0), 0
+  const itemsTotal = job.items.reduce(
+    (sum, item) => sum + (item.estimatedPrice || 0),
+    0
   );
-  
-  return itemsTotal + materialsTotal;
+
+  const materialsTotal = job.items.reduce(
+    (sum, item) => sum + (item.materials?.estimatedPrice || 0),
+    0
+  );
+
+  const consumablesTotal = job.items.reduce(
+    (sum, item) => sum + (item.consumable?.price || 0),
+    0
+  );
+
+  return itemsTotal + materialsTotal + consumablesTotal;
 };
 
 const handleSaveJob = async () => {
@@ -634,9 +664,16 @@ const handleSaveJob = async () => {
         endTime: item.worker.endTime || null,
         actualDuration: item.worker.actualDuration || null
       },
-      material: {
-        materialsRequired: item.material.materialsRequired || [],
-        estimatedPrice: item.material.estimatedPrice || 0
+      consumable: {
+        name:
+          item.selectedConsumableId === "manual"
+            ? item.manualConsumable?.name
+            : item.consumableName,
+        price:
+          item.selectedConsumableId === "manual"
+            ? item.manualConsumable?.price
+            : item.consumablePrice || 0,
+        available: item.isAvailable,
       }
     }))
   };
@@ -1075,16 +1112,23 @@ const handleRejectJob = async (jobId) => {
                                 </div>
                               )}
 
-                              {item.materials.materialsRequired.length > 0 && (
+                              {item.consumable && item.consumable.name && (
                                 <div className="job-items-container">
-                                  <strong className="job-items-title">Consumables Used:</strong>
+                                  <strong className="job-items-title">Consumable Used:</strong>
                                   <div className="full-width">
-                                    <p className='materials-name'><strong>Materials:</strong> {item.materials.materialsRequired.join(', ')}
-                                    <span> (₹{item.materials.estimatedPrice})</span></p>
+                                    <p style={{ color: 'black' }}>
+                                      {item.consumable.name} — ₹{item.consumable.price || 0}{" "}
+                                      {item.consumable.available ? "(Available)" : "(Not Available)"}
+                                    </p>
                                   </div>
                                 </div>
                               )}
-                              <div className="item-price">₹{item.estimatedPrice.toFixed(2)}</div>
+                              <div className="item-price">
+                                ₹{(
+                                  (item.estimatedPrice || 0) +
+                                  (item.consumable?.price || 0)
+                                ).toFixed(2)}
+                              </div>
                             </div>
                             {item.worker.workerAssigned && (
                               <div className="item-timer-section">
@@ -1329,51 +1373,74 @@ const handleRejectJob = async (jobId) => {
         </div>
       </div>
 
-      <div className='form-row1'>
+      <div className='form-group'>
         <div className="form-group">
-          <label>Materials Required (Optional)</label>
-          <div className="materials-list">
-            {item.material.materialsRequired.map((material, matIndex) => (
-              <div key={matIndex} className="material-tag">
-                <span className='meterial-name' >{material}</span>
-                <button 
-                  type="button"
-                  onClick={() => handleRemoveMaterialFromJobItem(index, matIndex)}
-                  className="material-remove"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="material-input-row">
-            <input 
-              type="text" 
-              placeholder="Enter material name and press Enter"
-              id={`material-input-${index}`}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddMaterialToJobItem(index, e.target.value);
-                  e.target.value = '';
-                }
-              }}
-            />
-          </div>
-        </div>
+          <label>Consumables Required (Optional)</label>
+          <select
+            value={item.selectedConsumableId || ""}
+            onChange={(e) => {
+              const selectedId = e.target.value;
 
-        <div className="form-group">
-          <label>Material Estimated Price (₹)</label>
-          <input 
-            type="number" 
-            placeholder="0" 
-            value={item.material.estimatedPrice || ''} 
-            onChange={(e) => handleMaterialsChange(
-              index, 
-              item.material.materialsRequired, 
-              e.target.value
-            )}
-          />
+              // Manual selection
+              if (selectedId === "manual") {
+                updateJobItemField(index, "manualConsumable", { name: "", price: 0 });
+                updateJobItemField(index, "selectedConsumableId", "manual");
+              } else {
+                const selectedConsumable = consumables.find(c => c._id === selectedId);
+                if (selectedConsumable) {
+                  updateJobItemField(index, "manualConsumable", null);
+                  updateJobItemField(index, "selectedConsumableId", selectedId);
+                  updateJobItemField(index, "consumableName", selectedConsumable.name);
+                  updateJobItemField(index, "consumablePrice", selectedConsumable.price);
+                  updateJobItemField(index, "isAvailable", selectedConsumable.available);
+                }
+              }
+            }}
+          >
+            <option value="">--Select Consumable--</option>
+            <option value="manual">➕ Manual Input</option>
+            {consumables.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name} - ₹{c.price} {c.available ? "" : "❌ (Not Available)"}
+              </option>
+            ))}
+          </select>
+
+          {/* If Manual Input is selected */}
+          {item.selectedConsumableId === "manual" && (
+            <div className="manual-consumable-fields">
+              <input
+                type="text"
+                placeholder="Consumable Name"
+                value={item.manualConsumable?.name || ""}
+                onChange={(e) =>
+                  updateJobItemField(index, "manualConsumable", {
+                    ...item.manualConsumable,
+                    name: e.target.value,
+                  })
+                }
+              />
+              <input
+                type="number"
+                placeholder="Consumable Price (₹)"
+                value={item.manualConsumable?.price || ""}
+                onChange={(e) =>
+                  updateJobItemField(index, "manualConsumable", {
+                    ...item.manualConsumable,
+                    price: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {/* If existing consumable is selected */}
+          {item.selectedConsumableId && item.selectedConsumableId !== "manual" && (
+            <p style={{ color: "#000", marginTop: "5px", fontSize: "0.9rem" }}>
+              Selected: <strong>{item.consumableName}</strong> — ₹{item.consumablePrice}{" "}
+              {item.isAvailable ? "" : "❌ Not Available"}
+            </p>
+          )}
         </div>
       </div>
     </div>

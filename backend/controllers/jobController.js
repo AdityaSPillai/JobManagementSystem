@@ -21,14 +21,14 @@ export const createJobCard = async (req, res) => {
       });
     }
 
-    
-    // Calculate total estimated amount (including material costs)
+
     const totalEstimatedAmount = jobItems.reduce(
       (sum, item) => {
         const itemPrice = item.estimatedPrice || 0;
-        const materialPrice = item.material?.estimatedPrice || 0;
-        return sum + itemPrice + materialPrice;
-      }, 
+        const consumablePrice = item.consumable?.price || 0;
+        const machineCost = item.machineEstimatedCost || 0;
+        return sum + itemPrice + consumablePrice + machineCost;
+      },
       0
     );
     
@@ -51,7 +51,7 @@ export const createJobCard = async (req, res) => {
         estimatedPrice: item.estimatedPrice || 0,
         machine: item.machine || {},
         worker: item.worker || {},
-        material: item.material || {}
+        consumable: item.consumable || {},
       })),
       status:'waiting',
       totalEstimatedAmount,
@@ -60,23 +60,23 @@ export const createJobCard = async (req, res) => {
 
     // Update machine availability for all machines assigned
     const machineUpdatePromises = jobItems
-      .filter(item => item.machine?.machineRequired)
-      .map(async (item, index) => {
-        try {
-          
-        
-        return MachineModel.findByIdAndUpdate(
-          item.machine.machineRequired,
-          { 
-            isAvailable: false,
-            jobId : jobCard._id
-          },
-          { new: true }
-        );
-        } catch (error) {
-          
-        }console.error(`Error updating machine for job item ${index}:`, error);
-      });
+    .filter(item => item.machine?.machineRequired && item.machine.machineRequired !== null)
+    .map(async (item, index) => {
+      try {
+        if (mongoose.isValidObjectId(item.machine.machineRequired)) {
+          return MachineModel.findByIdAndUpdate(
+            item.machine.machineRequired,
+            { 
+              isAvailable: false,
+              jobId: jobCard._id
+            },
+            { new: true }
+          );
+        }
+      } catch (error) {
+        console.error(`Error updating machine for job item ${index}:`, error);
+      }
+    });
 
     await Promise.all(machineUpdatePromises  );
 
@@ -144,8 +144,8 @@ export const updateJobSettings = async (req, res) => {
       const totalEstimatedAmount = jobItems.reduce(
         (sum, item) => {
           const itemPrice = item.estimatedPrice || 0;
-          const materialPrice = item.material?.estimatedPrice || 0;
-          return sum + itemPrice + materialPrice;
+          const consumablePrice = item.consumable?.price || 0;
+          return sum + itemPrice + consumablePrice;
         },
         0
       );
@@ -157,7 +157,7 @@ export const updateJobSettings = async (req, res) => {
         estimatedManHours:item.estimatedManHours,
         machine: item.machine || {},
         worker: item.worker || {},
-        material: item.material || {}
+        consumable: item.consumable || {}
       }));
 
       updateData.totalEstimatedAmount = totalEstimatedAmount;

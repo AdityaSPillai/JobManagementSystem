@@ -54,6 +54,7 @@ const JobCardSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Machine",
         required: false,
+        default: null
       },
       startTime: {
         type: Date,
@@ -87,14 +88,18 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       }
     },
-    material: {
-      materialsRequired: {
-        type: [String], 
-        default: []
+    consumable: {
+      name: {
+        type: String,
+        required: false,
       },
-      estimatedPrice: {
+      price: {
         type: Number,
-        default: 0
+        default: 0,
+      },
+      available: {
+        type: Boolean,
+        default: true,
       }
     }
   }],

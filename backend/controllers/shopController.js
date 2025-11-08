@@ -675,3 +675,113 @@ console.log(jobs.length)
     });
   }
 };
+
+// Add new consumables
+export const addConsumablesController = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const { consumables } = req.body;
+
+    if (!shopId || !Array.isArray(consumables)) {
+      return res.status(400).json({ success: false, message: "Shop ID and consumables array required" });
+    }
+
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    shop.consumables.push(...consumables);
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Consumables added successfully",
+      consumables: shop.consumables
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error adding consumables",
+      error: error.message
+    });
+  }
+};
+
+// Get all consumables
+export const getAllConsumablesController = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const shop = await ShopModel.findById(shopId).select("consumables");
+
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    res.status(200).json({
+      success: true,
+      consumables: shop.consumables
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching consumables",
+      error: error.message
+    });
+  }
+};
+
+// Update consumable
+export const updateConsumableController = async (req, res) => {
+  try {
+    const { shopId, consumableId } = req.params;
+    const { name, price, available } = req.body;
+
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    const item = shop.consumables.id(consumableId);
+    if (!item) return res.status(404).json({ success: false, message: "Consumable not found" });
+
+    if (name) item.name = name;
+    if (price !== undefined) item.price = price;
+    if (available !== undefined) item.available = available;
+
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Consumable updated successfully",
+      consumables: shop.consumables
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating consumable",
+      error: error.message
+    });
+  }
+};
+
+// Delete consumable
+export const deleteConsumableController = async (req, res) => {
+  try {
+    const { shopId, consumableId } = req.params;
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    const item = shop.consumables.id(consumableId);
+    if (!item) return res.status(404).json({ success: false, message: "Consumable not found" });
+
+    item.deleteOne();
+    await shop.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Consumable deleted successfully",
+      consumables: shop.consumables
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting consumable",
+      error: error.message
+    });
+  }
+};

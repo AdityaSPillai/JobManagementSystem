@@ -1,5 +1,5 @@
 import express from "express"
-import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories, getAllClient} from "../controllers/shopController.js";
+import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController} from "../controllers/shopController.js";
 import {isOwner} from "../middleware/middlewares.js";
 import { addMachineCategoryController, deleteMachineCategoryController, getAllMachineCategoryController, getHourlyRateController, updateMachineCategoryController } from "../controllers/machineCategoryController.js";
 
@@ -51,6 +51,19 @@ router.put('/updateCategory/:shopId/:categoryId',updateCategoryController)
 router.delete('/deleteCategory/:shopId/:categoryId',deleteCategoryController)
 
 
+
+
+// Add consumables
+router.post('/addConsumables/:shopId', addConsumablesController);
+
+// Get all consumables
+router.get('/allConsumables/:shopId', getAllConsumablesController);
+
+// Update consumable
+router.put('/updateConsumable/:shopId/:consumableId', updateConsumableController);
+
+// Delete consumable
+router.delete('/deleteConsumable/:shopId/:consumableId', deleteConsumableController);
 
 
 
