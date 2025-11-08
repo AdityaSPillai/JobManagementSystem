@@ -25,7 +25,9 @@ export const createJobCard = async (req, res) => {
     const totalEstimatedAmount = jobItems.reduce(
       (sum, item) => {
         const itemPrice = item.estimatedPrice || 0;
-        const consumablePrice = item.consumable?.price || 0;
+        const consumablePrice = Array.isArray(item.consumable)
+          ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
+          : 0;
         const machineCost = item.machineEstimatedCost || 0;
         return sum + itemPrice + consumablePrice + machineCost;
       },
@@ -34,6 +36,9 @@ export const createJobCard = async (req, res) => {
     
     // Generate job number
     const count = await JobCardModel.countDocuments();
+    const now = new Date();
+    // formattedDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+    // const jobCardNumber = JOB-${formattedDate}-${String(count + 1).padStart(6, '0')};
     const jobCardNumber = `JOB-${String(count + 1).padStart(6, '0')}`;
     
     // Create job card
@@ -51,7 +56,7 @@ export const createJobCard = async (req, res) => {
         estimatedPrice: item.estimatedPrice || 0,
         machine: item.machine || {},
         worker: item.worker || {},
-        consumable: item.consumable || {},
+        consumable: Array.isArray(item.consumable) ? item.consumable : [],
       })),
       status:'waiting',
       totalEstimatedAmount,
@@ -144,7 +149,9 @@ export const updateJobSettings = async (req, res) => {
       const totalEstimatedAmount = jobItems.reduce(
         (sum, item) => {
           const itemPrice = item.estimatedPrice || 0;
-          const consumablePrice = item.consumable?.price || 0;
+          const consumablePrice = Array.isArray(item.consumable)
+            ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
+            : 0;
           return sum + itemPrice + consumablePrice;
         },
         0
@@ -157,15 +164,15 @@ export const updateJobSettings = async (req, res) => {
         estimatedManHours:item.estimatedManHours,
         machine: item.machine || {},
         worker: item.worker || {},
-        consumable: item.consumable || {}
+        consumable: Array.isArray(item.consumable) ? item.consumable : []
       }));
 
       updateData.totalEstimatedAmount = totalEstimatedAmount;
 
     
       const oldMachineIds = existingJob.jobItems
-        .filter(item => item.machine?.machineRequired)
-        .map(item => item.machine.machineRequired);
+        .filter(item => item.machine?.machineId)
+        .map(item => item.machine.machineId);
 
       if (oldMachineIds.length > 0) {
         await MachineModel.updateMany(
@@ -179,16 +186,16 @@ export const updateJobSettings = async (req, res) => {
 
       // Assign new machines
       const newMachineUpdatePromises = jobItems
-        .filter(item => item.machine?.machineRequired)
-        .map(async (item) => {
-          return MachineModel.findByIdAndUpdate(
-            item.machine.machineRequired,
-            {
-              isAvailable: false,
-              currentJobId: jobId
-            },
-            { new: true }
-          );
+          .filter(item => item.machine?.machineId)
+          .map(async (item) => {
+            return MachineModel.findByIdAndUpdate(
+              item.machine.machineId,
+              {
+                isAvailable: false,
+                currentJobId: jobId
+              },
+              { new: true }
+            );
         });
 
       await Promise.all(newMachineUpdatePromises);

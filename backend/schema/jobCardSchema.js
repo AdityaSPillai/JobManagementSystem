@@ -4,7 +4,7 @@ const JobCardSchema = new mongoose.Schema({
   jobCardNumber: {
     type: String,
     required: true,
-    unique: true
+    //unique: true //Needed when adding Job invoice Creation, do check the rest of the programs logic when adding this, as this causes problems in Job Creation and deletion.
   },
   
   // Reference to the template used
@@ -88,7 +88,7 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       }
     },
-    consumable: {
+    consumable: [{
       name: {
         type: String,
         required: false,
@@ -101,7 +101,7 @@ const JobCardSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
       }
-    }
+    }]
   }],
   
   totalEstimatedAmount: {

@@ -788,6 +788,19 @@
   border-color: #3182ce;
 }
 
+.consumable-entry{
+  display: flex;
+  gap: 2vw;
+  margin-bottom:1vh;
+}
+
+.form-group-consumables-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2vh;
+}
+
 .job-items-section {
   margin: 24px 0;
   padding-top: 24px;
@@ -1015,7 +1028,7 @@
 .manual-consumable-fields {
   display: flex;
   gap: 10px;
-  margin-top: 8px;
+  width: 100%;
 }
 .manual-consumable-fields input {
   flex: 1;
