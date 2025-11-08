@@ -11,6 +11,7 @@ router.post('/create-machiene',isOwner,createMachineController)
 //get Individual Machines
 router.get('/getSingle/:id',getSingleMachineController)
 
+
 router.put('/updateMachine/:id',updateMachineController)
 
 router.delete("/deleteMachine/:id", deleteMachineController)

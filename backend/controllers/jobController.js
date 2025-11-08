@@ -36,10 +36,11 @@ export const createJobCard = async (req, res) => {
     
     // Generate job number
     const count = await JobCardModel.countDocuments();
-    const now = new Date();
-    // formattedDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
-    // const jobCardNumber = JOB-${formattedDate}-${String(count + 1).padStart(6, '0')};
-    const jobCardNumber = `JOB-${String(count + 1).padStart(6, '0')}`;
+ 
+// Generate job number with date and time
+const now = new Date();
+const formattedDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')}`;
     
     // Create job card
     const jobCard = await JobCardModel.create({
@@ -170,9 +171,10 @@ export const updateJobSettings = async (req, res) => {
       updateData.totalEstimatedAmount = totalEstimatedAmount;
 
     
-      const oldMachineIds = existingJob.jobItems
-        .filter(item => item.machine?.machineId)
-        .map(item => item.machine.machineId);
+     const oldMachineIds = existingJob.jobItems
+      .filter(item => item.machine?.machineId)
+      .map(item => item.machine.machineId);
+
 
       if (oldMachineIds.length > 0) {
         await MachineModel.updateMany(
@@ -196,7 +198,8 @@ export const updateJobSettings = async (req, res) => {
               },
               { new: true }
             );
-        });
+          });
+
 
       await Promise.all(newMachineUpdatePromises);
     }
@@ -206,6 +209,7 @@ export const updateJobSettings = async (req, res) => {
     }
 
     updateData.updatedAt = Date.now();
+    
 
     // Perform the update
     const updatedJob = await JobCardModel.findByIdAndUpdate(
