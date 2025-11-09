@@ -190,38 +190,49 @@ function EstimatorDashboard({ onLoginClick }) {
           status: (job.status || 'Not Assigned').toLowerCase(),
           notes: (job.notes || ''),
           totalEstimatedAmount: job.totalEstimatedAmount || 0,
-          items: job.jobItems?.map(item => ({
-            itemId: item._id,
-            jobType: item.itemData?.job_type || '',
-            description: item.itemData?.description || '',
-            priority: item.itemData?.priority || '',
-            estimatedPrice: item.estimatedPrice || 0,
-            category:item.category,
-            estimatedManHours:item.estimatedManHours,
-            itemStatus: (item.itemStatus || 'stopped').toLowerCase(),
-            machine: {
-              machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
-              machineId: item.machine?.machineRequired?._id || null,
-              startTime: item.machine?.startTime || null,
-              endTime: item.machine?.endTime || null,
-              actualDuration: item.machine?.actualDuration || null
-            },
-            worker: {
-              workerAssigned: item.worker?.workerAssigned || null,
-              startTime: item.worker?.startTime || null,
-              endTime: item.worker?.endTime || null,
-              actualDuration: item.worker?.actualDuration || null
-            },
-            consumable: Array.isArray(item.consumable)
-              ? item.consumable
-                  .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
-                  .map(c => ({
-                    name: c.name.trim(),
-                    price: c.price,
-                    available: c.available,
-                  }))
-              : []
-          })) || []
+          items: job.jobItems?.map(item => {
+              const startTime = item.worker?.startTime;
+              const endTime = item.worker?.endTime;
+
+              // Determine status from backend timestamps
+              let computedStatus = 'stopped';
+              if (startTime && !endTime) computedStatus = 'running';
+              if (endTime) computedStatus = 'completed';
+
+              return {
+                itemId: item._id,
+                jobType: item.itemData?.job_type || '',
+                description: item.itemData?.description || '',
+                priority: item.itemData?.priority || '',
+                estimatedPrice: item.estimatedPrice || 0,
+                category: item.category,
+                estimatedManHours: item.estimatedManHours,
+                itemStatus: computedStatus,
+                machine: {
+                  machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
+                  machineId: item.machine?.machineRequired?._id || null,
+                  startTime: item.machine?.startTime || null,
+                  endTime: item.machine?.endTime || null,
+                  actualDuration: item.machine?.actualDuration || null
+                },
+                worker: {
+                  workerAssigned: item.worker?.workerAssigned || null,
+                  startTime,
+                  endTime,
+                  actualDuration: item.worker?.actualDuration || null
+                },
+                consumable: Array.isArray(item.consumable)
+                  ? item.consumable
+                      .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
+                      .map(c => ({
+                        name: c.name.trim(),
+                        price: c.price,
+                        available: c.available,
+                      }))
+                  : []
+              };
+            }) || []
+
         }));
         setJobs(transformedJobs);
       }
@@ -230,33 +241,30 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
-  const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
-    console.log("Assigning worker:", employeeId, jobId, itemIndex);
-    
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
-    
-    const itemId = job.items[itemIndex].itemId;
-    console.log( "Assigning worker:", employeeId,jobId,itemId);
+ const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
+  console.log("Assigning worker:", employeeId, jobId, itemIndex);
 
-    const hasRunningTask = job.items.some(item => item.itemStatus === 'running');
-    if (hasRunningTask) {
-      alert('Cannot change assigned employee while a job task is running.');
+  const job = jobs.find(j => j.id === jobId);
+  if (!job) return;
+
+  const itemId = job.items[itemIndex].itemId;
+  console.log("Assigning worker:", employeeId, jobId, itemId);
+
+  try {
+    if (!employeeId || !jobId || !itemId) {
+      console.log("All IDs not received");
       return;
     }
 
-    try {
+    const response = await axios.put(
+      `/jobs/assign-worker/${employeeId}/${jobId}/${itemId}`
+    );
 
-      if(!employeeId||!jobId||!itemId)
-      {
-        console.log(" all ids not recieved")
-      }
-      const response = await axios.put(
-        `/jobs/assign-worker/${employeeId}/${jobId}/${itemId}`
-      );
-      
-      if (response.data.success) {
-        setJobs(prevJobs => prevJobs.map(job => {
+    if (response.data.success) {
+      const employee = employees.find(e => e._id === employeeId);
+
+      setJobs(prevJobs =>
+        prevJobs.map(job => {
           if (job.id === jobId) {
             const newItems = [...job.items];
             newItems[itemIndex] = {
@@ -264,27 +272,27 @@ function EstimatorDashboard({ onLoginClick }) {
               worker: {
                 ...newItems[itemIndex].worker,
                 workerAssigned: employeeId
-              }
+              },
+              itemStatus: 'stopped'
             };
-            
-            const employee = employees.find(e => e._id === employeeId);
             return {
               ...job,
               items: newItems,
-              assignedEmployee: employee,
-              status: employee ? 'Assigned' : 'Not Assigned'
+              status: 'Assigned'
             };
           }
           return job;
-        }));
-        
-        alert('Worker assigned successfully!');
-      }
-    } catch (error) {
-      console.error('Error assigning worker:', error,error.message);
-      alert('Failed to assign worker. Please try again.');
+        })
+      );
+
+      alert(`Worker ${employee?.name || employeeId} assigned successfully!`);
     }
-  };
+  } catch (error) {
+    console.error('Error assigning worker:', error);
+    alert('Failed to assign worker. Please try again.');
+  }
+};
+
 
   const handleStartItemTimer = async (jobId, itemIndex, workerID) => {
     console.log(`API CALL: Start timer for job ${jobId}, User ${workerID}`);
@@ -531,6 +539,37 @@ function EstimatorDashboard({ onLoginClick }) {
 
     return itemsTotal + consumablesTotal;
   };
+
+
+const calculateActualCost = (job) => {
+  if (!job || !job.items) return 0;
+
+  return job.items.reduce((total, item) => {
+    const category = categories.find(c => c.name === item.category);
+    const hourlyRate = category?.hourlyRate || 0;
+
+    // Worker actual duration in minutes from backend (already in item.worker.actualDuration)
+    const actualMinutes = item.worker?.actualDuration || 0;
+    const actualHours = actualMinutes / 60;
+
+    const laborCost = actualHours * hourlyRate;
+
+    // Optional: if you want to include machine cost dynamically (if machine actualDuration is tracked)
+    const machineHours = (item.machine?.actualDuration || 0) / 60;
+    const machineRate = item.machineHourlyRate || 0;
+    const machineCost = machineHours * machineRate;
+
+    // Include consumables (already priced)
+    const consumableCost = Array.isArray(item.consumable)
+      ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
+      : 0;
+
+    const totalItemCost = laborCost + machineCost + consumableCost;
+    return total + totalItemCost;
+  }, 0);
+};
+
+  
 
   const handleSaveJob = async () => {
     const { formData: customerData, jobItems } = formData;
@@ -1002,6 +1041,8 @@ function EstimatorDashboard({ onLoginClick }) {
                               <div className="item-description-container">
                                 <div className="item-description">{item.description}</div>
                                 <div className="item-description">Priority: {item.priority}</div>
+                              
+                                <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
                               </div>
                               
                               {/*Notes to be displayed here if Notes is not NULL*/}
@@ -1061,6 +1102,8 @@ function EstimatorDashboard({ onLoginClick }) {
                                         >
                                           <img src={playIcon} alt="Start" className="btn-icon" />
                                         </button>
+
+                                      
                                       )}
 
                                       {item.itemStatus === 'running' && (
@@ -1072,10 +1115,31 @@ function EstimatorDashboard({ onLoginClick }) {
                                           <img src={tickIcon} alt="End" className="btn-icon" />
                                         </button>
                                       )}
+                                      {item.itemStatus === 'running' && (
+                                            <p className="job-running-label">🟢 Job is being worked</p>
+                                          )}
                                     </>
                                   )}
+
+
+                                  
+
                                 </div>
+                                {item.worker?.actualDuration != null && (
+                                <div className="job-items-container">
+                                  <strong className="job-items-title">Actual Time Used:</strong>
+                                  <div className="full-width">
+                                    <p className='time'>
+                                      ⏱ {item.worker.actualDuration > 0 
+                                        ? `${(item.worker.actualDuration / 60).toFixed(2)} hrs` 
+                                        : "Less than 1 minute"}
+                                    </p>
+                                  </div>
+                                </div>
+)}
+
                               </div>
+                              
                             )}
                           </div>
                           <div className="full-width">
@@ -1090,7 +1154,6 @@ function EstimatorDashboard({ onLoginClick }) {
                                 }
                               }}
                               disabled={
-                                selectedJob.status.toLowerCase() === 'in_progress' ||
                                 selectedJob.status.toLowerCase() === 'completed' ||
                                 selectedJob.status.toLowerCase() === 'approved' ||
                                 selectedJob.status.toLowerCase()==='waiting' ||
@@ -1105,16 +1168,32 @@ function EstimatorDashboard({ onLoginClick }) {
                                 </option>
                               ))}
                             </select>
+
+
+                            
                           </div>
+                         
                         </div>
                       </div> 
+                      
                     ))}
                   </div>
+
+                  
                   <div className="job-detail-total">
                     <strong className="total-label">Total Estimated Amount:</strong>
                     <strong className="total-amount">
                       ₹{calculateJobTotal(selectedJob).toFixed(2)}
                     </strong>
+
+                    {selectedJob.status.toLowerCase()=="approved" &&(
+                      <>
+                      <strong className="total-label">Actual cost:</strong>
+                    <strong className="total-amount">
+                      ₹{calculateActualCost(selectedJob).toFixed(2)}
+                    </strong>
+                      </>
+                    )}
                   </div>
                 </div>
 

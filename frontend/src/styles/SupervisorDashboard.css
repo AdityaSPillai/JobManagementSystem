@@ -61,6 +61,22 @@
 .no-selection p { margin: 8px 0; }
 .no-selection-hint { font-size: 14px; }
 
+
+.consumable-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.consumable-price {
+  font-weight: bold;
+  color: #333;
+}
+
+
+
+
+
 /* --- Job Details View --- */
 .job-details-view { width: 100%; text-align: left; }
 .job-details-view .form-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0; }

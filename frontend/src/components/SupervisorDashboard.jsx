@@ -22,6 +22,8 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   const { userInfo} = useAuth();
   const[employees,setEmployees]=useState([]);
   const[categories,setCategories]=useState([])
+  const [consumables, setConsumables] = useState([]);
+
   const shopId = userInfo?.shopId;
 
 
@@ -83,6 +85,20 @@ const getAllWorlers=async()=>{
   };
 
 
+  const getAllConsumables = async () => {
+  try {
+    const res = await axios.get(`/shop/allConsumables/${userInfo?.shopId}`);
+    if (res.data?.consumables?.length > 0) {
+      setConsumables(res.data.consumables);
+    } else {
+      setConsumables([]);
+    }
+  } catch (error) {
+    console.error("Error fetching consumables:", error);
+  }
+};
+
+
   useEffect(() => {
     if (!userInfo) return;
     if (!userInfo.shopId) {
@@ -92,14 +108,28 @@ const getAllWorlers=async()=>{
     getAllServices();
     getAllMachines();
     getAllWorlers();
+    getAllConsumables();
     getAllCategory();
   }, [userInfo]);
 
   useEffect(() => {
     if (isOpen && initialJobData) {
       setSelectedJobIdInternal(initialJobData.id);
+      console.log(initialJobData)
+    if (isOpen && initialJobData) {
+  setEditFormData({
+    ...initialJobData,
+    items: initialJobData.items.map(item => ({
+      ...item,
+      estimatedManHours: item.estimatedManHours || 0,
+      machineHours: item.machineHours || 0,
+      machineHourlyRate: item.machineHourlyRate || 0,
+      machineEstimatedCost: item.machineEstimatedCost || 0,
+      consumable: item.consumable || [{ name: '', price: 0 }]
+    }))
+  });
+}
 
-      setEditFormData(JSON.parse(JSON.stringify(initialJobData)));
     } else if (isOpen && !initialJobData) {
       setSelectedJobIdInternal('');
       setEditFormData(null);
@@ -211,37 +241,36 @@ const handleItemChange = (index, field, value, type) => {
         vehicle_model: editFormData.vehicle_model,
         contact_number: editFormData.contact_number
       },
-      jobItems: editFormData.items.map((item) => ({
-        itemData: {
-          job_type: item.jobType || '',
-          description: item.description || '',
-          priority: item.priority || ''
-        },
-        estimatedPrice: item.estimatedPrice || 0,
-        category: item.category || '',
-        estimatedManHours: item.estimatedManHours || 0,
-        machine: {
-          machineRequired: item.machine.machineId ||  null,
-          startTime: item.machine.startTime || null,
-          endTime: item.machine.endTime || null,
-          actualDuration: item.machine.actualDuration || null
-        },
-        worker: {
-          workerAssigned: item.worker.workerAssigned || null,
-          startTime: item.worker.startTime || null,
-          endTime: item.worker.endTime || null,
-          actualDuration: item.worker.actualDuration || null
-        },
-        consumable: {
-          name:
-            item.materials?.materialsRequired ||  item.consumable?.name || null,
-          price:
-            item.materials?.estimatedPrice ||
-            item.consumable?.price ||
-            0,
-          available: true
-        }
-      })),
+     jobItems: editFormData.items.map((item) => ({
+            itemData: {
+              job_type: item.jobType || '',
+              description: item.description || '',
+              priority: item.priority || ''
+            },
+            estimatedPrice: item.estimatedPrice || 0,
+            category: item.category || '',
+            estimatedManHours: item.estimatedManHours || 0,
+            machine: {
+              machineRequired: item.machine.machineId || null,
+              startTime: item.machine.startTime || null,
+              endTime: item.machine.endTime || null,
+              actualDuration: item.machine.actualDuration || null
+            },
+            worker: {
+              workerAssigned: item.worker.workerAssigned || null,
+              startTime: item.worker.startTime || null,
+              endTime: item.worker.endTime || null,
+              actualDuration: item.worker.actualDuration || null
+            },
+            // ✅ FIXED: send array of consumables, not single object
+            consumable: Array.isArray(item.consumable)
+              ? item.consumable.map((c) => ({
+                  name: c.name || '',
+                  price: c.price || 0,
+                  available: true
+                }))
+              : []
+          })),
       status: editFormData.status || 'pending',
       isVerifiedByUser: true
     };
@@ -255,6 +284,7 @@ const handleItemChange = (index, field, value, type) => {
 
     if (response.data.success) {
       alert('✅ Job updated successfully!');
+       window.location.reload();
     } else {
       alert('⚠️ Failed to update job on server');
     }
@@ -271,19 +301,22 @@ const handleItemChange = (index, field, value, type) => {
 
 
 
-  const calculateTotal = () => {
-    if (!editFormData) return 0;
-    const itemsTotal = editFormData.items?.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0) || 0;
-    const machinesTotal = editFormData.machines?.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0) || 0;
-    const consumablesTotal = editFormData.materials?.reduce((sum, item) => sum + ((item.quantity || 0) * (item.perPiecePrice || 0)), 0) || 0;
-    return itemsTotal + machinesTotal + consumablesTotal;
-  };
+const calculateTotal = () => {
+  if (!editFormData) return 0;
+  const itemsTotal = editFormData.items?.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0) || 0;
+  const machinesTotal = editFormData.items?.reduce((sum, item) => sum + (item.machineEstimatedCost || 0), 0) || 0;
+  const consumablesTotal = editFormData.items?.reduce(
+    (sum, item) =>
+      sum +
+      (Array.isArray(item.consumable)
+        ? item.consumable.reduce((s, c) => s + (c.price || 0), 0)
+        : 0),
+    0
+  );
+  return itemsTotal + machinesTotal + consumablesTotal;
+};
 
   if (!isOpen) return null;
-
-
-
-
 
 const handleJobTypeSelect = (index, serviceId) => {
   const selectedService = services.find(service => service._id === serviceId);
@@ -300,21 +333,109 @@ const handleJobTypeSelect = (index, serviceId) => {
 };
 
 
+const handleConsumableSelect = (itemIndex, consIndex, selectedName) => {
+  const selected = consumables.find(c => c.name === selectedName);
+  const selectedPrice = selected?.price || 0;
 
-const handleJobCategorySelect = (index, categoryName) => {
   setEditFormData(prev => {
     const updatedItems = [...prev.items];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      category: categoryName
-    };
+    const updatedConsumables = [...(updatedItems[itemIndex].consumable || [])];
+    updatedConsumables[consIndex] = { name: selectedName, price: selectedPrice };
+    updatedItems[itemIndex].consumable = updatedConsumables;
+    return { ...prev, items: updatedItems };
+  });
+};
+
+const addConsumable = (itemIndex) => {
+  setEditFormData(prev => {
+    const updatedItems = [...prev.items];
+    updatedItems[itemIndex].consumable = [
+      ...(updatedItems[itemIndex].consumable || []),
+      { name: '', price: 0 },
+    ];
+    return { ...prev, items: updatedItems };
+  });
+};
+
+const removeConsumable = (itemIndex, consIndex) => {
+  setEditFormData(prev => {
+    const updatedItems = [...prev.items];
+    const updatedConsumables = [...(updatedItems[itemIndex].consumable || [])];
+    updatedConsumables.splice(consIndex, 1);
+    updatedItems[itemIndex].consumable = updatedConsumables;
     return { ...prev, items: updatedItems };
   });
 };
 
 
+const fetchHourlyRate = async (type) => {
+  try {
+    const res = await axios.get(`/shop/getHourlyRate/${userInfo?.shopId}/${type}`);
+    return res.data?.rate || 0;
+  } catch (err) {
+    console.error("Error fetching hourly rate:", err);
+    return 0;
+  }
+};
+
+const handleManHoursChange = async (index, hours) => {
+  const manHours = parseFloat(hours) || 0;
+  const categoryName = editFormData.items[index].category;
+  const category = categories.find(c => c.name === categoryName);
+  const hourlyRate = category?.hourlyRate || 0;
+  const estimatedPrice = manHours * hourlyRate;
+
+  setEditFormData(prev => {
+    const updated = [...prev.items];
+    updated[index] = { ...updated[index], estimatedManHours: manHours, estimatedPrice };
+    return { ...prev, items: updated };
+  });
+};
+
+const handleMachineHoursChange = async (index, hours) => {
+  const machineHours = parseFloat(hours) || 0;
+  const machineId = editFormData.items[index].machine?.machineId;
+  const machine = machines.find(m => m._id === machineId);
+  const rate = machine ? await fetchHourlyRate(machine.type) : 0;
+  const machineEstimatedCost = rate * machineHours;
+
+  setEditFormData(prev => {
+    const updated = [...prev.items];
+    updated[index] = {
+      ...updated[index],
+      machineHours,
+      machineHourlyRate: rate,
+      machineEstimatedCost
+    };
+    return { ...prev, items: updated };
+  });
+};
+
+const handleJobCategorySelect = (index, categoryName) => {
+      const selectedCategory = categories.find(c => c.name === categoryName);
+      const hourlyRate = selectedCategory?.hourlyRate || 0;
+
+      setEditFormData(prev => {
+        const updatedItems = [...prev.items];
+        const currentItem = updatedItems[index];
+
+        updatedItems[index] = {
+          ...currentItem,
+          category: categoryName,
+          hourlyRate,
+          estimatedPrice: (currentItem.estimatedManHours || 0) * hourlyRate
+        };
+
+        return { ...prev, items: updatedItems };
+      });
+    };
+
+
 
   return (
+
+    <div className="modal-overlay" onClick={(e) => e.target.classList.contains('modal-overlay') && handleClose()}>
+    <div className="modal-content create-job-form large" onClick={(e) => e.stopPropagation()}></div>
     <div className="modal-overlay">
       <div className="modal-content create-job-form large">
         <div className="form-header">
@@ -336,7 +457,7 @@ const handleJobCategorySelect = (index, categoryName) => {
         )}
 
         {editFormData && (
-          <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}>
             {!initialJobData && (<button type="button" className="btn-back" onClick={() => handleJobSelect('')}>&larr; Back to Job Selection</button>)}
             
             <div className="form-row">
@@ -375,6 +496,8 @@ const handleJobCategorySelect = (index, categoryName) => {
                     <option value="pending">Assigned</option>
                     <option value="in_progress">In Progress</option>
                     <option value="completed">Completed</option>
+                     <option value="approved">Approved</option>
+                      <option value="rejected">Reejcted</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -436,6 +559,16 @@ const handleJobCategorySelect = (index, categoryName) => {
         />
       </div>
 
+        <div className="form-group">
+          <label>Estimated Man Hours</label>
+          <input
+            type="number"
+            value={item.estimatedManHours || ''}
+            placeholder={item.estimatedManHours}
+            onChange={(e) => handleManHoursChange(index, e.target.value)}
+          />
+        </div>
+
      <div className="form-group">
   <label>Machine Used</label>
   <select
@@ -451,30 +584,54 @@ const handleJobCategorySelect = (index, categoryName) => {
   </select>
 </div>
 
-
       <div className="form-group">
-        <label>Consumable</label>
-        <select
-          value={item.materials?.materialsRequired || ''}
-          onChange={(e) => handleItemChange(index, 'consumable', { name: e.target.value }, 'items')}
+  <label>Machine Hours</label>
+  <input
+    type="number"
+    value={item.machineHours || ''}
+    onChange={(e) => handleMachineHoursChange(index, e.target.value)}
+  />
+</div>
+
+    <div className="form-group">
+        <label>Consumables</label>
+        {item.consumable?.map((cons, ci) => (
+          <div key={ci} className="consumable-row">
+            <select
+              value={cons.name}
+              onChange={(e) => handleConsumableSelect(index, ci, e.target.value)}
+            >
+              <option value="">-- Select Consumable --</option>
+              {consumables.map(c => (
+                <option key={c._id} value={c.name}>
+                  {c.name} — ₹{c.price}
+                </option>
+              ))}
+            </select>
+            <span className="consumable-price">
+              {cons.price ? `₹${cons.price}` : '—'}
+            </span>
+            <button
+              type="button"
+              className="btn-remove"
+              onClick={() => removeConsumable(index, ci)}
+            >
+              ❌
+            </button>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          className="btn-add-job"
+          onClick={() => addConsumable(index)}
         >
-          <option value="">{item.materials?.materialsRequired || 'Select '}</option>
-          {services.map(service => (
-            <option key={service._id} value={service.name}>
-              {service.name}
-            </option>
-          ))}
-        </select>
+          + Add Consumable
+        </button>
       </div>
 
-      <div className="form-group">
-        <label>Consumable Price (₹)</label>
-        <input
-          type="number"
-          value={item.materials?.estimatedPrice || 0}
-          onChange={(e) => handleItemChange(index, 'consumablePrice', parseFloat(e.target.value) || 0, 'items')}
-        />
-      </div>
+
+
 
       <div className="form-group">
         <label>Estimated Price (₹)</label>
@@ -508,6 +665,7 @@ const handleJobCategorySelect = (index, categoryName) => {
           </form>
         )}
       </div>
+    </div>
     </div>
   );
 }
@@ -553,10 +711,10 @@ const [formData, setFormData] = useState({
         endTime: null,
         actualDuration: null,
       },
-      material: {
-        materialsRequired: [],
-        estimatedPrice: 0,
-      },
+      consumable:[ {
+       name:null,
+        price: 0,
+      }]
     },
   ],
   machines: [],
@@ -584,6 +742,7 @@ const getAllJobs = async () => {
   try {
     const res = await axios.get(`/shop/getAllJobs/${userInfo?.shopId}`);
     if (res.data?.allJobs?.length > 0) {
+      console.log(res.data.allJobs)
       // Fetch machine list to resolve names
       const machineRes = await axios.get(`/shop/getAllMachines/${userInfo.shopId}`);
       const machineList = machineRes.data?.machines || [];
@@ -601,6 +760,7 @@ const getAllJobs = async () => {
           hour: '2-digit', minute: '2-digit'
         }),
         status: job.status || 'Not Assigned',
+      
         totalEstimatedAmount: job.totalEstimatedAmount || 0,
         items: job.jobItems?.map(item => {
           // Resolve machine name by ID
@@ -611,7 +771,8 @@ const getAllJobs = async () => {
             jobType: item.itemData?.job_type || '',
             description: item.itemData?.description || '',
             priority: item.itemData?.priority || '',
-            estimatedPrice: item.estimatedPrice || 0,
+            estimatedPrice: item.estimatedPrice || 0, 
+            estimatedManHours:item.estimatedManHours || 0,
             category:item.category ||'',
             itemStatus: item.itemStatus || 'stopped',
             machine: {
@@ -627,13 +788,18 @@ const getAllJobs = async () => {
               endTime: item.worker?.endTime || null,
               actualDuration: item.worker?.actualDuration || null
             },
-            materials: {
-              materialsRequired: item.consumable?.name || [],
-              estimatedPrice: item.consumable?.price || 0
-            }
+            consumable: Array.isArray(item.consumable)
+              ? item.consumable
+                  .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
+                  .map(c => ({
+                    name: c.name.trim(),
+                    price: c.price,
+                  }))
+                  :[]
           };
         }) || []
       }));
+      console.log(transformedJobs)
 
       setJobs(transformedJobs);
     }
@@ -687,7 +853,7 @@ const getAllJobs = async () => {
   
   // Sum up all materials prices from items
   const materialsTotal = job.items.reduce((sum, item) => 
-    sum + (item.materials?.estimatedPrice || 0), 0
+    sum + (item.consumable?.estimatedPrice || 0), 0
   );
   
   return itemsTotal + materialsTotal;
@@ -695,7 +861,6 @@ const getAllJobs = async () => {
   // Save Updated Job
   const handleUpdateJob = (updatedJob) => {
     setJobs(prevJobs => prevJobs.map(job => job.id === updatedJob.id ? updatedJob : job));
-    alert(`Job ${updatedJob.id} updated successfully!`);
     if (selectedJob && selectedJob.id === updatedJob.id) {
         setSelectedJob(updatedJob); // Update the view if the selected job was edited
         setShowJobDetails(true); // Ensure details view is shown after edit
@@ -705,7 +870,9 @@ const getAllJobs = async () => {
   // Delete Job
   const handleDeleteJob = (jobId) => {
     setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
+    
     alert(`Job ${jobId} deleted successfully!`);
+       window.location.reload();
     if (selectedJob && selectedJob.id === jobId) {
       setSelectedJob(null);
       setShowJobDetails(false);
@@ -715,6 +882,7 @@ const getAllJobs = async () => {
   // Open Edit Modal for Selected Job
   const openEditModalForSelected = () => {
     if (selectedJob) {
+      console.log("JOb model selected for editiong")
       setJobToEdit(selectedJob);
       setShowEditJobModal(true);
     } else {
@@ -875,11 +1043,13 @@ useEffect(() => {
                                                         </div>
                                                       </div>
                                                     )}
-                                                    {item.materials.length > 0 && (
+                                                    {item.consumable.length > 0 && (
                                                       <div className="job-items-container">
                                                         <strong className="job-items-title">Consumables Used:</strong>
                                                         <div className="full-width">
-                                                          <p className='job-items-title-Materials'><strong>Materials:</strong> {item.materials.materialsRequired} <span> (₹{item.materials.estimatedPrice})</span></p>
+                                                          {item.consumable.map((cons,index)=>(
+                                                            <p key={index} className='job-items-title-Materials'><strong>Materials:</strong> {cons.name}<span> (₹{cons.price})</span></p>
+                                                          ))}
                                                         </div>
                                                       </div>
                                                     )}

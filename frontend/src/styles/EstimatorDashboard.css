@@ -1037,6 +1037,20 @@
   border: 1px solid #ccc;
 }
 
+
+.job-running-label {
+  color: green;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  text-align: center;
+}
+
+
+.time{
+  color:#000
+}
+
 /* Responsive Design */
 @media (max-width: 1400px) {
   .dashboard-grid {
