@@ -313,7 +313,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                       id={`category-name-${index}`}
                       value={category.name}
                       onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
-                      placeholder="e.g., General, Painting, Electrical"
+                      placeholder="e.g., Electrician, Labour, Cleaner"
                       required
                     />
                   </div>
