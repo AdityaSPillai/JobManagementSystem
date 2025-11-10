@@ -5,7 +5,7 @@ import useAuth from '../context/context.js';
 
 function LoginModal({ isOpen, onClose, onLogin }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [username, setUsername] = useState('');
+  const [Mail, setMail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -21,14 +21,14 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     e.preventDefault();
     setError('');
 
-    if (!username || !password) {
-      setError('Please enter username and password');
+    if (!Mail || !password) {
+      setError('Please enter Mail and password');
       return;
     }
 
     try {
       const response = await axios.post('/auth/login', {
-        email: username,
+        email: Mail,
         password: password,
       });
               console.log(response.data)
@@ -116,7 +116,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   };
 
   const handleClose = () => {
-    setUsername('');
+    setMail('');
     setPassword('');
     setRegFormData({ name: '', email: '', password: '', phone: '', shopname: '' });
     setError('');
@@ -158,8 +158,8 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         ) : (
           <form onSubmit={handleLoginSubmit}>
             <div className="form-group">
-              <label>Username</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="form-control" placeholder="Enter username" autoFocus />
+              <label>Mail</label>
+              <input type="text" value={Mail} onChange={(e) => setMail(e.target.value)} className="form-control" placeholder="Enter Mail" autoFocus />
             </div>
             <div className="form-group">
               <label>Password</label>
