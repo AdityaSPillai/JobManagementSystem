@@ -1051,6 +1051,17 @@
   color:#000
 }
 
+.worker-info{
+  color: #000;
+}
+
+
+.item-status-badge {
+  font-size: 14px;
+  margin-top: 8px;
+  color: #000;
+}
+
 /* Responsive Design */
 @media (max-width: 1400px) {
   .dashboard-grid {

@@ -69,7 +69,7 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       }
     },
-    worker: {
+    workers: [{
       workerAssigned: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -87,7 +87,7 @@ const JobCardSchema = new mongoose.Schema({
         type: Number,  // Duration in minutes
         default: null
       }
-    },
+    }],
     consumable: [{
       name: {
         type: String,
@@ -101,7 +101,12 @@ const JobCardSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
       }
-    }]
+    }],
+     status: {
+    type: String,
+    enum: ['waiting','pending', 'in_progress', 'completed','approved', 'rejected'],
+    default: 'pending'
+  },
   }],
   
   totalEstimatedAmount: {

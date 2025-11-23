@@ -51,10 +51,6 @@ const shopSchema = new mongoose.Schema({
     licenseNumber: String,
     taxId: String
   },
-  
-  
-  
-  
 
   services:[{
     name:{

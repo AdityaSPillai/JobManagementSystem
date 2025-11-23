@@ -43,9 +43,9 @@ router.put('/start-machine-timer/:jobId/:machineId',startMachineForJobItem,)
 router.put('/end-machine-timer/:jobId/:machineId',endMachineForJobItem,)
 
 //start worker timer
-router.put('/start-worker-timer/:jobId/:userId',startWorkerTimer)
+router.post('/start-worker-timer/:jobId/:jobItemId/:workerObjectId',startWorkerTimer)
 
-router.put('/end-worker-timer/:jobId/:userId',endWorkerTimer)
+router.post('/end-worker-timer/:jobId/:jobItemId/:workerObjectId',endWorkerTimer)
 
 
 //perform quality check

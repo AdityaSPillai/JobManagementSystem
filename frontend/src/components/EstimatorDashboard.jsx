@@ -165,7 +165,7 @@ function EstimatorDashboard({ onLoginClick }) {
         setSelectedJob(updatedJob);
       }
     }
-    console.log('selected job =',jobs[2]?.items[0]?.jobType)
+    console.log(selectedJob);
   }, [jobs, selectedJob]);
 
   const getAllJobs = async () => {
@@ -187,17 +187,14 @@ function EstimatorDashboard({ onLoginClick }) {
             hour: '2-digit', 
             minute: '2-digit'
           }),
-          status: (job.status || 'Not Assigned').toLowerCase(),
+          status: job.status || 'Not Assigned',
           notes: (job.notes || ''),
           totalEstimatedAmount: job.totalEstimatedAmount || 0,
           items: job.jobItems?.map(item => {
-              const startTime = item.worker?.startTime;
-              const endTime = item.worker?.endTime;
+            
 
               // Determine status from backend timestamps
-              let computedStatus = 'stopped';
-              if (startTime && !endTime) computedStatus = 'running';
-              if (endTime) computedStatus = 'completed';
+             const computedStatus = item.status || 'pending';
 
               return {
                 itemId: item._id,
@@ -207,20 +204,30 @@ function EstimatorDashboard({ onLoginClick }) {
                 estimatedPrice: item.estimatedPrice || 0,
                 category: item.category,
                 estimatedManHours: item.estimatedManHours,
-                itemStatus: computedStatus,
-                machine: {
+                itemStatus: computedStatus,   // but computedStatus = item.status now
+                  machine: {
                   machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
                   machineId: item.machine?.machineRequired?._id || null,
                   startTime: item.machine?.startTime || null,
                   endTime: item.machine?.endTime || null,
                   actualDuration: item.machine?.actualDuration || null
                 },
-                worker: {
-                  workerAssigned: item.worker?.workerAssigned || null,
-                  startTime,
-                  endTime,
-                  actualDuration: item.worker?.actualDuration || null
-                },
+                // worker: {
+                //   workerAssigned: item.worker?.workerAssigned || null,
+                //   startTime,
+                //   endTime,
+                //   actualDuration: item.worker?.actualDuration || null
+                // },
+               workers: Array.isArray(item.workers)
+                    ? item.workers.map(worker => ({
+                        workerAssigned: worker.workerAssigned,
+                        startTime: worker.startTime,
+                        endTime: worker.endTime,
+                        actualDuration: worker.actualDuration,
+                      }))
+                    : [],
+
+                
                 consumable: Array.isArray(item.consumable)
                   ? item.consumable
                       .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
@@ -256,6 +263,7 @@ function EstimatorDashboard({ onLoginClick }) {
       return;
     }
 
+    // call backend to push a new worker into the jobItem.workers array
     const response = await axios.put(
       `/jobs/assign-worker/${employeeId}/${jobId}/${itemId}`
     );
@@ -263,18 +271,29 @@ function EstimatorDashboard({ onLoginClick }) {
     if (response.data.success) {
       const employee = employees.find(e => e._id === employeeId);
 
+      // Update local UI by pushing the new worker object into item.workers
       setJobs(prevJobs =>
         prevJobs.map(job => {
           if (job.id === jobId) {
             const newItems = [...job.items];
-            newItems[itemIndex] = {
-              ...newItems[itemIndex],
-              worker: {
-                ...newItems[itemIndex].worker,
-                workerAssigned: employeeId
-              },
-              itemStatus: 'stopped'
-            };
+            const item = { ...newItems[itemIndex] };
+
+            // Ensure workers array exists
+            const currWorkers = Array.isArray(item.workers) ? [...item.workers] : [];
+
+            // Push a minimal placeholder — backend will return the full object on next fetch.
+            currWorkers.push({
+              _id: response.data.workerObjectId || `temp-${employeeId}-${Date.now()}`, // backend should ideally return the new worker._id
+              workerAssigned: employeeId,
+              startTime: null,
+              endTime: null,
+              actualDuration: null
+            });
+
+            item.workers = currWorkers;
+            item.itemStatus = 'stopped';
+
+            newItems[itemIndex] = item;
             return {
               ...job,
               items: newItems,
@@ -294,78 +313,130 @@ function EstimatorDashboard({ onLoginClick }) {
 };
 
 
-  const handleStartItemTimer = async (jobId, itemIndex, workerID) => {
-    console.log(`API CALL: Start timer for job ${jobId}, User ${workerID}`);
 
-    try {
-      const response = await axios.put(`/jobs/start-worker-timer/${jobId}/${workerID}`);
-      
-      if (!response.data.success) {
-        console.log('Error occurred');
-        alert('Failed to start timer');
-        return;
-      }
-      
-      console.log('Started successfully');
+ const handleStartItemTimer = async (jobId, itemIndex, workerObjectId) => {
+  console.log(`API CALL: Start timer for job ${jobId}, workerObjectId ${workerObjectId}`);
+  console.log(jobId,itemIndex,workerObjectId)
 
-      setJobs(prevJobs => prevJobs.map(job => {
-        if (job.id === jobId) {
-          const newItems = [...job.items];
-          newItems[itemIndex].itemStatus = 'running';
+  try {
+    // Pass jobItemId and workerObjectId to backend
+    const job = jobs.find(j => j.id === jobId);
+    if(!job) return;
+    const jobItemId = job.items[itemIndex].itemId;
 
-          const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
-          
-          return { 
-            ...job, 
-            items: newItems, 
-            status: hasRunningTask ? 'In Progress' : job.status 
-          };
-        }
-        return job;
-      }));
-      
-    } catch (error) {
-      console.log('Error starting timer:', error);
+    const response = await axios.post(`/jobs/start-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
+    
+    if (!response.data.success) {
+      console.log('Error occurred');
       alert('Failed to start timer');
+      return;
     }
-  };
+    else{
+       alert('Timer Started Successfully');
+       getAllJobs();
+    }
+    
+    console.log('Started successfully');
 
-  const handleEndItemTimer = async (jobId, itemIndex, workerID) => {
-    console.log(`API CALL: End timer for job ${jobId}, User ${workerID}`);
+    // Update UI — set that worker's itemStatus to running
+    setJobs(prevJobs => prevJobs.map(job => {
+      if (job.id === jobId) {
+        const newItems = [...job.items];
+        const item = { ...newItems[itemIndex] };
 
-    try {
-      const response = await axios.put(`/jobs/end-worker-timer/${jobId}/${workerID}`);
-      
-      if (!response.data.success) {
-        console.log('Error occurred');
-        alert('Failed to end timer');
-        return;
+        // mark worker startTime locally (if backend returned timestamp use that)
+        item.workers = item.workers.map(w => w._id === workerObjectId ? { ...w, startTime: new Date().toISOString() } : w);
+
+        // Compute itemStatus: running if any worker running
+        item.itemStatus = response.data.updatedItemStatus;
+
+
+        newItems[itemIndex] = item;
+
+        const hasRunningTask = newItems.some(i => i.itemStatus === 'running');
+
+        return { 
+          ...job, 
+          items: newItems, 
+          status: hasRunningTask ? 'In Progress' : job.status 
+        };
       }
+      return job;
+    }));
 
-      console.log('Ended successfully');
+  } catch (error) {
+    console.log('Error starting timer:', error);
+    alert('Failed to start timer');
+  }
+};
 
-      setJobs(prevJobs => prevJobs.map(job => {
-        if (job.id === jobId) {
-          const newItems = [...job.items];
-          newItems[itemIndex].itemStatus = 'completed';
 
-          const allCompleted = newItems.every(item => item.itemStatus === 'completed');
-          const hasRunningTask = newItems.some(item => item.itemStatus === 'running');
-          
-          return { 
-            ...job, 
-            items: newItems, 
-            status: allCompleted ? 'completed' : (hasRunningTask ? 'in Progress' : 'assigned') 
-          };
-        }
-        return job;
-      }));
-      
-    } catch (error) {
-      console.log('Error ending timer:', error);
+ const handleEndItemTimer = async (jobId, itemIndex, workerObjectId) => {
+  console.log(`API CALL: End timer for job ${jobId}, workerObjectId ${workerObjectId}`);
+
+  try {
+    const job = jobs.find(j => j.id === jobId);
+    if(!job) return;
+    const jobItemId = job.items[itemIndex].itemId;
+
+    const response = await axios.post(`/jobs/end-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
+    
+    if (!response.data.success) {
+      console.log('Error occurred');
       alert('Failed to end timer');
+      return;
     }
-  };
+
+    console.log('Ended successfully');
+
+    // Update UI — set that worker's endTime & actualDuration locally
+    setJobs(prevJobs => prevJobs.map(job => {
+      if (job.id === jobId) {
+        const newItems = [...job.items];
+        const item = { ...newItems[itemIndex] };
+
+        // assume backend returned { worker: { _id, endTime, actualDuration } } optionally
+        const backendWorker = response.data.worker || null;
+
+        item.workers = item.workers.map(w => {
+          if (w._id === workerObjectId) {
+            const endTime = backendWorker?.endTime || new Date().toISOString();
+            const startTime = w.startTime || backendWorker?.startTime || null;
+            const actualDuration = backendWorker?.actualDuration != null
+              ? backendWorker.actualDuration
+              : startTime ? Math.floor((new Date(endTime) - new Date(startTime)) / (1000 * 60)) : 0;
+            return { ...w, endTime, actualDuration };
+          }
+          return w;
+        });
+
+        // recompute itemStatus: completed only if all workers have endTime
+        const allCompleted = item.workers.length > 0 && item.workers.every(w => w.endTime);
+        const hasRunning = item.workers.some(w => w.startTime && !w.endTime);
+        item.itemStatus = allCompleted ? 'completed' : (hasRunning ? 'running' : 'in_progress');
+
+        newItems[itemIndex] = item;
+
+        const jobAllCompleted = newItems.every(i => i.itemStatus === 'completed');
+        const jobHasRunning = newItems.some(i => i.itemStatus === 'running');
+
+        return { 
+          ...job, 
+          items: newItems, 
+          status: jobAllCompleted ? 'completed' : (jobHasRunning ? 'In Progress' : 'assigned') 
+        };
+      }
+      return job;
+    }));
+
+    getAllJobs();
+
+  } catch (error) {
+    console.log('Error ending timer:', error);
+    alert('Failed to end timer');
+  }
+};
+
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch =
@@ -549,10 +620,12 @@ const calculateActualCost = (job) => {
     const hourlyRate = category?.hourlyRate || 0;
 
     // Worker actual duration in minutes from backend (already in item.worker.actualDuration)
-    const actualMinutes = item.worker?.actualDuration || 0;
-    const actualHours = actualMinutes / 60;
+ const totalActualMinutes = Array.isArray(item.workers)
+  ? item.workers.reduce((s, w) => s + (w.actualDuration || 0), 0)
+  : (item.worker?.actualDuration || 0);
 
-    const laborCost = actualHours * hourlyRate;
+const actualHours = totalActualMinutes / 60;
+const laborCost = actualHours * hourlyRate;
 
     // Optional: if you want to include machine cost dynamically (if machine actualDuration is tracked)
     const machineHours = (item.machine?.actualDuration || 0) / 60;
@@ -616,12 +689,17 @@ const calculateActualCost = (job) => {
           endTime: item.machine.endTime || null,
           actualDuration: item.machine.actualDuration || null
         },
-        worker: {
-          workerAssigned: item.worker.workerAssigned || null,
-          startTime: item.worker.startTime || null,
-          endTime: item.worker.endTime || null,
-          actualDuration: item.worker.actualDuration || null
-        },
+      
+            workers: Array.isArray(item.workers)
+              ? item.workers.map(w => ({
+                  workerAssigned: w.workerAssigned,
+                  startTime: w.startTime || null,
+                  endTime: w.endTime || null,
+                  actualDuration: w.actualDuration || null
+                }))
+              : []
+            ,
+
         consumable: Array.isArray(item.consumable)
           ? item.consumable
               .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
@@ -1016,7 +1094,7 @@ const calculateActualCost = (job) => {
                     <div>
                       <strong>Status:</strong>
                       <span className={`status-badge ${
-                        selectedJob.status === 'In Progress' ? 'status-progress' : 
+                        selectedJob.status === 'in_progress' ? 'status-progress' : 
                         selectedJob.status === 'completed' ? 'status-completed' :
                         selectedJob.status === 'Assigned' ? 'status-assigned-active' :
                         'status-assigned'
@@ -1043,6 +1121,10 @@ const calculateActualCost = (job) => {
                                 <div className="item-description">Priority: {item.priority}</div>
                               
                                 <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
+                                <p className="item-status-badge">
+                              Status: <strong>{item.itemStatus}</strong>
+                            </p>
+
                               </div>
                               
                               {/*Notes to be displayed here if Notes is not NULL*/}
@@ -1083,70 +1165,78 @@ const calculateActualCost = (job) => {
                                 ).toFixed(2)}
                               </div>
                             </div>
-                            {item.worker.workerAssigned && (
-                              <div className="item-timer-section">
-                                <div className="item-timer-controls">
-                                  {item.itemStatus === 'completed' || 
-                                    selectedJob.status.toLowerCase() === 'completed' || 
-                                    selectedJob.status.toLowerCase() === 'approved' ? (
-                                      <div className="completed-badge-small">
-                                        <img src={tickIcon} alt="Completed" className="btn-icon" />
-                                      </div>
-                                  ) : (
-                                    <>
-                                      {item.itemStatus === 'stopped' && (
-                                        <button 
-                                          title="Start"
-                                          className="btn-timer-small btn-start"
-                                          onClick={() => handleStartItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
-                                        >
-                                          <img src={playIcon} alt="Start" className="btn-icon" />
-                                        </button>
-
-                                      
-                                      )}
-
-                                      {item.itemStatus === 'running' && (
-                                        <button 
-                                          title="End" 
-                                          className="btn-timer-small btn-end" 
-                                          onClick={() => handleEndItemTimer(selectedJob.id, index, item.worker.workerAssigned)}
-                                        >
-                                          <img src={tickIcon} alt="End" className="btn-icon" />
-                                        </button>
-                                      )}
-                                      {item.itemStatus === 'running' && (
-                                            <p className="job-running-label">🟢 Job is being worked</p>
-                                          )}
-                                    </>
-                                  )}
-
-
-                                  
-
-                                </div>
-                                {item.worker?.actualDuration != null && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Actual Time Used:</strong>
-                                  <div className="full-width">
-                                    <p className='time'>
-                                      ⏱ {item.worker.actualDuration > 0 
-                                        ? `${(item.worker.actualDuration / 60).toFixed(2)} hrs` 
-                                        : "Less than 1 minute"}
-                                    </p>
-                                  </div>
-                                </div>
-)}
-
-                              </div>
-                              
-                            )}
+                            <br></br>
+                            <br></br>
+                          {/* Workers list & per-worker timer controls */}
+                           
                           </div>
                           <div className="full-width">
                             <p className="employee-select-label"><strong>Assign Employee for this task:</strong></p>
+
+
+                                   {Array.isArray(item.workers) && item.workers.length > 0 ? (
+                              item.workers.map((w, wi) => (
+                                <div key={w._id || wi} className="item-timer-section">
+                                  <div className="worker-row">
+                                    <div className="worker-info">
+                                      <strong>Worker:</strong> { /* show name if you can resolve, else id */ }
+                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned}
+                                    </div>
+
+                                    <div className="item-timer-controls">
+                                      { (w.endTime || selectedJob.status.toLowerCase() === 'completed' || selectedJob.status.toLowerCase() === 'approved') ? (
+                                        <div className="completed-badge-small"><img src={tickIcon} alt="Completed" className="btn-icon" /></div>
+                                      ) : (
+                                        <>
+                                          {(!w.startTime || (w.startTime && w.endTime)) && (
+                                            <button
+                                              title="Start"
+                                              className="btn-timer-small btn-start"
+                                              onClick={() => handleStartItemTimer(selectedJob.id, index, w.workerAssigned)}
+                                            >
+                                              <img src={playIcon} alt="Start" className="btn-icon" />
+                                            </button>
+                                          )}
+
+                                          {(w.startTime && !w.endTime) && (
+                                            <button
+                                              title="End"
+                                              className="btn-timer-small btn-end"
+                                              onClick={() => handleEndItemTimer(selectedJob.id, index, w.workerAssigned)}
+                                            >
+                                              <img src={tickIcon} alt="End" className="btn-icon" />
+                                            </button>
+                                          )}
+
+                                          {(w.startTime && !w.endTime) && <p className="job-running-label">🟢 Working</p>}
+                                        </>
+                                      )}
+                                    </div>
+
+                                    {/* show actual duration if available */}
+                                    {w?.actualDuration != null && (
+                                      <div className="job-items-container">
+                                        <strong className="job-items-title">Actual Time Used:</strong>
+                                        <div className="full-width">
+                                          <p className='time'>
+                                            ⏱ {w.actualDuration > 0 ? `${(w.actualDuration / 60).toFixed(2)} hrs` : "Less than 1 minute"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p style={{ color: '#666' }}>No workers assigned yet for this task</p>
+                            )}
+
+
+
+
                             <select
                               className="employee-select"
-                              value={item.worker.workerAssigned || ''}
+                              value={''} // leave empty so user can add multiple workers; selection does not represent a single assigned worker
                               onChange={(e) => {
                                 const selectedEmployeeId = e.target.value;
                                 if (selectedEmployeeId) {
@@ -1154,20 +1244,29 @@ const calculateActualCost = (job) => {
                                 }
                               }}
                               disabled={
-                                selectedJob.status.toLowerCase() === 'completed' ||
-                                selectedJob.status.toLowerCase() === 'approved' ||
-                                selectedJob.status.toLowerCase()==='waiting' ||
-                                item.itemStatus === 'running' ||
-                                item.itemStatus === 'completed'
+                                selectedJob.status === 'waiting' ||
+                                item.itemStatus === 'completed' ||
+                                item.itemStatus === 'approved' ||
+                                selectedJob.status === 'approved' ||
+                                selectedJob.status === 'completed'
                               }
+
                             >
-                              <option value="">Select Employee</option>
-                              {employees.map(emp => (
+                            <option value="">Select Employee</option>
+
+                            {employees
+                              .filter(emp => emp.specialization === item.category)
+
+                              .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
+                              .map(emp => (
                                 <option key={emp._id} value={emp._id}>
-                                  {emp.name} ({emp._id})
+                                  {emp.name} — {emp.specialization}
                                 </option>
-                              ))}
-                            </select>
+                              ))
+                            }
+
+                                    </select>
+
 
 
                             

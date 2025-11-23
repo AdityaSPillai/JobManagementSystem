@@ -416,78 +416,63 @@ export const endMachineForJobItem = async (req, res) => {
 
 
 
-export const startWorkerTimer= async (req, res) => {
+export const startWorkerTimer = async (req, res) => {
   try {
-    const { jobId, userId } = req.params;
-  if (!jobId || !userId) {
+    const { jobId, jobItemId, workerObjectId } = req.params;
+
+    if (!jobId || !jobItemId || !workerObjectId) {
       return res.status(400).json({
         success: false,
-        message: "Please provide valid jobId and userId",
+        message: "jobId, jobItemId and workerObjectId are required"
       });
-    } 
-
-    const jobItem = await JobCardModel.findById(jobId);
-    if (!jobItem) {
-      return res.status(404).json({
-        success: false,
-        message: "Job item not found",
-      });
-    } 
-
-console.log(jobItem.status)
-    let workerFound = false;
-
-    for (const item of jobItem.jobItems) {
-        console.log("worker assigned is ",item.worker?.workerAssigned ,"useriD is",  userId)
-      if (item.worker?.workerAssigned?.toString() === userId) {
-        item.worker.startTime = new Date();
-        workerFound = true; 
-        console.log("Worker timer started at", item.worker.startTime);
-        break;
-      } 
     }
 
-    if (!workerFound) {
-      return res.status(404).json({
-        success: false,
-        message: "Worker not found in job items",
-      });
-    } 
-        jobItem.status="in_progress"
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
 
-    await jobItem.save();
+    const jobItem = job.jobItems.find(i => i._id.toString() === jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({ success: false, message: "Job item not found" });
+    }
+    console.log("Job Item found:", jobItem.workers);  
+
+    const worker = jobItem.workers.find(w => w.workerAssigned.toString() === workerObjectId);
+    if (!worker) {
+      return res.status(404).json({ success: false, message: "Worker not found" });
+    }
+
+    
+    worker.startTime = new Date();
+    jobItem.status = "in_progress";
+
+    await job.save();
 
     res.status(200).json({
       success: true,
-      message: "Worker timer started successfully",
-      jobItem,
+      message: "Worker timer started",
+      worker
     });
 
-
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
-    catch (error) {
-      console.error("Error starting worker timer:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      error,
-    });
-  } 
 };
 
 
 export const endWorkerTimer= async (req, res) => {
   try {
-    const {jobId,userId} = req.params;
-    if(!jobId|| !userId){
-      console.error("Please provide valid jobId and userId");
+    const {jobId,jobItemId,workerObjectId} = req.params;
+    if(!jobId|| !jobItemId|| !workerObjectId){
+      console.error("Please provide valid jobId and userId and workerObjectId");
       return res.status(400).json({
         success:false,
         message:"Please provide valid jobId and userId",
       })
     }
-    const jobItems=await JobCardModel.findById(jobId);
-    if(!jobItems){
+    const job=await JobCardModel.findById(jobId);
+    if(!job){
       console.error("Job item not found");
       return res.status(404).json({
         success:false,
@@ -495,35 +480,55 @@ export const endWorkerTimer= async (req, res) => {
       })
     }
 
+    const jobItem=job.jobItems.find(i=>i._id.toString()===jobItemId);
+    if(!jobItem){
+      return res.status(404).json({
+        success: false,
+        message: "Job item not found",
+      });
+    }
+console.log("Job Item found:", jobItem.workers);
     let workerFound= false;
 
-    for(const item of jobItems.jobItems){
-      console.log("Checking workerAssigned:", item.worker?.workerAssigned?.toString(), "against userId:", userId);
-      if(item.worker?.workerAssigned?.toString()=== userId){
-        item.worker.endTime= new Date();
-        timeDifference(item.worker.startTime, item.worker.endTime);
-        item.worker.actualDuration= endingtime;
-        console.log("Worker timer ended at", item.worker.endTime);
+    for(const worker of jobItem.workers){
+      console.log("Checking workerAssigned:", worker?.workerAssigned?.toString());
+      if(worker?.workerAssigned?.toString()=== workerObjectId){
+        worker.endTime= new Date();
+        timeDifference(worker.startTime, worker.endTime);
+        worker.actualDuration= endingtime;
+        console.log("Worker timer ended at", worker.endTime);
+
         workerFound= true;
+        jobItem.status='completed';
         break;
       }
     }
-            jobItems.status="completed"
-            await jobItems.save()
 
-    res.status(200).json({
+
+    let notCompleted=false;
+    for(const jobs in job.jobItems  ) {
+      console.log("Checking job item status:", jobs.status);
+        jobs.status !== 'completed' ? notCompleted=true : notCompleted=false
+    }
+
+    if(!notCompleted){
+      job.status='completed'
+    }
+
+      await job.save()
+        if(!workerFound){
+              console.error("Worker not found in job items");
+              return res.status(404).json({
+                success:false,
+                message:"Worker not found in job items",
+              })
+            }
+
+     res.status(200).json({
       success: true,
       message: "Worker timer ended successfully",
-      jobItems,
+      job,
     });
-
-if(!workerFound){
-      console.error("Worker not found in job items");
-      return res.status(404).json({
-        success:false,
-        message:"Worker not found in job items",
-      })
-    }
 
 
   } catch (error) {
@@ -548,13 +553,20 @@ if(!workerFound){
       });
     }
 
+    const workObject={
+      workerAssigned:userId,
+      startTime:null,
+      endTime:null,
+      actualDuration:null
+    }
+
     const job = await JobCardModel.findOneAndUpdate(
       { 
         _id: jobId,
         "jobItems._id": jobItemId
       },
       { 
-        $set: { "jobItems.$.worker.workerAssigned": userId }
+        $addToSet: { "jobItems.$.workers":workObject }
       },
       { new: true }
     );
