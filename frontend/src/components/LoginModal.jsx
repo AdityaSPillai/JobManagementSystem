@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import '../styles/LoginModal.css';
 import axios from "../utils/axios.js";
-import useAuth from '../context/context.js';
+import useAuth from '../context/context.jsx';
+import { useNavigate } from 'react-router-dom';
+
 
 function LoginModal({ isOpen, onClose, onLogin }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -9,6 +11,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [regFormData, setRegFormData] = useState({
     name: '',
     email: '',
@@ -49,11 +52,11 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         });
 
         console.log('Logged in User:', response.data.user);
-        window.location.reload();
-
         if (onLogin) {
           onLogin(response.data.user.role);
         }
+
+        // close modal UI
         handleClose();
       }
     } catch (error) {

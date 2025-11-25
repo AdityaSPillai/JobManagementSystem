@@ -98,7 +98,7 @@ function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, o
               className="login-btn logout-btn"
               onClick={() => {
                 if (onLogout) onLogout();
-                window.location.reload();
+                navigate("/login", { replace: true });
               }}
             >
               Logout

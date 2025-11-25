@@ -5,6 +5,7 @@ import SupervisorDashboard from './components/SupervisorDashboard';
 import QADashboard from './components/QADashboard';
 import useAuth from './context/context';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './components/LoginPage';
 
 const getRoleDashboard = (userInfo, onLogout) => {
   if (!userInfo?.role) {
@@ -45,8 +46,13 @@ function App() {
     <div className="app">
       <Routes>
         <Route 
-          path="/home" 
-          element={<EstimatorDashboard onLoginClick={handleLogin} />} 
+          path="/login" 
+          element={<LoginPage/>} 
+        />
+        
+        <Route
+          path="/home"
+          element={<EstimatorDashboard />}
         />
         
         <Route
@@ -54,13 +60,13 @@ function App() {
           element={
             isAuthenticated 
               ? getRoleDashboard(userInfo, handleLogout)
-              : <Navigate to="/home" replace />
+              : <Navigate to="/login" replace />
           }
         />
 
         <Route 
           path="/" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/home" replace />}
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
         />
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>

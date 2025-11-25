@@ -7,7 +7,7 @@ import MachinesTab from './MachinesTab';
 import CustomerTab from './CustomerTab';
 import MachineCategoryTab from './MachineCategoryTab.jsx';
 import ConsumablesTab from './ConsumablesTab.jsx';
-import useAuth from "../context/context.js";
+import useAuth from "../context/context.jsx";
 import axios from "../utils/axios.js"
 import JobTypeTab from './JobTypeTab.jsx';
 import JobCategoryTab from './JobCategoryTab.jsx';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../utils/axios.js';
-import useAuth from '../context/context.js';
+import useAuth from '../context/context.jsx';
 
 // --- Add Machine Modal ---
 function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {

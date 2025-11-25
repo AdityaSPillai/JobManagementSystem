@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import playIcon from '../assets/play.svg';
-import useAuth from '../context/context.js';
+import useAuth from '../context/context.jsx';
 import tickIcon from '../assets/tick.svg';
 import crossIcon from '../assets/cross.svg';
 import axios from '../utils/axios.js';

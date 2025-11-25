@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../utils/axios.js';
-import useAuth from '../context/context.js';
+import useAuth from '../context/context.jsx';
 
 // --- Add Employee Modal ---
 function AddEmployeeModal({ isVisible, onClose, onSubmit }) {

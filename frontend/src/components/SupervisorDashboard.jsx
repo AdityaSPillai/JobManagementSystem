@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import '../styles/SupervisorDashboard.css';
-import useAuth from '../context/context.js';
+import useAuth from '../context/context.jsx';
 import clipboardIcon from '../assets/clipboard.svg';
 import workerIcon from '../assets/worker.svg';
 import userIcon from '../assets/user.svg';

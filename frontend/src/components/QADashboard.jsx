@@ -3,7 +3,7 @@
   import '../styles/QADashboard.css'; // Use QA specific CSS
   import '../styles/SupervisorDashboard.css'; // Borrow some common styles like layout
   import axios  from '../utils/axios.js';
-  import useAuth from '../context/context.js';
+  import useAuth from '../context/context.jsx';
 
   // Import all necessary icons
   import clipboardIcon from '../assets/clipboard.svg';
