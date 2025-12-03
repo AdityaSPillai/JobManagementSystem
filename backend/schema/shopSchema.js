@@ -96,6 +96,10 @@ const shopSchema = new mongoose.Schema({
       available: {
         type: Boolean,
         default: true
+      },
+      quantity: {
+        type: Number,
+        default: 0
       }
     }
   ],

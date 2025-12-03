@@ -17,7 +17,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.price) {
+    if (!formData.name || !formData.price || !formData.quantity) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -70,6 +70,17 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
                 type="number"
                 name="price"
                 value={formData.price}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </div>
+             <div className="form-group">
+              <label>Quanity </label>
+              <input
+                type="number"
+                name="quantity"
+                value={formData.quantity}
                 onChange={handleChange}
                 required
                 disabled={loading}
@@ -168,6 +179,17 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
                 required
               />
             </div>
+            <div className="form-group">
+              <label>Quanity </label>
+              <input
+                type="number"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </div>
             <div className="form-group form-group-checkbox">
               <input
                 type="checkbox"
@@ -177,6 +199,7 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
               />
               <label>Available</label>
             </div>
+             
           </div>
 
           <button type="submit" className="btn-submit" disabled={loading}>
@@ -262,6 +285,9 @@ function ConsumablesTab() {
 
               <div className="data-card-body">
                 <p><strong>Price:</strong> ₹{item.price}</p>
+              </div>
+              <div className="data-card-body">
+                <p><strong>Quantity:</strong> {item.quantity}</p>
               </div>
 
               <div className="data-card-footer">

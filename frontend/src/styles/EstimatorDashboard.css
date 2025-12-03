@@ -831,6 +831,20 @@
   font-size: 14px;
   transition: background 0.2s;
 }
+.btn-add-task-job {
+  padding: 8px 16px;
+  background: #48bb78;
+  color: white;
+  position: relative;
+  left:38vw;
+  margin-top: 2vw;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+}
 
 .btn-add-job:hover {
   background: #38a169;

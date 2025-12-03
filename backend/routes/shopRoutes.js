@@ -1,11 +1,13 @@
 import express from "express"
-import { createShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController} from "../controllers/shopController.js";
+import { createShop,getShop, getAllEmployees,getAllWorkers,getAllMachineController, getAllShopJobsController,allServices,addNewCategoryController,addNewService,updateShopServices,deleteShopService,updateCategoryController, deleteCategoryController,allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController} from "../controllers/shopController.js";
 import {isOwner} from "../middleware/middlewares.js";
 import { addMachineCategoryController, deleteMachineCategoryController, getAllMachineCategoryController, getHourlyRateController, updateMachineCategoryController } from "../controllers/machineCategoryController.js";
 
 const router= express.Router();
 
 router.post('/create',isOwner,createShop);
+
+router.get('/getShopName/:id',getShop)
 
 // adding new services to shop;
 router.post('/addNewService/:shopId',isOwner,addNewService)

@@ -2,12 +2,34 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import LoginModal from './LoginModal';
 import '../styles/Header.css';
+import axios from '../utils/axios.js';
+import useAuth from '../context/context.jsx';
+import { use } from 'react';
+
 
 function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, onLoginClick }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const[name, setName] = useState('');
+    const {userInfo, } = useAuth();
+  
   
   const navigate = useNavigate(); // Initialize useNavigate
+
+const getShop=async () => {
+    try {
+      const response = await axios.get(`/shop/getShopName/${userInfo.shopId}`);  
+      setName(response.data.shopName);
+    } catch (error) {
+      console.error('Error fetching shop name:', error);
+    }
+  }
+
+
+  useEffect(() => {
+    getShop();
+  }, [userInfo.shopId]);
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -65,7 +87,7 @@ function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, o
   return (
     <>
       <header className="dashboard-header">
-        <h1>AutoCare WorkShop</h1>
+        <h1> {name}</h1>
         <div className="header-right">
           <span className="datetime">{getCurrentDateTime()}</span>
           <div className="container-user-btn">

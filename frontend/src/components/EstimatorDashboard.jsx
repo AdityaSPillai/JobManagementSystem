@@ -3,6 +3,7 @@ import Header from './Header';
 import playIcon from '../assets/play.svg';
 import useAuth from '../context/context.jsx';
 import tickIcon from '../assets/tick.svg';
+import pause from '../assets/pause.svg';
 import crossIcon from '../assets/cross.svg';
 import axios from '../utils/axios.js';
 import clipboardIcon from '../assets/clipboard.svg';
@@ -23,6 +24,9 @@ function EstimatorDashboard({ onLoginClick }) {
   const {userInfo, isAuthenticated, logout } = useAuth();
   const[employees,setEmployees]=useState([]);
   const[categories,setCategories]=useState([]);
+  const[ispaused,setIsPaused]=useState(false);
+  const [consumableQty, setConsumableQty] = useState({});
+
 
   const shopId = userInfo?.shopId;
 
@@ -364,6 +368,8 @@ function EstimatorDashboard({ onLoginClick }) {
       return job;
     }));
 
+    setIsPaused(false);
+
   } catch (error) {
     console.log('Error starting timer:', error);
     alert('Failed to start timer');
@@ -435,6 +441,27 @@ function EstimatorDashboard({ onLoginClick }) {
     console.log('Error ending timer:', error);
     alert('Failed to end timer');
   }
+};
+
+
+const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
+  console.log(`API CALL: End timer for job ${jobId}, workerObjectId ${workerObjectId}`);
+
+  try {
+    const job = jobs.find(j => j.id === jobId);
+    if(!job) return;
+    const jobItemId = job.items[itemIndex].itemId;
+
+    const response = await axios.post(`/jobs/pause-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
+    
+    if (!response.data.success) {
+      console.log('Error occurred');
+      alert('Failed to end timer');
+      return;
+    }
+    setIsPaused(true);
+    alert('Timer Paused Successfully');
+  } catch (error) {}
 };
 
 
@@ -572,44 +599,54 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
-  const calculateFormTotal = () => {
-    const itemsTotal = formData.jobItems.reduce(
-      (sum, item) => sum + (item.estimatedPrice || 0),
-      0
-    );
+ const calculateFormTotal = () => {
+  const itemsTotal = formData.jobItems.reduce(
+    (sum, item) => sum + (item.estimatedPrice || 0),
+    0
+  );
 
-    const machinesTotal = formData.jobItems.reduce(
-      (sum, item) => sum + (item.machineEstimatedCost || 0),
-      0
-    );
+  const machinesTotal = formData.jobItems.reduce(
+    (sum, item) => sum + (item.machineEstimatedCost || 0),
+    0
+  );
 
-    const consumablesTotal = formData.jobItems.reduce(
-      (sum, item) =>
-        sum +
-        (Array.isArray(item.consumable)
-          ? item.consumable.reduce((s, c) => s + (c.price || 0), 0)
-          : 0),
-      0
-    );
+  const consumablesTotal = formData.jobItems.reduce((sum, item, itemIndex) => {
+    const itemConsumableTotal = Array.isArray(item.consumable)
+      ? item.consumable.reduce((s, c, ci) => {
+          const qty = consumableQty[`${itemIndex}-${ci}`] || 0;
+          return s + (c.price || 0) * qty;
+        }, 0)
+      : 0;
 
-    return itemsTotal + machinesTotal + consumablesTotal;
-  };
+    return sum + itemConsumableTotal;
+  }, 0);
 
-  const calculateJobTotal = (job) => {
-    if (!job || !job.items) return 0;
+  return itemsTotal + machinesTotal + consumablesTotal;
+};
 
-    const itemsTotal = job.items.reduce(
-      (sum, item) => sum + (item.estimatedPrice || 0),
-      0
-    );
 
-    const consumablesTotal = job.items.reduce(
-      (sum, item) => sum + (Array.isArray(item.consumable) ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0) : 0),
-      0
-    );
+ const calculateJobTotal = (job) => {
+  if (!job || !job.items) return 0;
 
-    return itemsTotal + consumablesTotal;
-  };
+  const itemsTotal = job.items.reduce(
+    (sum, item) => sum + (item.estimatedPrice || 0),
+    0
+  );
+
+  const consumablesTotal = job.items.reduce((sum, item, itemIndex) => {
+    const itemConsumableTotal = Array.isArray(item.consumable)
+      ? item.consumable.reduce((s, c, ci) => {
+          const qty = consumableQty[`${itemIndex}-${ci}`] || 0;
+          return s + (c.price || 0) * qty;
+        }, 0)
+      : 0;
+
+    return sum + itemConsumableTotal;
+  }, 0);
+
+  return itemsTotal + consumablesTotal;
+};
+
 
 
 const calculateActualCost = (job) => {
@@ -707,6 +744,7 @@ const laborCost = actualHours * hourlyRate;
                 name: c.name.trim(),
                 price: c.price,
                 available: c.available,
+                quantity: c.quantity ||  1
               }))
           : []
       }))
@@ -1184,11 +1222,14 @@ const laborCost = actualHours * hourlyRate;
                                     </div>
 
                                     <div className="item-timer-controls">
-                                      { (w.endTime || selectedJob.status.toLowerCase() === 'completed' || selectedJob.status.toLowerCase() === 'approved') ? (
-                                        <div className="completed-badge-small"><img src={tickIcon} alt="Completed" className="btn-icon" /></div>
+                                      {(w.endTime || selectedJob.status.toLowerCase() === "completed" || selectedJob.status.toLowerCase() === "approved") ? (
+                                        <div className="completed-badge-small">
+                                          <img src={tickIcon} alt="Completed" className="btn-icon" />
+                                        </div>
                                       ) : (
                                         <>
-                                          {(!w.startTime || (w.startTime && w.endTime)) && (
+                                          {/* NOT STARTED */}
+                                          {(!w.startTime && !w.endTime) && (
                                             <button
                                               title="Start"
                                               className="btn-timer-small btn-start"
@@ -1198,20 +1239,45 @@ const laborCost = actualHours * hourlyRate;
                                             </button>
                                           )}
 
-                                          {(w.startTime && !w.endTime) && (
+                                          {/* PAUSED → ONLY PLAY */}
+                                          {(w.startTime && !w.endTime && ispaused) && (
                                             <button
-                                              title="End"
-                                              className="btn-timer-small btn-end"
-                                              onClick={() => handleEndItemTimer(selectedJob.id, index, w.workerAssigned)}
+                                              title="Resume"
+                                              className="btn-timer-small btn-start"
+                                              onClick={() => handleStartItemTimer(selectedJob.id, index, w.workerAssigned)}
                                             >
-                                              <img src={tickIcon} alt="End" className="btn-icon" />
+                                              <img src={playIcon} alt="Start" className="btn-icon" />
                                             </button>
                                           )}
 
-                                          {(w.startTime && !w.endTime) && <p className="job-running-label">🟢 Working</p>}
+                                          {/* RUNNING → PAUSE + END */}
+                                          {(w.startTime && !w.endTime && !ispaused) && (
+                                            <>
+                                              <button
+                                                title="End"
+                                                className="btn-timer-small btn-end"
+                                                onClick={() => handleEndItemTimer(selectedJob.id, index, w.workerAssigned)}
+                                              >
+                                                <img src={tickIcon} alt="End" className="btn-icon" />
+                                              </button>
+
+                                              <button
+                                                title="Pause"
+                                                className="btn-timer-small btn-pause"
+                                                onClick={() => handlePauseTimer(selectedJob.id, index, w.workerAssigned)}
+                                              >
+                                                <img src={pause} alt="Pause" className="btn-icon" />
+                                              </button>
+                                            </>
+                                          )}
+
+                                          {(w.startTime && !w.endTime && !ispaused) && (
+                                            <p className="job-running-label">🟢 Working</p>
+                                          )}
                                         </>
                                       )}
                                     </div>
+
 
                                     {/* show actual duration if available */}
                                     {w?.actualDuration != null && (
@@ -1348,7 +1414,7 @@ const laborCost = actualHours * hourlyRate;
                 <div className="job-items-section">
                   <div className="section-title">
                     <h4>Job Tasks</h4>
-                    <button className="btn-add-job" onClick={addJobItem}>+ Add Task</button>
+                   
                   </div>
                   {formData.jobItems.map((item, index) => (
                     <div key={index} className="job-item-card">
@@ -1498,12 +1564,25 @@ const laborCost = actualHours * hourlyRate;
       >
         <option value="">--Select Consumable--</option>
         {consumables.map((cOpt) => (
-          <option key={cOpt._id} value={cOpt._id}>
-            {cOpt.name} - ₹{cOpt.price}
+          <option key={cOpt._id} value={cOpt._id} >
+            {cOpt.name} - ₹{cOpt.price}                  { (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
           </option>
         ))}
         <option value="manual">+ Add Manual Consumable</option>
       </select>
+     <input
+  type="number"
+  placeholder="Quantity"
+  value={consumableQty[`${index}-${ci}`] || ""}
+  onChange={(e) => {
+    const qty = Number(e.target.value);
+    setConsumableQty(prev => ({
+      ...prev,
+      [`${index}-${ci}`]: qty
+    }));
+  }}
+/>
+
 
       {/* Manual input fields */}
       {c.isManual && (
@@ -1569,6 +1648,9 @@ const laborCost = actualHours * hourlyRate;
       ➕ Add Consumable
     </button>
   )}
+  <div>
+   <button className="btn-add-task-job" onClick={addJobItem}>+ Add Task</button>
+   </div>
 </div>
                     </div>
                   ))}

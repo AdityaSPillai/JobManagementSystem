@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import FormTemplateModel from "../schema/formTemplateSchema.js";
 import JobCardModel from "../schema/jobCardSchema.js";
 import MachineModel from "../schema/machieneModel.js";
@@ -461,6 +462,75 @@ export const startWorkerTimer = async (req, res) => {
 };
 
 
+
+export const pauseWrokerTImer= async (req, res) => {
+  try {
+      const {jobId,jobItemId,workerObjectId} = req.params;
+    if(!jobId|| !jobItemId|| !workerObjectId){
+      console.error("Please provide valid jobId and userId and workerObjectId");
+      return res.status(400).json({
+        success:false,
+        message:"Please provide valid jobId and userId",
+      })
+    }
+    const job=await JobCardModel.findById(jobId);
+    if(!job){
+      console.error("Job item not found");
+      return res.status(404).json({
+        success:false,
+        message:"Job item not found",
+      })
+    }
+
+    const jobItem=job.jobItems.find(i=>i._id.toString()===jobItemId);
+    if(!jobItem){
+      return res.status(404).json({
+        success: false,
+        message: "Job item not found",
+      });
+    }
+    console.log("Job Item found:", jobItem.workers);
+    let workerFound= false;
+for(const worker of jobItem.workers){
+      console.log("Checking workerAssigned:", worker?.workerAssigned?.toString());
+      if(worker?.workerAssigned?.toString()=== workerObjectId){
+        worker.endTime= new Date();
+        timeDifference(worker.startTime, worker.endTime);
+        worker.actualDuration += endingtime;
+        console.log("Worker timer ended at", worker.endTime);
+        worker.endTime= null;
+        worker.startTime=null;
+
+        workerFound= true;
+        jobItem.status='completed';
+        break;
+      }
+    }
+
+ await job.save()
+        if(!workerFound){
+              console.error("Worker not found in job items");
+              return res.status(404).json({
+                success:false,
+                message:"Worker not found in job items",
+              })
+            }
+
+     res.status(200).json({
+      success: true,
+      message: "Worker timer ended successfully",
+      job,
+    });
+
+
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
 export const endWorkerTimer= async (req, res) => {
   try {
     const {jobId,jobItemId,workerObjectId} = req.params;
@@ -487,30 +557,49 @@ export const endWorkerTimer= async (req, res) => {
         message: "Job item not found",
       });
     }
-console.log("Job Item found:", jobItem.workers);
+
     let workerFound= false;
+    
 
     for(const worker of jobItem.workers){
       console.log("Checking workerAssigned:", worker?.workerAssigned?.toString());
       if(worker?.workerAssigned?.toString()=== workerObjectId){
         worker.endTime= new Date();
         timeDifference(worker.startTime, worker.endTime);
-        worker.actualDuration= endingtime;
+        worker.actualDuration += endingtime;
         console.log("Worker timer ended at", worker.endTime);
-
         workerFound= true;
-        jobItem.status='completed';
         break;
       }
+
+    } 
+    let completed=false;
+    for(const w of jobItem.workers){
+      console.log("Worker actual duration: ", w.actualDuration + "\n");
+        if(w.actualDuration !== null && w.actualDuration >0){
+          completed=true;
+        }
     }
+
+    if(completed){
+      jobItem.status='completed';
+    }
+
 
 
     let notCompleted=false;
-    for(const jobs in job.jobItems  ) {
-      console.log("Checking job item status:", jobs.status);
-        jobs.status !== 'completed' ? notCompleted=true : notCompleted=false
-    }
+    for(let jobs of job.jobItems  ) {
 
+      console.log("Checking job item status: of ", jobs.status + "\n");
+        if(jobs.status !== 'completed'){
+          notCompleted=true;
+          break;
+        }
+        else{
+          notCompleted=false;
+        }
+    }
+console.log("Not completed status:", notCompleted);
     if(!notCompleted){
       job.status='completed'
     }

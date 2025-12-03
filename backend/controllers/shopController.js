@@ -93,6 +93,32 @@ await owner.save();
 };
 
 
+export const getShop= async(req,res)=>{
+  try {
+    const {id}=req.params;  
+    const shop= await ShopModel.findById(id);
+    if(!shop)
+    {
+      return res.status(404).send({
+        success:false,
+        message:"Unable to find the shop with the given id"
+      })
+    }
+    res.status(200).send({
+      success:true,
+      message:"Shop name recieved successfully",
+      shopName:shop.shopName
+    })
+  } catch (error) {
+    res.status(500).send({
+      success:false,  
+      message:"Unable to find the shop name",
+      error
+    })
+  }
+}
+
+
 
 
 export const addNewService= async(req,res)=>{
@@ -731,7 +757,7 @@ export const getAllConsumablesController = async (req, res) => {
 export const updateConsumableController = async (req, res) => {
   try {
     const { shopId, consumableId } = req.params;
-    const { name, price, available } = req.body;
+    const { name, price, available,quantity } = req.body;
 
     const shop = await ShopModel.findById(shopId);
     if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
@@ -742,6 +768,7 @@ export const updateConsumableController = async (req, res) => {
     if (name) item.name = name;
     if (price !== undefined) item.price = price;
     if (available !== undefined) item.available = available;
+    if (quantity !== undefined) item.quantity = quantity;
 
     await shop.save();
 

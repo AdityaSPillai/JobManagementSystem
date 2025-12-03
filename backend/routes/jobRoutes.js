@@ -11,7 +11,8 @@ import { createJobCard,
     assignWorkerController,
     qualityGoodController,
     qualityBadController,
-    verifyJobController
+    verifyJobController,
+    pauseWrokerTImer
     } from "../controllers/jobController.js";
 
 const router= express.Router();
@@ -44,6 +45,8 @@ router.put('/end-machine-timer/:jobId/:machineId',endMachineForJobItem,)
 
 //start worker timer
 router.post('/start-worker-timer/:jobId/:jobItemId/:workerObjectId',startWorkerTimer)
+
+router.post('/pause-worker-timer/:jobId/:jobItemId/:workerObjectId',pauseWrokerTImer)
 
 router.post('/end-worker-timer/:jobId/:jobItemId/:workerObjectId',endWorkerTimer)
 
