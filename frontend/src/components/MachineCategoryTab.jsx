@@ -154,23 +154,53 @@ function MachineCategoryTab() {
         <button className="btn-add-new" onClick={() => setIsModalOpen(true)}>+ Add Machine Category</button>
       </div>
 
-      {loading ? <p>Loading...</p> :
-        machineCategory.length === 0 ? <p className='error-text'>No machine categories found</p> :
-        <div className="data-grid">
-          {machineCategory.map(mt => (
-            <div key={mt._id} className="data-card">
-              <div className="data-card-header">
-                <h4>{mt.name}</h4>
-                <span className="data-card-status status-available">₹{mt.hourlyRate}/hr</span>
-              </div>
-              <div className="data-card-footer">
-                <button className="btn-card-action" onClick={() => openEditModal(mt)}>Edit</button>
-                <button className="btn-card-action btn-danger" onClick={() => handleDeleteCategory(mt._id)}>Remove</button>
-              </div>
-            </div>
-          ))}
+      {loading ? (
+        <p>Loading...</p>
+      ) : machineCategory.length === 0 ? (
+        <p className="error-text">No machine categories found</p>
+      ) : (
+        <div className="table-container">
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Machine Category</th>
+                <th>Hourly Rate</th>
+                <th className="th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {machineCategory.map((mt) => (
+                <tr key={mt._id}>
+                  <td>
+                    <span className="table-primary-text">{mt.name}</span>
+                  </td>
+                  <td>
+                    <span className="badge-rate">₹{mt.hourlyRate}/hr</span>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        type="button"
+                        className="table-cta"
+                        onClick={() => openEditModal(mt)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="table-cta table-cta-danger"
+                        onClick={() => handleDeleteCategory(mt._id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      }
+      )}
 
       <AddMachineCategoryModal isVisible={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleAddCategory} />
       <EditMachineCategoryModal
