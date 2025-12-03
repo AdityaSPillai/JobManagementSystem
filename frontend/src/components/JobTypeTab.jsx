@@ -28,7 +28,7 @@ function AddJobModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>➕ Add New Job Type</h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Job Type</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -89,7 +89,7 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>✏️ Edit Job Type</h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Job Type</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">

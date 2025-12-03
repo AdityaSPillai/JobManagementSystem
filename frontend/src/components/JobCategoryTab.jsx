@@ -26,7 +26,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>➕ Add New Job Category</h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Job Category</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -98,7 +98,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, jobData }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>✏️ Edit Job Category</h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Job Category</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">

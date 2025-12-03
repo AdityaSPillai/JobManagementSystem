@@ -45,7 +45,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>➕ Add Consumable</h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add Consumable</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
@@ -151,7 +151,7 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>✏️ Edit Consumable</h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Consumable</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 

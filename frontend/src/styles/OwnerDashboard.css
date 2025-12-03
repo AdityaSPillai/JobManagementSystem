@@ -78,6 +78,22 @@
   opacity: 0.7;
 }
 
+.heading-h3{
+  display: flex;
+  gap: 1vw;
+  align-items: center;
+}
+
+.plus-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.edit-icon {
+  width: 25px;
+  height: 25px;
+}
+
 /* --- Dashboard Content & Tabs (Updated) --- */
 .dashboard-content {
   padding: 0 32px 24px 32px; /* Removed top padding */

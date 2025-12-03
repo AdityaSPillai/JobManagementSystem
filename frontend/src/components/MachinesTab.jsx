@@ -55,7 +55,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>➕ Add New Machine</h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Machine</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -159,7 +159,7 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>✏️ Edit Machine</h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Machine</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">

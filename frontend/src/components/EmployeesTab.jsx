@@ -119,7 +119,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3>➕ Add New Employee</h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Employee</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         
@@ -305,7 +305,7 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
       <div className="modal-content modal-large">
         <div className="modal-header">
           <div className="modal-header-left">
-            <h3>✏️ Edit Employee</h3>
+            <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Employee</span> </h3>
           </div>
           <div className="modal-header-right">
             <button className="modal-close-btn" onClick={onClose}>✕</button>
