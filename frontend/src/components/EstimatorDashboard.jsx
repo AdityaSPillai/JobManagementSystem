@@ -969,12 +969,18 @@ const laborCost = actualHours * hourlyRate;
   };
 
   const handleRejectJob = async (jobId) => {
-    if (!window.confirm("Are you sure you want to reject this job?")) return;
+    const reason = prompt("Please provide a reason for rejecting this job:");
+    if (!reason) {
+      alert("Rejection reason is required.");
+      return;
+    }
     try {
-      const res = await axios.delete(`/jobs/delete-job/${jobId}`);
+      const name = userInfo?.name?.trim() || "Unknown User";
+
+      console.log(jobId,reason,name);
+      const res = await axios.post(`/reject/rejectJob`, { jobId, reason, rejectedBy: name });
       if (res.data?.success) {
         alert("❌ Job rejected and deleted successfully!");
-        window.location.reload();
         await getAllJobs();
         setShowJobDetails(false);
         setSelectedJob(null);

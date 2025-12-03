@@ -10,6 +10,7 @@ import jobRoutes from "./routes/jobRoutes.js"
 import connectDB from "./model/model.js";
 import rateLimit from "express-rate-limit";
 import machineRouets from './routes/machineRouets.js'
+import rejectedJobRoutes from './routes/rejectedJobRoutes.js'
 
 dotenv.config();
 const app= express();
@@ -48,6 +49,7 @@ app.use('/v1/employee',employeeRoutes);
 app.use('/v1/machine',machineRouets);
 app.use('/v1/template',templateRoutes)
 app.use('/v1/jobs',jobRoutes)
+app.use('/v1/reject/',rejectedJobRoutes)
 
 app.get('/',(req,res)=>{
   
