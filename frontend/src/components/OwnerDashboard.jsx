@@ -487,24 +487,24 @@ function OwnerDashboard({ onLogout }) {
         </div>
       </div>
 
-      <div className="dashboard-content">
-        <div className="tabs-section">
-          <button className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>⭐ Overview</button>
-          <button className={`tab-btn ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}>👥 Employees</button>
-          <button className={`tab-btn ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}>🔧 Machinery</button>
-          <button className={`tab-btn ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
-          <button className={`tab-btn ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}>🦺 Job Category</button>
-          <button className={`tab-btn ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}>⚙️ Machine Category</button>
-          <button className={`tab-btn ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}>👤 Customers</button>
-          <button className={`tab-btn ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}>🧰 Consumables</button>
+      <div className="dashboard-layout">
+        <div className="sidebar-tabs">
+          <button className={`sidebar-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>⭐ Overview</button>
+          <button className={`sidebar-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}>👥 Employees</button>
+          <button className={`sidebar-tab ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}>🔧 Machinery</button>
+          <button className={`sidebar-tab ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
+          <button className={`sidebar-tab ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}>🦺 Job Category</button>
+          <button className={`sidebar-tab ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}>⚙️ Machine Category</button>
+          <button className={`sidebar-tab ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}>👤 Customers</button>
+          <button className={`sidebar-tab ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}>🧰 Consumables</button>
         </div>
 
-        <div className="tab-content">
+        <div className="main-content-area">
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
-          {activeTab === 'jobTypes' && <JobTypeTab/> }
-          {activeTab === 'jobCategory' && <JobCategoryTab/> }
+          {activeTab === 'jobTypes' && <JobTypeTab />}
+          {activeTab === 'jobCategory' && <JobCategoryTab />}
           {activeTab === 'machineCategory' && <MachineCategoryTab />}
           {activeTab === 'customers' && <CustomerTab />}
           {activeTab === 'consumables' && <ConsumablesTab />}
