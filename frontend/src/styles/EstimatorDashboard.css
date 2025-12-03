@@ -836,7 +836,6 @@
   background: #48bb78;
   color: white;
   position: relative;
-  left:38vw;
   margin-top: 2vw;
   border: none;
   border-radius: 6px;
@@ -953,6 +952,29 @@
   font-weight: 600;
   font-size: 16px;
   transition: all 0.2s;
+}
+
+.add-con-wrapper{
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.add-job-heading-h3{
+  display: flex;
+  gap: 1vw;
+  align-items: center;
+}
+
+.edit-icon {
+  width: 25px;
+  height: 25px;
+}
+
+.plus-icon-con {
+  width: 15px;
+  height: 15px;
+  filter: invert(1);
 }
 
 .btn-save-job:hover {

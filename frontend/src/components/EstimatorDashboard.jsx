@@ -1391,7 +1391,7 @@ const laborCost = actualHours * hourlyRate;
             {showCreateJob && (
               <div className="create-job-form">
                 <div className="form-header">
-                  <h3>📝 Create New Job Card</h3>
+                  <h3 className="add-job-heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="new-job-card">Create New Job Card</span> </h3>
                   <button className="close-btn" onClick={() => setShowCreateJob(false)}>✕</button>
                 </div>
                 <p className="form-subtitle">Fill in the details to create a new job order</p>
@@ -1537,129 +1537,129 @@ const laborCost = actualHours * hourlyRate;
                       </div>
 
                       <div className="form-group">
-  <div className="form-group-consumables-header">
-    <label>Consumables Required (Optional)</label>
-  </div>
+                        <div className="form-group-consumables-header">
+                          <label>Consumables Required (Optional)</label>
+                        </div>
 
-  {item.consumable.map((c, ci) => (
-    <div key={ci} className="consumable-entry">
-      <select
-        value={c._id || ""}
-        onChange={(e) => {
-          const selectedId = e.target.value;
+                        {item.consumable.map((c, ci) => (
+                          <div key={ci} className="consumable-entry">
+                            <select
+                              value={c._id || ""}
+                              onChange={(e) => {
+                                const selectedId = e.target.value;
 
-          if (selectedId === "manual") {
-            // Manual input mode
-            const updatedConsumables = [...item.consumable];
-            updatedConsumables[ci] = { name: "", price: 0, available: true, isManual: true };
-            updateJobItemField(index, "consumable", updatedConsumables);
-            return;
-          }
+                                if (selectedId === "manual") {
+                                  // Manual input mode
+                                  const updatedConsumables = [...item.consumable];
+                                  updatedConsumables[ci] = { name: "", price: 0, available: true, isManual: true };
+                                  updateJobItemField(index, "consumable", updatedConsumables);
+                                  return;
+                                }
 
-          const selectedConsumable = consumables.find(con => con._id === selectedId);
-          if (selectedConsumable) {
-            const updatedConsumables = [...item.consumable];
-            updatedConsumables[ci] = {
-              _id: selectedConsumable._id,
-              name: selectedConsumable.name,
-              price: selectedConsumable.price,
-              available: selectedConsumable.available,
-              isManual: false,
-            };
-            updateJobItemField(index, "consumable", updatedConsumables);
-          }
-        }}
-      >
-        <option value="">--Select Consumable--</option>
-        {consumables.map((cOpt) => (
-          <option key={cOpt._id} value={cOpt._id} >
-            {cOpt.name} - ₹{cOpt.price}                  { (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
-          </option>
-        ))}
-        <option value="manual">+ Add Manual Consumable</option>
-      </select>
-     <input
-  type="number"
-  placeholder="Quantity"
-  value={consumableQty[`${index}-${ci}`] || ""}
-  onChange={(e) => {
-    const qty = Number(e.target.value);
-    setConsumableQty(prev => ({
-      ...prev,
-      [`${index}-${ci}`]: qty
-    }));
-  }}
-/>
+                                const selectedConsumable = consumables.find(con => con._id === selectedId);
+                                if (selectedConsumable) {
+                                  const updatedConsumables = [...item.consumable];
+                                  updatedConsumables[ci] = {
+                                    _id: selectedConsumable._id,
+                                    name: selectedConsumable.name,
+                                    price: selectedConsumable.price,
+                                    available: selectedConsumable.available,
+                                    isManual: false,
+                                  };
+                                  updateJobItemField(index, "consumable", updatedConsumables);
+                                }
+                              }}
+                            >
+                              <option value="">--Select Consumable--</option>
+                              {consumables.map((cOpt) => (
+                                <option key={cOpt._id} value={cOpt._id} >
+                                  {cOpt.name} - ₹{cOpt.price}                  { (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
+                                </option>
+                              ))}
+                              <option value="manual">+ Add Manual Consumable</option>
+                            </select>
+                          <input
+                        type="number"
+                        placeholder="Quantity"
+                        value={consumableQty[`${index}-${ci}`] || ""}
+                        onChange={(e) => {
+                          const qty = Number(e.target.value);
+                          setConsumableQty(prev => ({
+                            ...prev,
+                            [`${index}-${ci}`]: qty
+                          }));
+                        }}
+                      />
 
 
-      {/* Manual input fields */}
-      {c.isManual && (
-        <div className="manual-consumable-fields">
-          <input
-            type="text"
-            placeholder="Consumable Name"
-            value={c.name || ""}
-            onChange={(e) => {
-              const updated = [...item.consumable];
-              updated[ci] = { ...updated[ci], name: e.target.value };
-              updateJobItemField(index, "consumable", updated);
-            }}
-          />
-          <input
-            type="number"
-            placeholder="Price (₹)"
-            value={c.price || ""}
-            onChange={(e) => {
-              const updated = [...item.consumable];
-              updated[ci] = { ...updated[ci], price: parseFloat(e.target.value) || 0 };
-              updateJobItemField(index, "consumable", updated);
-            }}
-          />
-        </div>
-      )}
+                            {/* Manual input fields */}
+                            {c.isManual && (
+                              <div className="manual-consumable-fields">
+                                <input
+                                  type="text"
+                                  placeholder="Consumable Name"
+                                  value={c.name || ""}
+                                  onChange={(e) => {
+                                    const updated = [...item.consumable];
+                                    updated[ci] = { ...updated[ci], name: e.target.value };
+                                    updateJobItemField(index, "consumable", updated);
+                                  }}
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="Price (₹)"
+                                  value={c.price || ""}
+                                  onChange={(e) => {
+                                    const updated = [...item.consumable];
+                                    updated[ci] = { ...updated[ci], price: parseFloat(e.target.value) || 0 };
+                                    updateJobItemField(index, "consumable", updated);
+                                  }}
+                                />
+                              </div>
+                            )}
 
-      {/* Remove button */}
-      {item.consumable.length > 1 && (
-        <button
-          type="button"
-          onClick={() => {
-            const updated = item.consumable.filter((_, i) => i !== ci);
-            updateJobItemField(index, "consumable", updated);
-          }}
-        >
-          ❌
-        </button>
-      )}
-    </div>
-  ))}
+                            {/* Remove button */}
+                            {item.consumable.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = item.consumable.filter((_, i) => i !== ci);
+                                  updateJobItemField(index, "consumable", updated);
+                                }}
+                              >
+                                ❌
+                              </button>
+                            )}
+                          </div>
+                        ))}
 
-  {/* Auto-add empty row when last filled */}
-  {(() => {
-    const last = item.consumable[item.consumable.length - 1];
-    if (last?.name && last?.price > 0) {
-      const updated = [...item.consumable, { name: "", price: 0, available: true }];
-      if (JSON.stringify(updated) !== JSON.stringify(item.consumable)) {
-        updateJobItemField(index, "consumable", updated);
-      }
-    }
-  })()}
+                        {/* Auto-add empty row when last filled */}
+                        {(() => {
+                          const last = item.consumable[item.consumable.length - 1];
+                          if (last?.name && last?.price > 0) {
+                            const updated = [...item.consumable, { name: "", price: 0, available: true }];
+                            if (JSON.stringify(updated) !== JSON.stringify(item.consumable)) {
+                              updateJobItemField(index, "consumable", updated);
+                            }
+                          }
+                        })()}
 
-  {/* Add button only if no consumables */}
-  {item.consumable.length === 0 && (
-    <button
-      type="button"
-      className="btn-add-job"
-      onClick={() =>
-        updateJobItemField(index, "consumable", [{ name: "", price: 0, available: true }])
-      }
-    >
-      ➕ Add Consumable
-    </button>
-  )}
-  <div>
-   <button className="btn-add-task-job" onClick={addJobItem}>+ Add Task</button>
-   </div>
-</div>
+                        {/* Add button only if no consumables */}
+                        {item.consumable.length === 0 && (
+                          <button
+                            type="button"
+                            className="btn-add-job"
+                            onClick={() =>
+                              updateJobItemField(index, "consumable", [{ name: "", price: 0, available: true }])
+                            }
+                          >
+                            <span className="add-con-wrapper"><img src="/plus.png" alt="Plus Icon" className="plus-icon-con"/> Add Consumable</span>
+                          </button>
+                        )}
+                        <div>
+                          <button className="btn-add-task-job" onClick={addJobItem}>+ Add Task</button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
