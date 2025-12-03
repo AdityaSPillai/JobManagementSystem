@@ -60,7 +60,7 @@ function OverviewTab() {
       <h3 className="section-title">System Overview</h3>
       <div className="overview-grid">
         <div className="overview-card blue-card">
-          <h4>📊 Job Statistics</h4>
+          <h4 className="stat-header-h4"><img src="/graph.png" alt="Graph Icon" className="sidebar-icon"/> Job Statistics</h4>
           <div className="stat-row">
             <span>Total Jobs</span>
             <span className="stat-number">3</span>
@@ -80,7 +80,7 @@ function OverviewTab() {
         </div>
 
         <div className="overview-card green-card">
-          <h4>👥 Workforce</h4>
+          <h4 className="stat-header-h4"><img src="/employee.png" alt="Employee Icon" className="sidebar-icon"/> Workforce</h4>
           <div className="stat-row">
             <span>Total Employees:</span>
             <span className="stat-number">{empCount}</span>
@@ -96,7 +96,7 @@ function OverviewTab() {
         </div>
 
         <div className="overview-card purple-card">
-          <h4>🔧 Equipment Status</h4>
+          <h4 className="stat-header-h4"><img src="/machine.png" alt="Machine Icon" className="sidebar-icon"/> Equipment Status</h4>
           <div className="stat-row">
             <span>Total Machines:</span>
             <span className="stat-number">{machineCount}</span>
@@ -116,7 +116,7 @@ function OverviewTab() {
         </div>
 
         <div className="overview-card peach-card">
-          <h4>💰 Job Types</h4>
+          <h4 className="stat-header-h4"><img src="/job.png" alt="Job Icon" className="sidebar-icon"/> Job Types</h4>
           <div className="stat-row">
             <span>Total Job Types Created:</span>
             <span className="stat-number green-text">{jobCount}</span>

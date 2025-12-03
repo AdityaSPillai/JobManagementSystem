@@ -472,31 +472,31 @@ function OwnerDashboard({ onLogout }) {
           <div className="stat-card">
             <span className="stat-label">All Employees</span>
             <span className="stat-value">{empCount}</span>
-            <span className="stat-icon">👥</span>
+            <span className="stat-icon"><img src="/employee.png" alt="Employee Icon" className="stat-icon"/></span>
           </div>
           <div className="stat-card">
             <span className="stat-label">Available Machines</span>
             <span className="stat-value">{machineCount}</span>
-            <span className="stat-icon">🔧</span>
+            <span className="stat-icon"><img src="/machinecategory.png" alt="Machine Icon" className="stat-icon" /></span>
           </div>
           <div className="stat-card">
             <span className="stat-label">Total Jobs</span>
             <span className="stat-value">{jobCount}</span>
-            <span className="stat-icon">📈</span>
+            <span className="stat-icon"><img src="/graph.png" alt="Graph Icon" className="stat-icon" /></span>
           </div>
         </div>
       </div>
 
       <div className="dashboard-layout">
         <div className="sidebar-tabs">
-          <button className={`sidebar-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>⭐ Overview</button>
-          <button className={`sidebar-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}>👥 Employees</button>
-          <button className={`sidebar-tab ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}>🔧 Machinery</button>
-          <button className={`sidebar-tab ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}>💼 Job Types</button>
-          <button className={`sidebar-tab ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}>🦺 Job Category</button>
-          <button className={`sidebar-tab ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}>⚙️ Machine Category</button>
-          <button className={`sidebar-tab ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}>👤 Customers</button>
-          <button className={`sidebar-tab ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}>🧰 Consumables</button>
+          <button className={`sidebar-tab ${activeTab === 'overview' ? 'active' : ''}`}  onClick={() => setActiveTab('overview')}><img src="/stats.png" alt="Overview Icon" className="sidebar-icon" /> Overview</button>
+          <button className={`sidebar-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}><img src="/employee.png" alt="Employee Icon" className="sidebar-icon" /> Employees</button>
+          <button className={`sidebar-tab ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}><img src="/job.png" alt="Job Type Icon" className="sidebar-icon" /> Jobs</button>
+          <button className={`sidebar-tab ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}><img src="/jobcategory.png" alt="Job Category Icon" className="sidebar-icon" /> Job Category</button>
+          <button className={`sidebar-tab ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}><img src="/machine.png" alt="Machinery Icon" className="sidebar-icon" /> Machinery</button>
+          <button className={`sidebar-tab ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}><img src="/machinecategory.png" alt="Machine Category Icon" className="sidebar-icon" /> Machine Category</button>
+          <button className={`sidebar-tab ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}><img src="/consumables.png" alt="Consumables Icon" className="sidebar-icon" /> Consumables</button>
+          <button className={`sidebar-tab ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}><img src="/customer.png" alt="Customers Icon" className="sidebar-icon" /> Customers</button>
         </div>
 
         <div className="main-content-area">

@@ -269,46 +269,69 @@ function ConsumablesTab() {
       ) : consumables.length === 0 ? (
         <p className="error-text">No consumables found. Add one to get started!</p>
       ) : (
-        <div className="data-grid">
-          {consumables.map((item) => (
-            <div key={item._id} className="data-card">
-              <div className="data-card-header">
-                <h4>{item.name}</h4>
-                <span
-                  className={`data-card-role ${
-                    item.available ? "status-available" : "status-offline"
-                  }`}
-                >
-                  {item.available ? "Available" : "Not Available"}
-                </span>
-              </div>
+        <div className="table-container">
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th className="th-actions">Actions</th>
+              </tr>
+            </thead>
 
-              <div className="data-card-body">
-                <p><strong>Price:</strong> ₹{item.price}</p>
-              </div>
-              <div className="data-card-body">
-                <p><strong>Quantity:</strong> {item.quantity}</p>
-              </div>
+            <tbody>
+              {consumables.map((item) => (
+                <tr key={item._id}>
+                  <td>
+                    <span className="table-primary-text">{item.name}</span>
+                  </td>
 
-              <div className="data-card-footer">
-                <button
-                  className="btn-card-action"
-                  onClick={() => {
-                    setSelectedConsumable(item);
-                    setIsEditModalOpen(true);
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  className="btn-card-action btn-danger"
-                  onClick={() => handleDelete(item._id)}
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
+                  <td>
+                    <span className="badge-rate">₹{item.price}</span>
+                  </td>
+
+                  <td>
+                    <span className="quantity-consumables">{item.quantity}</span>
+                  </td>
+
+                  <td>
+                    {item.available ? (
+                      <span className="badge-rate" style={{ background: "#c6f6d5", color: "#22543d" }}>
+                        Available
+                      </span>
+                    ) : (
+                      <span className="badge-rate" style={{ background: "#fed7d7", color: "#c53030" }}>
+                        Not Available
+                      </span>
+                    )}
+                  </td>
+
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        className="table-cta"
+                        onClick={() => {
+                          setSelectedConsumable(item);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="table-cta table-cta-danger"
+                        onClick={() => handleDelete(item._id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
