@@ -1074,7 +1074,9 @@ const laborCost = actualHours * hourlyRate;
                   }}
                 >
                   <div className="job-header">
-                    <span className="job-number">{job.id}</span>
+                    <span className="job-number">
+                      {`Job-${job.jobCardNumber?.split("-").pop()}`}
+                    </span>
                     <span className={`status-badge ${
                       job.status === 'In Progress' ? 'status-progress' : 
                       job.status === 'completed' ? 'status-completed' :
@@ -1122,7 +1124,7 @@ const laborCost = actualHours * hourlyRate;
                 </div>
                 <div className="job-detail-content">
                   <div className="job-info-grid">
-                    <div><strong>Job Number:</strong> <span>{selectedJob.id}</span></div>
+                    <div><strong>Job Number:</strong> <span>{selectedJob.jobCardNumber}</span></div>
                     <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div>
                     <div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div>
                     <div><strong>Model:</strong> <span>{selectedJob.vehicle_model || 'N/A'}</span></div>
