@@ -208,6 +208,121 @@
   min-height: 280px; 
 }
 
+.table-container {
+  margin-top: 8px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.modern-table thead tr {
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modern-table th,
+.modern-table td {
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.modern-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #a0aec0;
+  font-weight: 700;
+}
+
+.th-actions {
+  text-align: right !important;
+}
+
+.modern-table tbody tr {
+  border-bottom: 1px solid #edf2f7;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.modern-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.modern-table tbody tr:hover {
+  background: #fff5f5;
+}
+
+/* Cell content */
+.table-primary-text {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Hourly rate pill */
+.badge-rate {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f3e8ff;
+  color: #553c9a;
+}
+
+/* Actions cell */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* CTA buttons inside table */
+.table-cta {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 999px;
+  border: 1px solid #cbd5e0;
+  background: white;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.table-cta:hover {
+  background: #edf2f7;
+  transform: translateY(-1px);
+}
+
+.table-cta-danger {
+  border-color: #fed7d7;
+  color: #c53030;
+}
+
+.table-cta-danger:hover {
+  background: #fed7d7;
+}
+
+/* Horizontal scroll on very small screens */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .modern-table {
+    min-width: 500px;
+  }
+}
+
 .data-card-header {
   display: flex;
   justify-content: space-between;

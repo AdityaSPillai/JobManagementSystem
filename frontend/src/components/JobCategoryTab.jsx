@@ -249,19 +249,46 @@ function JobCategoryTab() {
       ) : jobCategory.length === 0 ? (
         <p>No job category found. Click "Add Job Category" to get started!</p>
       ) : (
-        <div className="data-grid">
-          {jobCategory.map(cat => (
-            <div key={cat._id} className="data-card">
-                <div className="data-card-header">
-                <h4>{cat.name}</h4>
-                <span className="data-card-status status-available">₹{cat.hourlyRate}/hr</span>
-                </div>
-                <div className="data-card-footer">
-                <button className="btn-card-action" onClick={() => openEditModal(cat)}>Edit</button>
-                <button className="btn-card-action btn-danger" onClick={() => handleDeleteJobCategory(cat._id)}>Remove</button>
-                </div>
-            </div>
-            ))}
+        <div className="table-container">
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Hourly Rate</th>
+                <th className="th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {jobCategory.map((cat) => (
+                <tr key={cat._id}>
+                  <td>
+                    <span className="table-primary-text">{cat.name}</span>
+                  </td>
+                  <td>
+                    <span className="badge-rate">₹{cat.hourlyRate}/hr</span>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        type="button"
+                        className="table-cta"
+                        onClick={() => openEditModal(cat)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="table-cta table-cta-danger"
+                        onClick={() => handleDeleteJobCategory(cat._id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
