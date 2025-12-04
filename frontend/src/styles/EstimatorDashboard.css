@@ -790,8 +790,13 @@
 
 .consumable-entry{
   display: flex;
-  gap: 2vw;
+  gap: 1vw;
   margin-bottom:1vh;
+}
+.consumable-entry-select{
+  width: 45% !important;
+
+
 }
 
 .form-group-consumables-header{
@@ -1097,6 +1102,48 @@
   margin-top: 8px;
   color: #000;
 }
+
+
+
+.customer-popup-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  gap: 20px;
+  padding: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.customer-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 500px;
+  padding: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.customer-popup h3 {
+  margin-top: 0;
+  color: #2d3748;
+}
+
+.customer-popup .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
 
 /* Responsive Design */
 @media (max-width: 1400px) {

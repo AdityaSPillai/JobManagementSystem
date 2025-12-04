@@ -26,7 +26,21 @@ function EstimatorDashboard({ onLoginClick }) {
   const[categories,setCategories]=useState([]);
   const[ispaused,setIsPaused]=useState(false);
   const [consumableQty, setConsumableQty] = useState({});
+const [showCustomerPopup, setShowCustomerPopup] = useState(false);
+const [customers, setCustomers] = useState([]);
+const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
+
+
+const [newCustomer, setNewCustomer] = useState({
+  name: '',
+  phone: '',
+  email: '',
+  address: '',
+  productId: '',
+  productModel: '',
+  productIdentification: ''
+});
 
   const shopId = userInfo?.shopId;
 
@@ -73,7 +87,7 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
-  const getAllWorlers=async()=>{
+  const getAllWorkers=async()=>{
     try {
       const res= await axios.get(`/shop/getAllWorkers/${userInfo?.shopId}`);
       if(res.data?.users?.length>0){
@@ -100,6 +114,21 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
+const getAllCustomers = async () => {
+  try {
+    const res = await axios.get(`/customer/list/${userInfo?.shopId}`);
+    if (res.data?.customers) {
+      setCustomers(res.data.customers);
+      console.log("Customers fetched:", res.data.customers);
+    }
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+  }
+};
+
+
+
+
   useEffect(() => {
     if (!userInfo) return;
     if (!userInfo.shopId) {
@@ -109,9 +138,10 @@ function EstimatorDashboard({ onLoginClick }) {
     getAllServices();
     getAllMachines();
     getAllJobs();
-    getAllWorlers();
+    getAllWorkers();
     getAllCategory();
     getAllConsumables();
+    getAllCustomers();
   }, [userInfo]);
 
   const [jobs, setJobs] = useState([])
@@ -1013,6 +1043,84 @@ const laborCost = actualHours * hourlyRate;
     }
   };
 
+
+
+
+
+  const handleCreateCustomer = async () => {
+  const {
+    name,
+    phone,
+    email,
+    address,
+    productId,
+    productModel,
+    productIdentification
+  } = newCustomer;
+
+  if (
+    !name ||
+    !phone ||
+    !email ||
+    !address ||
+    !productId ||
+    !productModel ||
+    !productIdentification
+  ) {
+    alert("All fields are required");
+    return;
+  }
+
+  try {
+    const res = await axios.post('/customer/create', {
+      name,
+      phone,
+      email,
+      address,
+      productId,
+      productModel,
+      productIdentification,
+      shopId: userInfo?.shopId
+    });
+
+    if (res.data?.success) {
+      alert("✅ Customer Added");
+
+      const created = res.data.customer;
+
+      setCustomers(prev => [...prev, created]);
+
+      // ✅ Auto-fill job form with new customer + product
+      setFormData(prev => ({
+        ...prev,
+        formData: {
+          ...prev.formData,
+          customer_name: created.name,
+          contact_number: created.phone,
+          vehicle_number: created.productId,
+          vehicle_model: created.productModel,
+          engine_number: created.productIdentification
+        }
+      }));
+
+      setShowCustomerPopup(false);
+      setNewCustomer({
+        name: '',
+        phone: '',
+        email: '',
+        address: '',
+        productId: '',
+        productModel: '',
+        productIdentification: ''
+      });
+    }
+  } catch (error) {
+    console.error("Customer create error:", error);
+    alert("Failed to add customer");
+  }
+};
+
+
   return (
     <div className="estimator-dashboard">
       <Header 
@@ -1361,12 +1469,7 @@ const laborCost = actualHours * hourlyRate;
                             }
 
                                     </select>
-
-
-
-                            
                           </div>
-                         
                         </div>
                       </div> 
                       
@@ -1418,26 +1521,65 @@ const laborCost = actualHours * hourlyRate;
                 <p className="form-subtitle">Fill in the details to create a new job order</p>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Customer Name *</label>
-                    <input type="text" placeholder="Enter customer's full name" value={formData.formData.customer_name} onChange={(e) => handleFormChange('customer_name', e.target.value)} />
+                    <label>Customer Name</label>
+
+                    <select
+                      value={selectedCustomerId}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSelectedCustomerId(value);
+
+                        if (value === "__add_new__") {
+                          setShowCustomerPopup(true);
+                          return;
+                        }
+
+                        const selectedCustomer = customers.find(c => c._id === value);
+
+                        if (selectedCustomer) {
+                          setFormData(prev => ({
+                            ...prev,
+                            formData: {
+                              ...prev.formData,
+                              customer_name: selectedCustomer.name,
+                              contact_number: selectedCustomer.phone,
+                              vehicle_number: selectedCustomer.productId,
+                              vehicle_model: selectedCustomer.productModel,
+                              engine_number: selectedCustomer.productIdentification,
+                            }
+                          }));
+                        }
+                      }}
+                    >
+                      <option value="">-- Select Customer (Name + Phone) --</option>
+
+                      {customers.map(c => (
+                        <option key={c._id} value={c._id}>
+                          {c.name} — {c.phone}
+                        </option>
+                      ))}
+
+                      <option value="__add_new__">➕ Add New Customer</option>
+                    </select>
+
                   </div>
                   <div className="form-group">
-                    <label>Contact Number *</label>
+                    <label>Contact Number</label>
                     <input type="tel" placeholder="555-123-4567" value={formData.formData.contact_number} onChange={(e) => handleFormChange('contact_number', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Vehicle Number *</label>
+                    <label>Product ID </label>
                     <input type="text" placeholder="ABC-123" value={formData.formData.vehicle_number} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label>Vehicle Model</label>
+                    <label>Product Model</label>
                     <input type="text" placeholder="e.g., Toyota Camry 2018" value={formData.formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-group">
-                  <label>Engine Number</label>
+                  <label>Secondary Identifcation</label>
                   <input type="text" placeholder="Enter engine identification number" value={formData.formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
                 </div>
                 <div className="job-items-section">
@@ -1575,6 +1717,7 @@ const laborCost = actualHours * hourlyRate;
                           <div key={ci} className="consumable-entry">
                             <select
                               value={c._id || ""}
+                              className="consumable-quantity-input"
                               onChange={(e) => {
                                 const selectedId = e.target.value;
 
@@ -1600,10 +1743,10 @@ const laborCost = actualHours * hourlyRate;
                                 }
                               }}
                             >
-                              <option value="">--Select Consumable--</option>
+                             <option value="">--Select Consumable--</option>
                               {consumables.map((cOpt) => (
                                 <option key={cOpt._id} value={cOpt._id} >
-                                  {cOpt.name} - ₹{cOpt.price}                  { (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
+                                  {cOpt.name} - ₹{cOpt.price}{ (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
                                 </option>
                               ))}
                               <option value="manual">+ Add Manual Consumable</option>
@@ -1611,6 +1754,7 @@ const laborCost = actualHours * hourlyRate;
                           <input
                         type="number"
                         placeholder="Quantity"
+                        className='consumable-quantity-select'
                         value={consumableQty[`${index}-${ci}`] || ""}
                         onChange={(e) => {
                           const qty = Number(e.target.value);
@@ -1625,6 +1769,18 @@ const laborCost = actualHours * hourlyRate;
                             {/* Manual input fields */}
                             {c.isManual && (
                               <div className="manual-consumable-fields">
+                                 <input
+                        type="number"
+                        placeholder="Quantity"
+                        value={consumableQty[`${index}-${ci}`] || ""}
+                        onChange={(e) => {
+                          const qty = Number(e.target.value);
+                          setConsumableQty(prev => ({
+                            ...prev,
+                            [`${index}-${ci}`]: qty
+                          }));
+                        }}
+                      />
                                 <input
                                   type="text"
                                   placeholder="Consumable Name"
@@ -1705,7 +1861,71 @@ const laborCost = actualHours * hourlyRate;
           </div>
         </div>
       </div>
-    </div>
+
+
+       {/* ✅ CUSTOMER ADD POPUP — ADD IT HERE */}
+    {showCustomerPopup && (
+      <div className="customer-popup-overlay">
+        <div className="customer-popup">
+        <div className="form-group">
+          <h3>Add New Customer</h3>
+
+          <input
+            placeholder="Customer Name"
+            value={newCustomer.name}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))}
+          />
+
+          <input
+            placeholder="Phone Number"
+            value={newCustomer.phone}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+          />
+
+          <input
+            placeholder="Email"
+            value={newCustomer.email}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+          />
+
+          <input
+            placeholder="Address"
+            value={newCustomer.address}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
+          />
+
+          <input
+            placeholder="Product ID"
+            value={newCustomer.productId}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, productId: e.target.value }))}
+          />
+
+          <input
+            placeholder="Product Model"
+            value={newCustomer.productModel}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, productModel: e.target.value }))}
+          />
+
+          <input
+            placeholder="Product Identification"
+            value={newCustomer.productIdentification}
+            onChange={(e) =>
+              setNewCustomer(prev => ({ ...prev, productIdentification: e.target.value }))
+            }
+          />
+
+          <div className="popup-actions">
+            <button onClick={() => setShowCustomerPopup(false)}>Cancel</button>
+            <button onClick={handleCreateCustomer}>Save</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    )}
+  </div>
+  
+
+  
   );
 }
 

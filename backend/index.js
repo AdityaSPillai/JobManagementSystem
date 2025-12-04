@@ -12,6 +12,8 @@ import rateLimit from "express-rate-limit";
 import machineRouets from './routes/machineRouets.js'
 import rejectedJobRoutes from './routes/rejectedJobRoutes.js'
 
+import customerRoutes from "./routes/customerRoutes.js";
+
 dotenv.config();
 const app= express();
 
@@ -50,6 +52,7 @@ app.use('/v1/machine',machineRouets);
 app.use('/v1/template',templateRoutes)
 app.use('/v1/jobs',jobRoutes)
 app.use('/v1/reject/',rejectedJobRoutes)
+app.use('/v1/customer',customerRoutes);
 
 app.get('/',(req,res)=>{
   
