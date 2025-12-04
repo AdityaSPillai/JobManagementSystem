@@ -49,6 +49,30 @@ const JobCardSchema = new mongoose.Schema({
       type:Number,
       required:true
     },
+    numberOfWorkers:{
+      type:Number,
+      required:true,
+      default:1,
+    },
+     workers: [{
+      workerAssigned: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: false,
+      },
+      startTime: {
+        type: Date,
+        default: null
+      },
+      endTime: {
+        type: Date,
+        default: null
+      },
+      actualDuration: {
+        type: Number,  // Duration in minutes
+        default: null
+      }
+    }],
     machine: {
       machineRequired: {
         type: mongoose.Schema.Types.ObjectId,
@@ -69,25 +93,7 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       }
     },
-    workers: [{
-      workerAssigned: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: false,
-      },
-      startTime: {
-        type: Date,
-        default: null
-      },
-      endTime: {
-        type: Date,
-        default: null
-      },
-      actualDuration: {
-        type: Number,  // Duration in minutes
-        default: null
-      }
-    }],
+   
     consumable: [{
       name: {
         type: String,

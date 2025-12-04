@@ -139,6 +139,7 @@ function EstimatorDashboard({ onLoginClick }) {
         estimatedPrice: 0,
         category:'',
         estimatedManHours:0,
+        numberOfWorkers:1,
         machineHours: 0,
         machineHourlyRate: 0,
         machineEstimatedCost: 0,
@@ -206,6 +207,7 @@ function EstimatorDashboard({ onLoginClick }) {
                 description: item.itemData?.description || '',
                 priority: item.itemData?.priority || '',
                 estimatedPrice: item.estimatedPrice || 0,
+                numberOfWorkers:item.numberOfWorkers || 1,
                 category: item.category,
                 estimatedManHours: item.estimatedManHours,
                 itemStatus: computedStatus,   // but computedStatus = item.status now
@@ -252,13 +254,24 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
- const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
+const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
   console.log("Assigning worker:", employeeId, jobId, itemIndex);
 
   const job = jobs.find(j => j.id === jobId);
   if (!job) return;
 
-  const itemId = job.items[itemIndex].itemId;
+  const item = job.items[itemIndex];
+  if (!item) return;
+
+  const maxWorkers = item.numberOfWorkers || 1;
+  const currentWorkers = Array.isArray(item.workers) ? item.workers.length : 0;
+
+  if (currentWorkers >= maxWorkers) {
+    alert(`You can assign only ${maxWorkers} worker(s) to this task.`);
+    return;
+  }
+
+  const itemId = item.itemId;
   console.log("Assigning worker:", employeeId, jobId, itemId);
 
   try {
@@ -571,6 +584,7 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
           estimatedPrice: 0,
           category:'',
           estimatedManHours:0,
+          numberOfWorkers:1,
           machineHours: 0,
           machineHourlyRate: 0,
           machineEstimatedCost: 0,
@@ -697,6 +711,9 @@ const laborCost = actualHours * hourlyRate;
       return;
     }
 
+
+    console.log("formdata" ,formData.numberOfWorkers );
+
     const backendPayload = {
       templateId: formData.templateId,
       isVerifiedByUser: formData.isVerifiedByUser,
@@ -715,6 +732,7 @@ const laborCost = actualHours * hourlyRate;
           priority: item.itemData.priority || 'Medium'
         },
         estimatedPrice: item.estimatedPrice + (item.machineEstimatedCost || 0),
+        numberOfWorkers: item.numberOfWorkers  || 1,
         category:item.category,
         estimatedManHours:item.estimatedManHours,
         machine: {
@@ -773,6 +791,7 @@ const laborCost = actualHours * hourlyRate;
             jobType: item.itemData.job_type || '',
             description: item.itemData.description,
             estimatedPrice: item.estimatedPrice,
+            numberOfWorkers: item.numberOfWorkers,
             category:item.category,
             estimatedManHours:item.estimatedManHours,
             itemStatus: 'stopped'
@@ -804,6 +823,7 @@ const laborCost = actualHours * hourlyRate;
               estimatedPrice: 0,
               category:'',
               estimatedManHours:0,
+              numberOfWorkers:1,
               machineHours: 0,
               machineHourlyRate: 0,
               machineEstimatedCost: 0,
@@ -1322,7 +1342,8 @@ const laborCost = actualHours * hourlyRate;
                                 item.itemStatus === 'completed' ||
                                 item.itemStatus === 'approved' ||
                                 selectedJob.status === 'approved' ||
-                                selectedJob.status === 'completed'
+                                selectedJob.status === 'completed'||
+                                 (Array.isArray(item.workers) && item.workers.length >= (item.numberOfWorkers || 1))
                               }
 
                             >
@@ -1475,6 +1496,15 @@ const laborCost = actualHours * hourlyRate;
                             placeholder="0" 
                             value={item.estimatedManHours || ''} 
                             onChange={(e) => handleJobItemChange(index, 'estimatedManHours', e.target.value)}
+                          />
+                        </div>
+                         <div className="form-group">
+                          <label>Number of Workers </label>
+                          <input 
+                            type="number" 
+                            placeholder="0" 
+                            value={item.numberOfWorkers || ''} 
+                            onChange={(e) => handleJobItemChange(index, 'numberOfWorkers', e.target.value)}
                           />
                         </div>
                       </div>
