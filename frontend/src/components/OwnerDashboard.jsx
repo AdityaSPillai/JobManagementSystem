@@ -219,7 +219,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3>➕ Create Shop</h3>
+          <h3 className="create-shop-heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> Create Shop</h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -286,16 +286,19 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                     required 
                   />
                 </div>
-              </div>
-              {formData.services.length > 1 && (
-                <button 
-                  type="button" 
-                  className="btn-remove-service" 
-                  onClick={() => removeService(index)}
-                >
-                  ✕ Remove Service
-                </button>
+                {formData.services.length > 1 && (
+                  <div>
+                    <label className="remove-btn-label">Remove</label>
+                    <button 
+                      type="button" 
+                      className="btn-remove-service" 
+                      onClick={() => removeService(index)}
+                    >
+                      ✕ Remove Service
+                    </button>
+                  </div>
               )}
+              </div>
             </div>
           ))}
           <button type="button" className="btn-add-service" onClick={addService}>
@@ -305,7 +308,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
           <label className="form-label-group">Job Categories</label>
             {formData.categories.map((category, index) => (
               <div key={index} className="service-item">
-                <div className="form-grid cols-2">
+                <div className="form-grid cols-3">
                   <div className="form-group">
                     <label htmlFor={`category-name-${index}`}>Category Name</label>
                     <input
@@ -330,17 +333,19 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                       required
                     />
                   </div>
+                  {formData.categories.length > 1 && (
+                    <div>
+                      <label className="remove-btn-label">Remove</label>
+                      <button
+                        type="button"
+                        className="btn-remove-service"
+                        onClick={() => removeCategory(index)}
+                      >
+                        ✕ Remove Category
+                      </button>
+                    </div>
+                  )}
                 </div>
-
-                {formData.categories.length > 1 && (
-                  <button
-                    type="button"
-                    className="btn-remove-service"
-                    onClick={() => removeCategory(index)}
-                  >
-                    ✕ Remove Category
-                  </button>
-                )}
               </div>
             ))}
             <button type="button" className="btn-add-service" onClick={addCategory}>
@@ -350,7 +355,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
             <label className="form-label-group">Machine Categories</label>
               {formData.machineCategory.map((mc, index) => (
                 <div key={index} className="service-item">
-                  <div className="form-grid cols-2">
+                  <div className="form-grid cols-3">
                     <div className="form-group">
                       <label htmlFor={`mc-name-${index}`}>Machine Category Name</label>
                       <input
@@ -374,16 +379,20 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                         required
                       />
                     </div>
-                  </div>
-                  {formData.machineCategory.length > 1 && (
-                    <button
-                      type="button"
-                      className="btn-remove-service"
-                      onClick={() => removeMachineCategory(index)}
-                    >
-                      ✕ Remove Machine Category
-                    </button>
+                    {formData.machineCategory.length > 1 && (
+                    <div>
+                      <label className="remove-btn-label">Remove</label>
+                      <button
+                        type="button"
+                        className="btn-remove-service"
+                        onClick={() => removeMachineCategory(index)}
+                      >
+                        ✕ Remove Machine
+                      </button>
+                    </div>
                   )}
+                  </div>
+                  
                 </div>
               ))}
               <button type="button" className="btn-add-service" onClick={addMachineCategory}>
