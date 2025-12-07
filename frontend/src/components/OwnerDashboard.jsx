@@ -9,8 +9,8 @@ import MachineCategoryTab from './MachineCategoryTab.jsx';
 import ConsumablesTab from './ConsumablesTab.jsx';
 import useAuth from "../context/context.jsx";
 import axios from "../utils/axios.js"
-import JobTypeTab from './JobTypeTab.jsx';
-import JobCategoryTab from './JobCategoryTab.jsx';
+import ManPowerCategoryTab from './ManPowerCategoryTab.jsx';
+import ServiceTypeTab from './ServiceTypeTab.jsx';
 
 // --- Shop Creation Modal Component ---
 function ShopCreationModal({ isVisible, onClose, onSubmit }) {
@@ -266,7 +266,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
             </div>
           </div>
 
-          <label className="form-label-group">Services</label>
+          <label className="form-label-group">Service Types</label>
           {formData.services.map((service, index) => (
             <div key={index} className="service-item">
               <div className="form-grid cols-3">
@@ -311,7 +311,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
             + Add Another Service
           </button>
 
-          <label className="form-label-group">Job Categories</label>
+          <label className="form-label-group">Man Power Categories</label>
             {formData.categories.map((category, index) => (
               <div key={index} className="service-item">
                 <div className="form-grid cols-3">
@@ -506,8 +506,8 @@ function OwnerDashboard({ onLogout }) {
         <div className="sidebar-tabs">
           <button className={`sidebar-tab ${activeTab === 'overview' ? 'active' : ''}`}  onClick={() => setActiveTab('overview')}><img src="/stats.png" alt="Overview Icon" className="sidebar-icon" /> Overview</button>
           <button className={`sidebar-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}><img src="/employee.png" alt="Employee Icon" className="sidebar-icon" /> Employees</button>
-          <button className={`sidebar-tab ${activeTab === 'jobTypes' ? 'active' : ''}`} onClick={() => setActiveTab('jobTypes')}><img src="/job.png" alt="Job Type Icon" className="sidebar-icon" /> Jobs</button>
-          <button className={`sidebar-tab ${activeTab === 'jobCategory' ? 'active' : ''}`} onClick={() => setActiveTab('jobCategory')}><img src="/jobcategory.png" alt="Job Category Icon" className="sidebar-icon" /> Job Category</button>
+          <button className={`sidebar-tab ${activeTab === 'serviceTypes' ? 'active' : ''}`} onClick={() => setActiveTab('serviceTypes')}><img src="/job.png" alt="Service Type Icon" className="sidebar-icon" /> Service Type</button>
+          <button className={`sidebar-tab ${activeTab === 'manPowerCategory' ? 'active' : ''}`} onClick={() => setActiveTab('manPowerCategory')}><img src="/jobcategory.png" alt="Man Power Category Icon" className="sidebar-icon" /> Man Power Category</button>
           <button className={`sidebar-tab ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}><img src="/machine.png" alt="Machinery Icon" className="sidebar-icon" /> Machinery</button>
           <button className={`sidebar-tab ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}><img src="/machinecategory.png" alt="Machine Category Icon" className="sidebar-icon" /> Machine Category</button>
           <button className={`sidebar-tab ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}><img src="/consumables.png" alt="Consumables Icon" className="sidebar-icon" /> Consumables</button>
@@ -518,8 +518,8 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
-          {activeTab === 'jobTypes' && <JobTypeTab />}
-          {activeTab === 'jobCategory' && <JobCategoryTab />}
+          {activeTab === 'serviceTypes' && <ServiceTypeTab />}
+          {activeTab === 'manPowerCategory' && <ManPowerCategoryTab  />}
           {activeTab === 'machineCategory' && <MachineCategoryTab />}
           {activeTab === 'customers' && <CustomerTab />}
           {activeTab === 'consumables' && <ConsumablesTab />}

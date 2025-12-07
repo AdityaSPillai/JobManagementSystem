@@ -26,7 +26,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Job Category</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Man Power Category</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -65,7 +65,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
   );
 }
 
-function EditCategoryModal({ isVisible, onClose, onSubmit, jobData }) {
+function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
   const [formData, setFormData] = useState({
     name: '',
     hourlyRate: '',
@@ -73,13 +73,13 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, jobData }) {
 
   // Populate the form when category data changes
   useEffect(() => {
-    if (jobData) {
+    if (manPowerData) {
       setFormData({
-        name: jobData.name || '',
-        hourlyRate: jobData.hourlyRate || '',
+        name: manPowerData.name || '',
+        hourlyRate: manPowerData.hourlyRate || '',
       });
     }
-  }, [jobData]);
+  }, [manPowerData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,7 +98,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, jobData }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Job Category</span> </h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Man Power Category</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -134,19 +134,19 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, jobData }) {
   );
 }
 
-// --- Main Job Type Tab ---
-function JobCategoryTab() {
+// --- Main Man Power Type Tab ---
+function manPowerCategoryTab() {
   const { userInfo } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [jobCategory, setJobCategory] = useState([]);
+  const [manPowerCategory, setmanPowerCategory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const shopId = userInfo?.shopId;
 
-  const fetchJobCategories = async () => {
+  const fetchmanPowerCategories = async () => {
     if (!shopId) return setError('Shop ID not found.');
     try {
         setLoading(true);
@@ -155,9 +155,9 @@ function JobCategoryTab() {
 
         if (res.data.success) {
         console.log("Categories received", res.data.categories);
-        setJobCategory(res.data.categories || []);
+        setmanPowerCategory(res.data.categories || []);
         if (res.data.categories.length === 0) {
-            setError('No job categories found. Add your first one!');
+            setError('No Man Power categories found. Add your first one!');
         }
         } else {
         setError('Unexpected response format from server.');
@@ -170,24 +170,24 @@ function JobCategoryTab() {
     }
     };
 
-  const handleAddJobCategory = async (categoryData) => {
+  const handleAddmanPowerCategory = async (categoryData) => {
     try {
         const payload = { categories: [categoryData] };
         const res = await axios.post(`/shop/addNewCategory/${shopId}`, payload);
 
         if (res.data.success) {
-        console.log('✅ Job category added successfully');
-        await fetchJobCategories();
+        console.log('✅ Man Power category added successfully');
+        await fetchmanPowerCategories();
         } else {
-        alert(res.data.message || 'Failed to add job category.');
+        alert(res.data.message || 'Failed to add Man Power category.');
         }
     } catch (err) {
-        console.error('❌ Error adding job category:', err);
-        alert(err.response?.data?.message || 'Failed to add job category.');
+        console.error('❌ Error adding Man Power category:', err);
+        alert(err.response?.data?.message || 'Failed to add Man Power category.');
     }
     };
 
-  const handleEditJobCategory = async (categoryData) => {
+  const handleEditmanPowerCategory = async (categoryData) => {
     try {
         const payload = {
         name: categoryData.name,
@@ -197,57 +197,57 @@ function JobCategoryTab() {
         const res = await axios.put(`/shop/updateCategory/${shopId}/${editingCategory._id}`, payload);
 
         if (res.data.success) {
-        console.log('✅ Job category updated successfully');
-        await fetchJobCategories();
+        console.log('✅ Man Power category updated successfully');
+        await fetchmanPowerCategories();
         } else {
-        alert(res.data.message || 'Failed to update job category.');
+        alert(res.data.message || 'Failed to update Man Power category.');
         }
     } catch (err) {
         console.error('❌ Error updating category:', err);
-        alert(err.response?.data?.message || 'Failed to update job category.');
+        alert(err.response?.data?.message || 'Failed to update Man Power category.');
     }
     };
 
-  const openEditModal = (job) => {
-    setEditingCategory(job);
+  const openEditModal = (manPower) => {
+    setEditingCategory(manPower);
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteJobCategory = async (categoryId) => {
-    if (!window.confirm('Are you sure you want to delete this job category?')) return;
+  const handleDeletemanPowerCategory = async (categoryId) => {
+    if (!window.confirm('Are you sure you want to delete this Man Power category?')) return;
     try {
         const res = await axios.delete(`/shop/deleteCategory/${shopId}/${categoryId}`);
         if (res.data.success) {
-        console.log('🗑️ Job category deleted');
-        await fetchJobCategories();
+        console.log('🗑️ Man Power category deleted');
+        await fetchmanPowerCategories();
         } else {
-        alert(res.data.message || 'Failed to delete job category.');
+        alert(res.data.message || 'Failed to delete Man Power category.');
         }
     } catch (err) {
         console.error('❌ Error deleting category:', err);
-        alert(err.response?.data?.message || 'Failed to delete job category.');
+        alert(err.response?.data?.message || 'Failed to delete Man Power category.');
     }
     };
 
   useEffect(() => {
-    if (shopId) fetchJobCategories();
+    if (shopId) fetchmanPowerCategories();
   }, [shopId]);
 
   return (
     <div>
       <div className="tab-header">
-        <h3 className="section-title">Job Category Management</h3>
+        <h3 className="section-title">Man Power Category Management</h3>
         <button className="btn-add-new" onClick={() => setIsModalOpen(true)}>
-          + Add Job Category
+          + Add Man Power Category
         </button>
       </div>
 
       {loading ? (
-        <p>Loading job category...</p>
+        <p>Loading Man Power category...</p>
       ) : error ? (
         <p className="error-text">{error}</p>
-      ) : jobCategory.length === 0 ? (
-        <p>No job category found. Click "Add Job Category" to get started!</p>
+      ) : manPowerCategory.length === 0 ? (
+        <p>No Man Power category found. Click "Add Man Power Category" to get started!</p>
       ) : (
         <div className="table-container">
           <table className="modern-table">
@@ -259,7 +259,7 @@ function JobCategoryTab() {
               </tr>
             </thead>
             <tbody>
-              {jobCategory.map((cat) => (
+              {manPowerCategory.map((cat) => (
                 <tr key={cat._id}>
                   <td>
                     <span className="table-primary-text">{cat.name}</span>
@@ -279,7 +279,7 @@ function JobCategoryTab() {
                       <button
                         type="button"
                         className="table-cta table-cta-danger"
-                        onClick={() => handleDeleteJobCategory(cat._id)}
+                        onClick={() => handleDeletemanPowerCategory(cat._id)}
                       >
                         Remove
                       </button>
@@ -295,7 +295,7 @@ function JobCategoryTab() {
       <AddCategoryModal
         isVisible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddJobCategory}
+        onSubmit={handleAddmanPowerCategory}
       />
 
       <EditCategoryModal
@@ -304,11 +304,11 @@ function JobCategoryTab() {
           setIsEditModalOpen(false);
           setEditingCategory(null);
         }}
-        onSubmit={handleEditJobCategory}
-        jobData={editingCategory}
+        onSubmit={handleEditmanPowerCategory}
+        manPowerData={editingCategory}
       />
     </div>
   );
 }
 
-export default JobCategoryTab;
+export default manPowerCategoryTab;

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from '../utils/axios.js';
 import useAuth from '../context/context.jsx';
 
-// --- Add Job Modal ---
-function AddJobModal({ isVisible, onClose, onSubmit }) {
+// --- Add Service Modal ---
+function AddServiceModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -28,13 +28,13 @@ function AddJobModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Job Type</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Service Type</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid cols-2">
             <div className="form-group">
-              <label htmlFor="name">Job Name</label>
+              <label htmlFor="name">Service Type Name</label>
               <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div className="form-group full-width">
@@ -46,31 +46,31 @@ function AddJobModal({ isVisible, onClose, onSubmit }) {
               <textarea id="note" name="note" value={formData.note} onChange={handleChange}></textarea>
             </div>
           </div>
-          <button type="submit" className="btn-submit">Add Job Type</button>
+          <button type="submit" className="btn-submit">Add Service Type</button>
         </form>
       </div>
     </div>
   );
 }
 
-// --- Edit Job Modal ---
-function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
+// --- Edit Service Modal ---
+function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     note: '',
   });
 
-  // Update form when jobData changes
+  // Update form when serviceData changes
   useEffect(() => {
-    if (jobData) {
+    if (serviceData) {
       setFormData({
-        name: jobData.name || '',
-        description: jobData.description || '',
-        note: jobData.note || '',
+        name: serviceData.name || '',
+        description: serviceData.description || '',
+        note: serviceData.note || '',
       });
     }
-  }, [jobData]);
+  }, [serviceData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,13 +89,13 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Job Type</span> </h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Service Type</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid cols-2">
             <div className="form-group">
-              <label htmlFor="edit-name">Job Name</label>
+              <label htmlFor="edit-name">Service Type Name</label>
               <input 
                 type="text" 
                 id="edit-name" 
@@ -105,7 +105,7 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
                 disabled 
                 style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
               />
-              <small style={{ color: '#666', fontSize: '0.75rem' }}>Job name cannot be changed</small>
+              <small style={{ color: '#666', fontSize: '0.75rem' }}>Service type name cannot be changed</small>
             </div>
             <div className="form-group full-width">
               <label htmlFor="edit-description">Description</label>
@@ -126,7 +126,7 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
               ></textarea>
             </div>
           </div>
-          <button type="submit" className="btn-submit">Update Job Type</button>
+          <button type="submit" className="btn-submit">Update Service Type</button>
         </form>
       </div>
     </div>
@@ -134,20 +134,20 @@ function EditJobModal({ isVisible, onClose, onSubmit, jobData }) {
 }
 
 
-// --- Main Job Type Tab ---
-function JobTypeTab() {
+// --- Main Service Type Tab ---
+function ServiceTypeTab() {
   const { userInfo } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState(null);
-  const [jobTypes, setJobTypes] = useState([]);
+  const [editingService, setEditingService] = useState(null);
+  const [ServiceTypes, setServiceTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const shopId = userInfo?.shopId;
 
-  // Fetch all job types
-  const fetchJobTypes = async () => {
+  // Fetch all Service types
+  const fetchServiceTypes = async () => {
     if (!shopId) return setError('Shop ID not found.');
     try {
       setLoading(true);
@@ -157,141 +157,141 @@ function JobTypeTab() {
       // Handle both "success" and "succes" (typo in backend)
       if (res.data.success || res.data.succes) {
         console.log("Services received", res.data.shop.services);
-        setJobTypes(res.data.shop.services || []);
+        setServiceTypes(res.data.shop.services || []);
         if (res.data.shop.services.length === 0) {
-          setError('No job types found. Add your first one!');
+          setError('No Service types found. Add your first one!');
         }
       } else {
         setError('Unexpected response format from server.');
       }
     } catch (err) {
-      console.error('Error fetching job types:', err);
-      setError(err.response?.data?.message || 'Failed to fetch job types.');
+      console.error('Error fetching Service types:', err);
+      setError(err.response?.data?.message || 'Failed to fetch Service types.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Add new job type
-  const handleAddJob = async (jobData) => {
+  // Add new Service type
+  const handleAddService = async (serviceData) => {
     try {
-      const payload = { services: [jobData] };
+      const payload = { services: [serviceData] };
       const res = await axios.post(`/shop/addNewService/${shopId}`, payload);
 
       if (res.data.success || res.data.succes) {
-        console.log('✅ Job type added successfully');
-        await fetchJobTypes();
+        console.log('✅ Service type added successfully');
+        await fetchServiceTypes();
       } else {
-        alert(res.data.message || 'Failed to add job type.');
+        alert(res.data.message || 'Failed to add Service type.');
       }
     } catch (err) {
-      console.error('❌ Error adding job type:', err);
-      alert(err.response?.data?.message || 'Failed to add job type.');
+      console.error('❌ Error adding Service type:', err);
+      alert(err.response?.data?.message || 'Failed to add Service type.');
     }
   };
 
-  // Edit job type
-  const handleEditJob = async (jobData) => {
+  // Edit Service type
+  const handleEditService = async (serviceData) => {
     try {
       // Format data according to backend requirements (only description)
       const payload = {
-        description: jobData.description,
-        ...(jobData.note && { note: jobData.note }) // Include note if it exists
+        description: serviceData.description,
+        ...(serviceData.note && { note: serviceData.note }) // Include note if it exists
       };
 
-      const res = await axios.put(`/shop/updateShopServices/${shopId}/${editingJob._id}`, payload);
+      const res = await axios.put(`/shop/updateShopServices/${shopId}/${editingService._id}`, payload);
 
       if (res.data.success || res.data.succes) {
-        console.log('✅ Job type updated successfully');
-        await fetchJobTypes();
+        console.log('✅ Service type updated successfully');
+        await fetchServiceTypes();
       } else {
-        alert(res.data.message || 'Failed to update job type.');
+        alert(res.data.message || 'Failed to update Service type.');
       }
     } catch (err) {
-      console.error('❌ Error updating job type:', err);
-      alert(err.response?.data?.message || 'Failed to update job type.');
+      console.error('❌ Error updating Service type:', err);
+      alert(err.response?.data?.message || 'Failed to update Service type.');
     }
   };
 
   // Open edit modal
-  const openEditModal = (job) => {
-    setEditingJob(job);
+  const openEditModal = (Service) => {
+    setEditingService(Service);
     setIsEditModalOpen(true);
   };
 
-  // Remove job type
-  const handleDeleteJob = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this job type?')) return;
+  // Remove Service type
+  const handleDeleteService = async (serviceId) => {
+    if (!window.confirm('Are you sure you want to delete this Service type?')) return;
     try {
       const res = await axios.delete(`/shop/deleteShopService/${shopId}/${serviceId}`);
       if (res.data.success || res.data.succes) {
-        console.log('🗑️ Job type deleted');
-        await fetchJobTypes();
+        console.log('🗑️ Service type deleted');
+        await fetchServiceTypes();
       } else {
-        alert(res.data.message || 'Failed to delete job type.');
+        alert(res.data.message || 'Failed to delete Service type.');
       }
     } catch (err) {
-      console.error('❌ Error deleting job type:', err);
-      alert(err.response?.data?.message || 'Failed to delete job type.');
+      console.error('❌ Error deleting Service type:', err);
+      alert(err.response?.data?.message || 'Failed to delete Service type.');
     }
   };
 
   useEffect(() => {
-    if (shopId) fetchJobTypes();
+    if (shopId) fetchServiceTypes();
   }, [shopId]);
 
   return (
     <div>
       <div className="tab-header">
-        <h3 className="section-title">Job Type Management</h3>
+        <h3 className="section-title">Service Type Management</h3>
         <button className="btn-add-new" onClick={() => setIsModalOpen(true)}>
-          + Add Job Type
+          + Add Service Type
         </button>
       </div>
 
       {loading ? (
-        <p>Loading job types...</p>
+        <p>Loading Service types...</p>
       ) : error ? (
         <p className="error-text">{error}</p>
-      ) : jobTypes.length === 0 ? (
-        <p>No job types found. Click "Add Job Type" to get started!</p>
+      ) : ServiceTypes.length === 0 ? (
+        <p>No Service types found. Click "Add Service Type" to get started!</p>
       ) : (
         <div className="data-grid">
-          {jobTypes.map(job => (
-            <div key={job._id} className="data-card">
+          {ServiceTypes.map(Service => (
+            <div key={Service._id} className="data-card">
               <div className="data-card-header">
-                <h4>{job.name}</h4>
+                <h4>{Service.name}</h4>
               </div>
               <div className="data-card-body">
-                <p><strong>Description:</strong> {job.description || 'N/A'}</p>
-                {job.note && <p><strong>Note:</strong> {job.note}</p>}
+                <p><strong>Description:</strong> {Service.description || 'N/A'}</p>
+                {Service.note && <p><strong>Note:</strong> {Service.note}</p>}
               </div>
               <div className="data-card-footer">
-                <button className="btn-card-action" onClick={() => openEditModal(job)}>Edit</button>
-                <button className="btn-card-action btn-danger" onClick={() => handleDeleteJob(job._id)}>Remove</button>
+                <button className="btn-card-action" onClick={() => openEditModal(Service)}>Edit</button>
+                <button className="btn-card-action btn-danger" onClick={() => handleDeleteService(Service._id)}>Remove</button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <AddJobModal
+      <AddServiceModal
         isVisible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddJob}
+        onSubmit={handleAddService}
       />
 
-      <EditJobModal
+      <EditServiceModal
         isVisible={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
-          setEditingJob(null);
+          setEditingService(null);
         }}
-        onSubmit={handleEditJob}
-        jobData={editingJob}
+        onSubmit={handleEditService}
+        ServiceData={editingService}
       />
     </div>
   );
 }
 
-export default JobTypeTab;
+export default ServiceTypeTab;

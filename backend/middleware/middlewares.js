@@ -117,16 +117,3 @@ export const isAllowed= async(req,res,next)=>{
         });
     }
 }
-
-
-
-import fetch from "node-fetch";
-
-export async function getExchangeRate(base, target) {
-  const url = `https://api.exchangerate.host/latest?base=${base}&symbols=${target}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  return data.rates[target];
-}

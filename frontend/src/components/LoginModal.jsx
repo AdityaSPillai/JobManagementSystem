@@ -16,8 +16,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     name: '',
     email: '',
     password: '',
-    phone: '',
-    shopname: ''
+    phone: ''
   });
 
   const handleLoginSubmit = async (e) => {
@@ -46,7 +45,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
           email: response.data.user.email,
           role: response.data.user.role,
           phone: response.data.user.phone,
-          shopname: response.data.user.shopname,
            ...(response.data.user?.shopId && { shopId: response.data.user.shopId }),
           token: response.data.token
         });
@@ -69,9 +67,9 @@ function LoginModal({ isOpen, onClose, onLogin }) {
     e.preventDefault();
     try {
       setError('');
-      const { name, email, password, phone, shopname } = regFormData;
+      const { name, email, password, phone } = regFormData;
 
-      if (!name || !email || !password || !phone || !shopname) {
+      if (!name || !email || !password || !phone ) {
         setError('Please fill in all registration fields');
         return;
       }
@@ -80,8 +78,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         email,
         password,
         role: "owner",
-        phone,
-        shopname
+        phone
       };
       const response = await axios.post('/auth/signup', ownerData);
       
@@ -95,7 +92,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
           email: response.data.user.email,
           role: response.data.user.role,
           phone: response.data.user.phone,
-          shopname: response.data.user.shopname,
           token: response.data.token
         });
 
@@ -121,7 +117,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   const handleClose = () => {
     setMail('');
     setPassword('');
-    setRegFormData({ name: '', email: '', password: '', phone: '', shopname: '' });
+    setRegFormData({ name: '', email: '', password: '', phone: '' });
     setError('');
     setIsRegisterMode(false);
     onClose();
@@ -132,7 +128,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
   return (
     <div className="login-modal-overlay" onClick={handleClose}>
       <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2 className="modal-title-login">{isRegisterMode ? 'Register as Owner' : 'Login to AutoCare WorkShop'}</h2>
+        <h1 className="modal-title-login">{isRegisterMode ? 'Register as Owner' : 'Login Portal'}</h1>
         {error && <div className="error-message">{error}</div>}
         {isRegisterMode ? (
           <form onSubmit={handleRegisterSubmit}>
@@ -151,10 +147,6 @@ function LoginModal({ isOpen, onClose, onLogin }) {
             <div className="form-group">
               <label>Phone Number</label>
               <input type="tel" name="phone" value={regFormData.phone} onChange={handleRegFormChange} className="form-control" placeholder="Enter your phone number" required />
-            </div>
-            <div className="form-group">
-              <label>Shop Name</label>
-              <input type="text" name="shopname" value={regFormData.shopname} onChange={handleRegFormChange} className="form-control" placeholder="Enter your shop name" required />
             </div>
             <button type="submit" className="btn-login">Register</button>
           </form>

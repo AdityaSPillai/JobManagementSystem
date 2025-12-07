@@ -73,6 +73,9 @@
 }
 
 .modal-title-login{
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color:#536068;
 }
 
