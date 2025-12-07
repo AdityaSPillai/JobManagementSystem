@@ -6,6 +6,7 @@ import useAuth from '../context/context.jsx';
 function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
   const [formData, setFormData] = useState({
     name: '',
+    machineId: '',
     type: '',
     hourlyRate:0,
     status: 'true',  // Fixed: matches dropdown options
@@ -39,6 +40,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     onClose();
     setFormData({
       name: '',
+      machineId: '',
       type: '',
       status: 'true',
       purchaseDate: '',
@@ -86,7 +88,11 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
                 style={{ backgroundColor: "#f3f3f3" }}
               />
             </div>
-
+            
+            <div className="form-group">
+              <label htmlFor="machineId">Machine ID</label>
+              <input type="text" id="machineId" name="machineId" value={formData.machineId} onChange={handleChange} required />
+            </div>
             <div className="form-group">
               <label htmlFor="status">Current Status</label>
               <select id="status" name="status" value={formData.status} onChange={handleChange}>
@@ -376,9 +382,10 @@ function MachinesTab() {
               <div className="data-card-body">
                 <p><strong>Type:</strong> {machine.type}</p>
                 <p><strong>Purchased:</strong> {machine.purchaseDate?.split('T')[0] || 'N/A'}</p>
+                 <p><strong>Machine Id:</strong> {machine.machineId || 'N/A'}</p>  
+                <p><strong>Status:</strong> <span className={getStatusClass(machine.isAvailable ?'Available' : 'Offline' )}>{machine.isAvailable ? 'Offline' :'In-use'  }</span></p>
                 <p><strong>Last Maintenance:</strong> {machine.lastMaintenanceDate?.split('T')[0] || 'N/A'}</p>
                 <p><strong>Next Maintenance:</strong> {machine.nextMaintenanceDate?.split('T')[0] || 'N/A'}</p>
-                <p><strong>Active:</strong> {machine.isActive ? 'Yes' : 'No'}</p>
               </div>
               <div className="data-card-footer">
                 <button className="btn-card-action" onClick={() => handleEditClick(machine)}>Edit</button>

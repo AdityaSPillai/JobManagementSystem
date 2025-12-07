@@ -9,6 +9,11 @@ const RejectedJobSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  shopId:{
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Shop'
+  },
   rejectedBy: {
     type: String,
     required: true

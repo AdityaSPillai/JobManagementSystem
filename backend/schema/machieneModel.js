@@ -8,6 +8,11 @@ const machineSchema = new mongoose.Schema({
         lowercase:true
         
     },
+    machineId:{
+        type: String,
+        unique: true,
+        trim: true,
+    },
     type: {
         type: String,
         required: true,

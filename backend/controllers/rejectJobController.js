@@ -3,9 +3,9 @@ import RejectedJobModel from "../schema/rejectedJobSchema.js";
 
 export const rejectedJobController = async (req, res) => {
   try {
-    const { jobId, reason, rejectedBy } = req.body;
+    const { jobId, reason, rejectedBy,shopId } = req.body;
 
-    if (!jobId || !reason || !rejectedBy) {
+    if (!jobId || !reason || !rejectedBy || !shopId) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -19,6 +19,7 @@ export const rejectedJobController = async (req, res) => {
       originalJobId: job._id,
       rejectionReason: reason,
       rejectedBy,
+      shopId,
       fullJobData: job,
       rejectedAt: new Date()
     });
@@ -54,6 +55,27 @@ export const getRejectedJobsController= async (req, res) => {
   } catch (error) {
     console.error("Error fetching rejected jobs:", error);
     res.status(500).send({  
+        success: false, 
+        message: "Server Error",
+        error: error.message
+    });
+    }
+};
+
+
+
+export const getAllShopRejecetedJobsController= async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const rejectedJobs = await RejectedJobModel.find({ shopId }).sort({ rejectedAt: -1 });    
+    res.status(200).send({
+      success: true, 
+      message: "Rejected jobs fetched successfully",
+      rejectedJobs
+    });
+  } catch (error) {
+    console.error("Error fetching rejected jobs:", error);
+    res.status(500).send({
         success: false, 
         message: "Server Error",
         error: error.message

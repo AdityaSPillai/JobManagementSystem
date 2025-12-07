@@ -135,3 +135,16 @@ input[type="text"]::placeholder {
     width: 100%;
   }
 }
+
+.clickable-row {
+  cursor: pointer;
+  color: black;
+}
+
+.clickable-row:hover {
+  background: #f5f7fa;
+  color: #000;
+}
+.job-info-grid, .job-items-container{
+  color: #000;
+}
