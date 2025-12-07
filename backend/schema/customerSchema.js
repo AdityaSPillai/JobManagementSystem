@@ -14,6 +14,11 @@ const customerSchema= new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  trnNumber:{
+    type: String,
+    trim:true,
+    unique:true
+  },
   
   phone: {
     type: String,

@@ -36,6 +36,7 @@ const [newCustomer, setNewCustomer] = useState({
   name: '',
   phone: '',
   email: '',
+  trnNumber: '',
   address: '',
   productId: '',
   productModel: '',
@@ -89,7 +90,7 @@ const [newCustomer, setNewCustomer] = useState({
 
   const getAllWorkers=async()=>{
     try {
-      const res= await axios.get(`/shop/getAllWorkers/${userInfo?.shopId}`);
+      const res= await axios.get(`/shop/getAllEmployees/${userInfo?.shopId}`);
       if(res.data?.users?.length>0){
         setEmployees(res.data.users)
       }
@@ -248,12 +249,7 @@ const getAllCustomers = async () => {
                   endTime: item.machine?.endTime || null,
                   actualDuration: item.machine?.actualDuration || null
                 },
-                // worker: {
-                //   workerAssigned: item.worker?.workerAssigned || null,
-                //   startTime,
-                //   endTime,
-                //   actualDuration: item.worker?.actualDuration || null
-                // },
+               
                workers: Array.isArray(item.workers)
                     ? item.workers.map(worker => ({
                         workerAssigned: worker.workerAssigned,
@@ -600,6 +596,27 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
     });
   };
 
+
+  const updateActualCostController=async(jobId, actualCost)=>{
+    try {
+      if(!jobId){
+        console.log("No jobId found");
+        return;
+      }
+      const res= await axios.put(`/jobs/actual-cost/${jobId}`,{actualTotalAmount:actualCost});
+
+      if(!res.data.success){
+        console.log("Error in updating actual cost");
+        return;
+      }
+      console.log("Actual cost updated successfully");
+      
+    } catch (error) {
+      console.log("Error updating actual cost:", error.message);
+    }
+  }
+
+
   const addJobItem = () => {
     setFormData(prev => ({
       ...prev,
@@ -719,7 +736,13 @@ const laborCost = actualHours * hourlyRate;
       : 0;
 
     const totalItemCost = laborCost + machineCost + consumableCost;
-    return total + totalItemCost;
+    const acutalCost= total + totalItemCost;
+    try {
+      updateActualCostController(job.id,acutalCost);
+    } catch (error) {
+      console.log(error);
+    }
+    return acutalCost;
   }, 0);
 };
 
@@ -1052,6 +1075,7 @@ const laborCost = actualHours * hourlyRate;
     name,
     phone,
     email,
+    trnNumber,
     address,
     productId,
     productModel,
@@ -1062,6 +1086,7 @@ const laborCost = actualHours * hourlyRate;
     !name ||
     !phone ||
     !email ||
+    !trnNumber ||
     !address ||
     !productId ||
     !productModel ||
@@ -1076,6 +1101,7 @@ const laborCost = actualHours * hourlyRate;
       name,
       phone,
       email,
+      trnNumber,
       address,
       productId,
       productModel,
@@ -1162,13 +1188,7 @@ const laborCost = actualHours * hourlyRate;
                   className={`filter-btn ${statusFilter === 'waiting' ? 'active' : ''}`} 
                   onClick={() => setStatusFilter('waiting')}
                 >
-                  Waiting
-                </button>
-                <button 
-                  className={`filter-btn ${statusFilter === 'assigned' ? 'active' : ''}`} 
-                  onClick={() => setStatusFilter('assigned')}
-                >
-                  Assigned
+                  Job created
                 </button>
                 <button 
                   className={`filter-btn ${statusFilter === 'unassigned' ? 'active' : ''}`} 
@@ -1176,6 +1196,13 @@ const laborCost = actualHours * hourlyRate;
                 >
                   Unassigned
                 </button>
+                <button 
+                  className={`filter-btn ${statusFilter === 'assigned' ? 'active' : ''}`} 
+                  onClick={() => setStatusFilter('assigned')}
+                >
+                  Assigned
+                </button>
+                
                 <button 
                   className={`filter-btn ${statusFilter === 'completed' ? 'active' : ''}`} 
                   onClick={() => setStatusFilter('completed')}
@@ -1326,14 +1353,14 @@ const laborCost = actualHours * hourlyRate;
                                   <div className="full-width">
                                     {item.consumable.map((c, i) => (
                                       <p key={i} style={{ color: 'black' }}>
-                                        {c.name} — ₹{c.price} {c.available ? "(Available)" : "(Not Available)"}
+                                        {c.name} — ${c.price} {c.available ? "(Available)" : "(Not Available)"}
                                       </p>
                                     ))}
                                   </div>
                                 </div>
                               )}
                               <div className="item-price">
-                                ₹{(
+                                ${(
                                   (item.estimatedPrice || 0) +
                                   (Array.isArray(item.consumable) ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0) : 0)
                                 ).toFixed(2)}
@@ -1354,7 +1381,7 @@ const laborCost = actualHours * hourlyRate;
                                   <div className="worker-row">
                                     <div className="worker-info">
                                       <strong>Worker:</strong> { /* show name if you can resolve, else id */ }
-                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned}
+                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned} {employees.find(e => e._id === w.workerAssigned)?.employeeNumber || ''  }
                                     </div>
 
                                     <div className="item-timer-controls">
@@ -1463,7 +1490,7 @@ const laborCost = actualHours * hourlyRate;
                               .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
                               .map(emp => (
                                 <option key={emp._id} value={emp._id}>
-                                  {emp.name} — {emp.specialization}
+                                  {emp.name} {emp.employeeNumber} — {emp.specialization}
                                 </option>
                               ))
                             }
@@ -1480,14 +1507,14 @@ const laborCost = actualHours * hourlyRate;
                   <div className="job-detail-total">
                     <strong className="total-label">Total Estimated Amount:</strong>
                     <strong className="total-amount">
-                      ₹{calculateJobTotal(selectedJob).toFixed(2)}
+                      ${calculateJobTotal(selectedJob).toFixed(2)}
                     </strong>
 
                     {selectedJob.status.toLowerCase()=="approved" &&(
                       <>
                       <strong className="total-label">Actual cost:</strong>
                     <strong className="total-amount">
-                      ₹{calculateActualCost(selectedJob).toFixed(2)}
+                      ${calculateActualCost(selectedJob).toFixed(2)}
                     </strong>
                       </>
                     )}
@@ -1579,7 +1606,7 @@ const laborCost = actualHours * hourlyRate;
                   </div>
                 </div>
                 <div className="form-group">
-                  <label>Secondary Identifcation</label>
+                  <label>Serial Number</label>
                   <input type="text" placeholder="Enter engine identification number" value={formData.formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
                 </div>
                 <div className="job-items-section">
@@ -1702,7 +1729,7 @@ const laborCost = actualHours * hourlyRate;
                           />
                           {item.machineHourlyRate > 0 && (
                             <p style={{ fontSize: '0.8rem', marginTop: '5px', color: '#444' }}>
-                              Rate: ₹{item.machineHourlyRate}/hr | Cost: ₹{item.machineEstimatedCost.toFixed(2)}
+                              Rate: ${item.machineHourlyRate}/hr | Cost: ${item.machineEstimatedCost.toFixed(2)}
                             </p>
                           )}
                         </div>
@@ -1746,7 +1773,7 @@ const laborCost = actualHours * hourlyRate;
                              <option value="">--Select Consumable--</option>
                               {consumables.map((cOpt) => (
                                 <option key={cOpt._id} value={cOpt._id} >
-                                  {cOpt.name} - ₹{cOpt.price}{ (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
+                                  {cOpt.name} - ${cOpt.price}{ (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
                                 </option>
                               ))}
                               <option value="manual">+ Add Manual Consumable</option>
@@ -1793,7 +1820,7 @@ const laborCost = actualHours * hourlyRate;
                                 />
                                 <input
                                   type="number"
-                                  placeholder="Price (₹)"
+                                  placeholder="Price ($)"
                                   value={c.price || ""}
                                   onChange={(e) => {
                                     const updated = [...item.consumable];
@@ -1852,7 +1879,7 @@ const laborCost = actualHours * hourlyRate;
                 <div className="form-footer">
                   <div className="total-amount">
                     <span>Total Estimated Amount:</span>
-                    <span className="amount">₹{calculateFormTotal().toFixed(2)}</span>
+                    <span className="amount">${calculateFormTotal().toFixed(2)}</span>
                   </div>
                   <button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button>
                 </div>
@@ -1886,6 +1913,11 @@ const laborCost = actualHours * hourlyRate;
             placeholder="Email"
             value={newCustomer.email}
             onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+          />
+           <input
+            placeholder="TRN Number"
+            value={newCustomer.trnNumber}
+            onChange={(e) => setNewCustomer(prev => ({ ...prev, trnNumber: e.target.value }))}
           />
 
           <input

@@ -71,7 +71,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
                 <option value="">-- Select Category --</option>
                 {machineCategories.map(cat => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (₹{cat.hourlyRate}/hr)
+                    {cat.name} (${cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>
@@ -175,7 +175,7 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
                 <option value="">-- Select Category --</option>
                 {machineCategories.map((cat) => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (₹{cat.hourlyRate}/hr)
+                    {cat.name} (${cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>

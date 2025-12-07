@@ -5,7 +5,7 @@ import useAuth from "../context/context.jsx";
 // Add Consumable Modal
 function AddConsumableModal({ isVisible, onClose, onSubmit }) {
   const { userInfo } = useAuth();
-  const [formData, setFormData] = useState({ name: "", price: "", available: true });
+  const [formData, setFormData] = useState({ name: "", price: "", unitOfMeasure: "", available: true });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -70,6 +70,17 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
                 type="number"
                 name="price"
                 value={formData.price}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </div>
+             <div className="form-group">
+              <label>Unit of Measure </label>
+              <input
+                type="text"
+                name="unitOfMeasure"
+                value={formData.unitOfMeasure}
                 onChange={handleChange}
                 required
                 disabled={loading}
@@ -180,6 +191,17 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
               />
             </div>
             <div className="form-group">
+              <label>Unit of Measure </label>
+              <input
+                type="text"
+                name="unitOfMeasure"
+                value={formData.unitOfMeasure || ""}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="form-group">
               <label>Quanity </label>
               <input
                 type="number"
@@ -276,6 +298,7 @@ function ConsumablesTab() {
                 <th>Name</th>
                 <th>Price</th>
                 <th>Quantity</th>
+                <th>Unit of Measure</th>
                 <th>Status</th>
                 <th className="th-actions">Actions</th>
               </tr>
@@ -294,6 +317,9 @@ function ConsumablesTab() {
 
                   <td>
                     <span className="quantity-consumables">{item.quantity}</span>
+                  </td>
+                  <td>
+                    <span className="quantity-consumables">{item.unitOfMeasure}</span>
                   </td>
 
                   <td>

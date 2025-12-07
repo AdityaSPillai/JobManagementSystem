@@ -119,6 +119,10 @@ const JobCardSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  actualTotalAmount:{
+    type:Number,
+    default:0
+  },
   
   status: {
     type: String,

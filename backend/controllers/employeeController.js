@@ -4,7 +4,7 @@ import UserModel from "../schema/userSchema.js";
 
 export const createEmployeeController = async(req, res) => {
     try {
-        const {name, email, password, role, shopId, phone, specialization, experience} = req.body;
+        const {name, email, password, role, shopId, phone, specialization,employeeNumber, experience} = req.body;
 
         // Basic validations
         if(!name) return res.status(400).send({success: false, message: "Name is Required"});
@@ -13,6 +13,7 @@ export const createEmployeeController = async(req, res) => {
         if(!role) return res.status(400).send({success: false, message: "Role is Required"});
         if(!phone) return res.status(400).send({success: false, message: "Phone is Required"}); // Fixed message
         if(!experience) return res.status(400).send({success: false, message: "Experience is Required"});
+        if(!employeeNumber) return res.status(400).send({success: false, message: "Employee Number is Required"});
 
         console.log(role);
         // Password validation - only required for non-worker roles
@@ -59,6 +60,7 @@ export const createEmployeeController = async(req, res) => {
             phone,
             shopId,
             experience,
+            employeeNumber
         };
 
         // Add optional fields only if they exist
@@ -80,11 +82,11 @@ export const createEmployeeController = async(req, res) => {
             worker,
         });
     } catch (error) {
-        console.error("Error creating worker:", error);
+        console.error("Error creating worker:", error.errorResponse.errmsg);
         res.status(500).send({
             success: false,
-            message: "Unable to add new worker",
-            error: error.message,
+            message:  error.errorResponse.errmsg.slice(0,20) || "Error in creating worker",
+            error: error,
         });
     }
 };
@@ -132,7 +134,7 @@ export const updateEmployeeController= async(req,res)=>{
     try {
         
         const {empid}=req.params;
-        const {name,role,phone,isAvailable,specialization,experience}=req.body
+        const {name,role,phone,isAvailable,specialization,experience,employeeNumber}=req.body
 
         const newEmployeeData={
         name,
@@ -140,7 +142,8 @@ export const updateEmployeeController= async(req,res)=>{
         phone,
         isAvailable,
         specialization,
-        experience
+        experience,
+        employeeNumber
         }
 
         const employee= await UserModel.findByIdAndUpdate(empid,newEmployeeData,{ new: true })

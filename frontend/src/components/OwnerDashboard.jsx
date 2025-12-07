@@ -19,6 +19,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     shopName: '',
     phone: '',
     email: '',
+    currency: '',
     street: '',
     city: '',
     state: '',
@@ -145,6 +146,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     const shopData = {
       shopName: formData.shopName,
       ownerId: userInfo.id,
+      currency: formData.currency,
       contactInfo: {
         phone: formData.phone,
         email: formData.email
@@ -238,6 +240,10 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
               <label htmlFor="email">Email</label>
               <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="contact@garage.com" required />
             </div>
+             <div className="form-group">
+              <label htmlFor="currency">Currency</label>
+              <input type="text" id="currency" name="currency" value={formData.currency} onChange={handleChange} placeholder=" USD | AED | INR" required />
+            </div>
           </div>
 
           <label className="form-label-group">Address</label>
@@ -322,7 +328,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor={`category-rate-${index}`}>Hourly Rate (₹)</label>
+                    <label htmlFor={`category-rate-${index}`}>Hourly Rate ($)</label>
                     <input
                       type="number"
                       id={`category-rate-${index}`}
@@ -368,7 +374,7 @@ function ShopCreationModal({ isVisible, onClose, onSubmit }) {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor={`mc-rate-${index}`}>Hourly Rate (₹)</label>
+                      <label htmlFor={`mc-rate-${index}`}>Hourly Rate ($)</label>
                       <input
                         type="number"
                         id={`mc-rate-${index}`}

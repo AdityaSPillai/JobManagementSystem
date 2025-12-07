@@ -804,3 +804,34 @@ export const verifyJobController =async(req,res)=>{
     });
   }
 }
+
+
+export const updateActualCostController = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { actualTotalAmount } = req.body;
+    const job = await JobCardModel.findByIdAndUpdate(
+      jobId,
+      { actualTotalAmount },
+      { new: true }
+    );
+    if (!job) {
+      return res.status(404).send({
+        success: false,
+        message: "Job not found"
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Actual cost updated successfully",
+      job
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: error.errorResponse.errmsg || "Unable to update actual cost",
+      error,
+    });
+  }
+};

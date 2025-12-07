@@ -13,6 +13,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     shopname: '',
     specialization: '',
     experience: '',
+    employeeNumber: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,7 +48,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     e.preventDefault();
     
     // Validation
-    if (!formData.name || !formData.email || !formData.phone || !formData.experience) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.experience || !formData.employeeNumber) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -70,6 +71,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
       shopId: userInfo?.shopId,
       specialization: formData.specialization,
       experience: formData.experience,
+      employeeNumber: formData.employeeNumber,
     };
 
     if (formData.password) {
@@ -102,6 +104,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
         shopname: '',
         specialization: '',
         experience: '',
+        employeeNumber: '',
       });
       onClose();
       
@@ -221,6 +224,18 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 value={formData.experience} 
                 onChange={handleChange}
                 min="0"
+                required
+                disabled={loading}
+              />
+            </div>
+             <div className="form-group">
+              <label htmlFor="employeeNumber">Employee Number *</label>
+              <input 
+                type="text" 
+                id="employeeNumber" 
+                name="employeeNumber" 
+                value={formData.employeeNumber} 
+                onChange={handleChange}
                 required
                 disabled={loading}
               />
@@ -486,6 +501,7 @@ function EmployeesTab() {
               <div className="data-card-body">
                 <p><strong>Email:</strong> {emp.email}</p>
                 <p><strong>Phone:</strong> {emp.phone}</p>
+                <p><strong>Emp Number:</strong> {emp.employeeNumber}</p>
                 {emp.specialization && (
                   <p><strong>Specialization:</strong> {emp.specialization}</p>
                 )}

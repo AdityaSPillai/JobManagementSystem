@@ -45,7 +45,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="hourlyRate">Hourly Rate (₹)</label>
+              <label htmlFor="hourlyRate">Hourly Rate ($)</label>
               <input
                 type="number"
                 id="hourlyRate"
@@ -115,7 +115,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, jobData }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="edit-hourlyRate">Hourly Rate (₹)</label>
+              <label htmlFor="edit-hourlyRate">Hourly Rate ($)</label>
               <input
                 type="number"
                 id="edit-hourlyRate"
@@ -265,7 +265,7 @@ function JobCategoryTab() {
                     <span className="table-primary-text">{cat.name}</span>
                   </td>
                   <td>
-                    <span className="badge-rate">₹{cat.hourlyRate}/hr</span>
+                    <span className="badge-rate">${cat.hourlyRate}/hr</span>
                   </td>
                   <td>
                     <div className="table-actions">

@@ -3,8 +3,8 @@ import CustomerModel from "../schema/customerSchema.js";
 export const createNewCustomer= async (req,res)=>{
     try {
 
-        const {name,email,phone,address, productId,productModel,productIdentification,shopId}= req.body;
-        if(!name || !email || !phone || !address || !shopId|| !productId || !productModel || !productIdentification){
+        const {name,email,phone,address, productId,productModel,productIdentification,shopId,trnNumber}= req.body;
+        if(!name || !email || !phone || !address || !shopId|| !productId || !productModel || !productIdentification || !trnNumber){
             return res.status(400).send({
                 success:false,
                 message:"All fields are required",
@@ -16,6 +16,7 @@ export const createNewCustomer= async (req,res)=>{
             phone,
             address,
             shopId,
+            trnNumber,
             productId,
             productModel,
             productIdentification

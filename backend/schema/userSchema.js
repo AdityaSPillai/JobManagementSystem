@@ -55,27 +55,18 @@ const userSchema = new mongoose.Schema({
       return this.role === 'worker' || this.role === 'qa_qc' || this.role==="supervisor";
     }
   },
+  employeeNumber:{
+    type: String,
+    unique: true,
+    sparse: true,
+    required: function() {
+      return this.role === 'worker' || this.role === 'qa_qc' || this.role==="supervisor";
+    }
+  },
   isAvailable: {
     type: Boolean,
     default: true
   },
-  
-  // For Customer specific fields
-  vehicleDetails: [{
-    vehicleType: {
-      type: String,
-      enum: ['car', 'bike', 'truck', 'bus', 'other']
-    },
-    make: String,
-    model: String,
-    year: Number,
-    registrationNumber: {
-      type: String,
-      unique: true,
-      sparse: true
-    },
-    vin: String // Vehicle Identification Number
-  }],
   
   address: {
     street: String,

@@ -97,6 +97,10 @@ const shopSchema = new mongoose.Schema({
         type: Boolean,
         default: true
       },
+      unitOfMeasure:{
+        type:String,
+        default:""
+      },
       quantity: {
         type: Number,
         default: 0

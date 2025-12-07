@@ -12,7 +12,8 @@ import { createJobCard,
     qualityGoodController,
     qualityBadController,
     verifyJobController,
-    pauseWrokerTImer
+    pauseWrokerTImer,
+    updateActualCostController
     } from "../controllers/jobController.js";
 
 const router= express.Router();
@@ -57,6 +58,9 @@ router.post('/qualityBad/:jobId/:userId',qualityBadController)
 
 //vuser verification of job
 router.post('/verifyJob/:jobId',verifyJobController)
+
+
+router.put(`/actual-cost/:jobId`, updateActualCostController);
 
 
 

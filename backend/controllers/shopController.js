@@ -8,6 +8,7 @@ export const createShop = async (req, res) => {
     const {
       shopName,
       ownerId,
+      currency,
       categories,
       contactInfo,
       address,
@@ -18,6 +19,7 @@ export const createShop = async (req, res) => {
     // Validation
     if (!shopName)  return res.status(400).send({ success: false, message: "Shop name is required"});
     if (!ownerId) return res.status(400).send({ success: false, message: "Owner ID is required" });
+    if(!currency) return res.status(400).send({ success: false, message: "Currency is required" });
     if (!contactInfo || !contactInfo.phone || !contactInfo.email) return res.status(400).send({success: false,  message: "Contact information (phone and email) is required" });
     if (!address || !address.street || !address.city || !address.state || !address.pincode)
   return res.status(400).send({ success: false, message: "Complete address is required" });
@@ -61,6 +63,7 @@ const existingShop = await ShopModel.findOne({
     const shop = new ShopModel({
       shopName,
       ownerId,
+      currency,
       contactInfo,
       address,
       services,
@@ -221,7 +224,7 @@ export const addNewCategoryController = async (req, res) => {
 
 export const updateShopServices= async(req,res)=>{
   try {
-    const { name, description, note} = req.body;
+    const { name, description, note,currency} = req.body;
     const {shopId,serviceId}=req.params;
 
     if (!shopId|| !serviceId) return res.status(400).json({ success: false, message: "Shop ID  or Serive Id is required" });
@@ -236,6 +239,7 @@ export const updateShopServices= async(req,res)=>{
     if (name) service.name = name;
     if (description) service.description = description;
     if(note) service.note=note;
+    if(currency) shop.currency= currency;
 
     await shop.save();
 
@@ -757,7 +761,7 @@ export const getAllConsumablesController = async (req, res) => {
 export const updateConsumableController = async (req, res) => {
   try {
     const { shopId, consumableId } = req.params;
-    const { name, price, available,quantity } = req.body;
+    const { name, price, available,quantity,unitOfMeasure } = req.body;
 
     const shop = await ShopModel.findById(shopId);
     if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
@@ -768,6 +772,7 @@ export const updateConsumableController = async (req, res) => {
     if (name) item.name = name;
     if (price !== undefined) item.price = price;
     if (available !== undefined) item.available = available;
+    if(unitOfMeasure !== undefined) item.unitOfMeasure= unitOfMeasure;  
     if (quantity !== undefined) item.quantity = quantity;
 
     await shop.save();

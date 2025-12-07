@@ -53,6 +53,7 @@ app.use('/v1/template',templateRoutes)
 app.use('/v1/jobs',jobRoutes)
 app.use('/v1/reject/',rejectedJobRoutes)
 app.use('/v1/customer',customerRoutes);
+app.use('/v1/currency',customerRoutes);
 
 app.get('/',(req,res)=>{
   
