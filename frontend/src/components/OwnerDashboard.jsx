@@ -2,6 +2,7 @@ import { useState,useEffect } from 'react';
 import '../styles/OwnerDashboard.css';
 import Header from './Header';
 import OverviewTab from './OverviewTab';
+import StatsTab from './StatsTab';
 import EmployeesTab from './EmployeesTab';
 import MachinesTab from './MachinesTab';
 import CustomerTab from './CustomerTab';
@@ -505,6 +506,7 @@ function OwnerDashboard({ onLogout }) {
       <div className="dashboard-layout">
         <div className="sidebar-tabs">
           <button className={`sidebar-tab ${activeTab === 'overview' ? 'active' : ''}`}  onClick={() => setActiveTab('overview')}><img src="/stats.png" alt="Overview Icon" className="sidebar-icon" /> Overview</button>
+          <button className={`sidebar-tab ${activeTab === 'stats' ? 'active' : ''}`}  onClick={() => setActiveTab('stats')}><img src="/graph.png" alt="Stats Icon" className="sidebar-icon" /> Stats</button>
           <button className={`sidebar-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}><img src="/employee.png" alt="Employee Icon" className="sidebar-icon" /> Employees</button>
           <button className={`sidebar-tab ${activeTab === 'serviceTypes' ? 'active' : ''}`} onClick={() => setActiveTab('serviceTypes')}><img src="/job.png" alt="Service Type Icon" className="sidebar-icon" /> Service Type</button>
           <button className={`sidebar-tab ${activeTab === 'manPowerCategory' ? 'active' : ''}`} onClick={() => setActiveTab('manPowerCategory')}><img src="/jobcategory.png" alt="Man Power Category Icon" className="sidebar-icon" /> Man Power Category</button>
@@ -516,6 +518,7 @@ function OwnerDashboard({ onLogout }) {
 
         <div className="main-content-area">
           {activeTab === 'overview' && <OverviewTab />}
+          {activeTab === 'stats' && <StatsTab />}
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
           {activeTab === 'serviceTypes' && <ServiceTypeTab />}
