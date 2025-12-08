@@ -207,7 +207,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 <option value="">-- Select Job Category --</option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (₹{cat.hourlyRate}/hr)
+                    {cat.name} (${cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>

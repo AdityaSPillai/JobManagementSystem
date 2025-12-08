@@ -5,6 +5,7 @@ export const createMachineController = async (req, res) => {
   try {
     const {
       name,
+      machineId,
       type,
       status,
       hourlyRate,
@@ -38,6 +39,7 @@ export const createMachineController = async (req, res) => {
     // ✅ create new machine entry
     const machine = new MachineModel({
       name,
+      machineId,
       type,
       hourlyRate,
       status,
@@ -55,14 +57,14 @@ export const createMachineController = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Machine added successfully",
+      message: "Machine created successfully",
       machine,
     });
   } catch (error) {
     console.error("❌ Error creating machine:", error);
     res.status(500).json({
       success: false,
-      message: "Error adding machine",
+      message: error.errorResponse.errmsg.slice(0,20) || "Error in creating Machine",
       error: error.message,
     });
   }
@@ -107,6 +109,7 @@ export const updateMachineController = async (req, res) => {
     let {
       name,
       type,
+      machineId,
       status,
       hourlyRate,
       purchaseDate,
@@ -122,6 +125,7 @@ export const updateMachineController = async (req, res) => {
     // Build update object — only include defined fields
     const machineData = {};
     if (name !== undefined) machineData.name = name;
+    if (machineId !== undefined) machineData.machineId = machineId;
     if (type !== undefined) machineData.type = type;
     if (hourlyRate !== undefined) machineData.hourlyRate = hourlyRate;
     if (status !== undefined) machineData.status = status;

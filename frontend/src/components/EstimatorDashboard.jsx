@@ -65,6 +65,7 @@ const [newCustomer, setNewCustomer] = useState({
       const res = await axios.get(`/shop/getAllMachines/${userInfo.shopId}`);
       if (res.data?.machines?.length > 0) {
         setMachines(res.data.machines);
+        console.log("Machines fetched:", res.data.machines);
       } else {
         console.log("No machines found for this shop");
         setMachines([]);
@@ -1051,7 +1052,7 @@ const laborCost = actualHours * hourlyRate;
       const name = userInfo?.name?.trim() || "Unknown User";
 
       console.log(jobId,reason,name);
-      const res = await axios.post(`/reject/rejectJob`, { jobId, reason, rejectedBy: name });
+      const res = await axios.post(`/reject/rejectJob`, { jobId, shopId: userInfo?.shopId, reason, rejectedBy: name });
       if (res.data?.success) {
         alert("❌ Job rejected and deleted successfully!");
         await getAllJobs();
@@ -1711,9 +1712,14 @@ const laborCost = actualHours * hourlyRate;
                           >
                             <option value="">--No Machine Required--</option>
                             {machines.map((machine) => (
-                              <option key={machine._id} value={machine._id}>
+
+                                machine.isAvailable && (  
+                                  <option key={machine._id} value={machine._id}>
                                 {machine.name}
                               </option>
+                                )
+                              
+                              
                             ))}
                           </select>
                         </div>
