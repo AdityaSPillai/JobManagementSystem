@@ -127,6 +127,7 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
   const [formData, setFormData] = useState({
     name: '',
     type: '',
+    machineId: '',
     status: true,
     purchaseDate: '',
     lastMaintenanceDate: '',
@@ -139,6 +140,7 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
       setFormData({
         name: machine.name || '',
         type: machine.type || '',
+        machineId: machine.machineId || '',
         status: machine.status || true,
         purchaseDate: machine.purchaseDate ? machine.purchaseDate.split('T')[0] : '',
         lastMaintenanceDate: machine.lastMaintenanceDate ? machine.lastMaintenanceDate.split('T')[0] : '',
@@ -156,6 +158,16 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
+    setFormData({
+      name: '',
+      type: '',
+      machineId: '',
+      status: true,
+      purchaseDate: '',
+      lastMaintenanceDate: '',
+      nextMaintenanceDate: '',
+      isActive: true,
+    })
     onClose();
   };
 
@@ -173,6 +185,10 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
             <div className="form-group">
               <label>Machine Name</label>
               <input name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Machine Id</label>
+              <input name="machineId" value={formData.machineId} onChange={handleChange} required />
             </div>
 
             <div className="form-group">
@@ -243,6 +259,7 @@ function MachinesTab() {
       if (res.data.success) {
         alert("Machine updated successfully!");
         fetchMachines();
+        
       } else {
         alert(res.data.message || "Failed to update machine.");
       }

@@ -29,8 +29,10 @@ export const createJobCard = async (req, res) => {
         const consumablePrice = Array.isArray(item.consumable)
           ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
           : 0;
-        const machineCost = item.machineEstimatedCost || 0;
-        return sum + itemPrice + consumablePrice + machineCost;
+       const machineCost= Array.isArray(item.machine)?
+       item.machine.reduce((sum,m)=> sum+m.machineEstimatedCost||0,0):0;
+             return sum + itemPrice + consumablePrice + machineCost
+
       },
       0
     );
@@ -57,8 +59,16 @@ const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')
         estimatedManHours:item.estimatedManHours,
         numberOfWorkers:item.numberOfWorkers,
         estimatedPrice: item.estimatedPrice || 0,
-        machine: item.machine || {},
-        workers: item.workers || [],
+       machine: Array.isArray(item.machine) 
+          ? item.machine.map(m => ({
+              machineRequired: m.machineRequired || null,
+              startTime: m.startTime || null,
+              endTime: m.endTime || null,
+              actualDuration: m.actualDuration || null
+            }))
+          : [],
+
+        workers: Array.isArray(item.workers) ? item.workers : [],
         consumable: Array.isArray(item.consumable) ? item.consumable : [],
       })),
       status:'waiting',
@@ -86,7 +96,31 @@ const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')
       }
     });
 
-    await Promise.all(machineUpdatePromises  );
+
+    const MachineUpdatePromise= [];
+    jobItems.forEach((item,itemIndex)=>{
+          console.log(item.machine)
+
+      if(Array.isArray(item.machine)){
+        item.machine.forEach((machine, machineIndex) => {
+        if(machine.machineRequired && machine.machineRequired !== null){
+          machineUpdatePromises.push(
+            MachineModel.findByIdAndUpdate(machine.machineRequired,{  isAvailable: false,  jobId: jobCard._id },{new:true})
+            .catch(error => {
+                console.error(
+                  `Error updating machine ${machine.machineRequired} for job item ${itemIndex}, machine ${machineIndex}:`, 
+                  error
+                );
+                return null; 
+              })
+          );
+        }
+      })
+      }
+    
+    });
+
+    await Promise.all(MachineUpdatePromise );
 
     res.status(201).json({
       success: true,
@@ -532,104 +566,166 @@ for(const worker of jobItem.workers){
 
 
 
-export const endWorkerTimer= async (req, res) => {
+export const endWorkerTimer = async (req, res) => {
   try {
-    const {jobId,jobItemId,workerObjectId} = req.params;
-    if(!jobId|| !jobItemId|| !workerObjectId){
-      console.error("Please provide valid jobId and userId and workerObjectId");
+    const { jobId, jobItemId, workerObjectId } = req.params;
+    
+    if (!jobId || !jobItemId || !workerObjectId) {
+      console.error("Please provide valid jobId, jobItemId and workerObjectId");
       return res.status(400).json({
-        success:false,
-        message:"Please provide valid jobId and userId",
-      })
-    }
-    const job=await JobCardModel.findById(jobId);
-    if(!job){
-      console.error("Job item not found");
-      return res.status(404).json({
-        success:false,
-        message:"Job item not found",
-      })
+        success: false,
+        message: "Please provide valid jobId, jobItemId and workerObjectId",
+      });
     }
 
-    const jobItem=job.jobItems.find(i=>i._id.toString()===jobItemId);
-    if(!jobItem){
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      console.error("Job not found");
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    const jobItem = job.jobItems.find(i => i._id.toString() === jobItemId);
+    if (!jobItem) {
       return res.status(404).json({
         success: false,
         message: "Job item not found",
       });
     }
 
-    let workerFound= false;
+    let workerFound = false;
     
+    for (const worker of jobItem.workers) {
+      if (worker?.workerAssigned?.toString() === workerObjectId) {
 
-    for(const worker of jobItem.workers){
-      console.log("Checking workerAssigned:", worker?.workerAssigned?.toString());
-      if(worker?.workerAssigned?.toString()=== workerObjectId){
-        worker.endTime= new Date();
-        timeDifference(worker.startTime, worker.endTime);
-        worker.actualDuration += endingtime;
-        console.log("Worker timer ended at", worker.endTime);
-        workerFound= true;
+        if (!worker.startTime) {
+          return res.status(400).json({
+            success: false,
+            message: "Worker timer was never started",
+          });
+        }
+
+        if (worker.endTime) {
+          return res.status(400).json({
+            success: false,
+            message: "Worker timer already ended",
+          });
+        }
+
+        worker.endTime = new Date();
+        
+        // Calculate duration for this work session in minutes
+        const startTime = new Date(worker.startTime);
+        const endTime = new Date(worker.endTime);
+        const sessionDurationInMinutes = Math.floor((endTime - startTime) / (1000 * 60));
+        
+    
+        worker.actualDuration = (worker.actualDuration || 0) + sessionDurationInMinutes;
+        
+        console.log(`Worker timer ended. Session Duration: ${sessionDurationInMinutes} minutes, Total Accumulated: ${worker.actualDuration} minutes`);
+        workerFound = true;
         break;
       }
-
-    } 
-    let completed=false;
-    for(const w of jobItem.workers){
-      console.log("Worker actual duration: ", w.actualDuration + "\n");
-        if(w.actualDuration !== null && w.actualDuration >0){
-          completed=true;
-        }
     }
 
-    if(completed){
-      jobItem.status='completed';
+    if (!workerFound) {
+      console.error("Worker not found in job items");
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found in job items",
+      });
     }
 
-
-
-    let notCompleted=false;
-    for(let jobs of job.jobItems  ) {
-
-      console.log("Checking job item status: of ", jobs.status + "\n");
-        if(jobs.status !== 'completed'){
-          notCompleted=true;
+    
+    let allWorkersCompleted = true;
+    
+    if (jobItem.workers.length === 0) {
+      allWorkersCompleted = false;
+    } else {
+      for (const w of jobItem.workers) {
+      
+        if (!w.endTime) {
+          allWorkersCompleted = false;
           break;
         }
-        else{
-          notCompleted=false;
-        }
-    }
-console.log("Not completed status:", notCompleted);
-    if(!notCompleted){
-      job.status='completed'
+      }
     }
 
-      await job.save()
-        if(!workerFound){
-              console.error("Worker not found in job items");
-              return res.status(404).json({
-                success:false,
-                message:"Worker not found in job items",
-              })
+
+    if (allWorkersCompleted && jobItem.workers.length > 0) {
+      jobItem.status = 'completed';
+      console.log(`Job item ${jobItemId} marked as completed`);
+      let actualManHours=item.workers.reduce((sum,w)=>sum+(w.actualDuration ||0),0)
+
+      job.actualManHours += actualManHours;
+
+      
+      // Release all machines assigned to this completed job item
+      if (Array.isArray(jobItem.machine) && jobItem.machine.length > 0) {
+        const machineReleasePromises = jobItem.machine
+          .filter(m => m.machineRequired && mongoose.isValidObjectId(m.machineRequired))
+          .map(async (machine) => {
+            try {
+              return await MachineModel.findByIdAndUpdate(
+                machine.machineRequired,
+                { 
+                  isAvailable: true,
+                  jobId: null
+                },
+                { new: true }
+              );
+            } catch (error) {
+              console.error(`Error releasing machine ${machine.machineRequired}:`, error);
+              return null;
             }
+          });
+        
+        await Promise.all(machineReleasePromises);
+        console.log(`Released ${machineReleasePromises.length} machine(s) for job item ${jobItemId}`);
+      }
+    }
 
-     res.status(200).json({
+    // Check if ALL job items are completed
+    let allJobItemsCompleted = true;
+    for (const item of job.jobItems) {
+      if (item.status !== 'completed') {
+        allJobItemsCompleted = false;
+        break;
+      }
+    }
+
+    // Only mark the entire job as completed if ALL job items are completed
+    if (allJobItemsCompleted) {
+      job.status = 'completed';
+      console.log(`Job ${jobId} marked as completed`);
+    }
+
+
+    await job.save();
+
+    res.status(200).json({
       success: true,
       message: "Worker timer ended successfully",
-      job,
+      data: {
+        jobId: job._id,
+        jobItemId: jobItem._id,
+        workerObjectId,
+        duration: jobItem.workers.find(w => w.workerAssigned.toString() === workerObjectId)?.actualDuration,
+        jobItemStatus: jobItem.status,
+        jobStatus: job.status
+      }
     });
-
 
   } catch (error) {
     console.error("Error ending worker timer:", error);
     res.status(500).json({
       success: false,
       message: error.message,
-      error,
     });
-  } 
-}
+  }
+};
 
 
   export const assignWorkerController = async (req, res) => {

@@ -340,6 +340,10 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
               <input type="email" name="email" value={formData.email || ''} onChange={handleChange} required />
             </div>
             <div className="form-group">
+              <label>Employee number</label>
+              <input type="text" name="employeeNumber" value={formData.employeeNumber || ''} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
               <label>Phone</label>
               <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} required />
             </div>

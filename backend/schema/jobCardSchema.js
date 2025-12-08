@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { act } from "react";
 
 const JobCardSchema = new mongoose.Schema({
   jobCardNumber: {
@@ -73,7 +74,7 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       }
     }],
-    machine: {
+    machine: [{
       machineRequired: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Machine",
@@ -92,7 +93,7 @@ const JobCardSchema = new mongoose.Schema({
         type: Number,  // Duration in minutes
         default: null
       }
-    },
+    }],
    
     consumable: [{
       name: {
@@ -119,7 +120,15 @@ const JobCardSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+   actualManHours:{
+    type:Number,
+    default:0
+  },
   actualTotalAmount:{
+    type:Number,
+    default:0
+  },
+  actualManHours:{
     type:Number,
     default:0
   },

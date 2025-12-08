@@ -175,12 +175,7 @@ const getAllCustomers = async () => {
         machineHours: 0,
         machineHourlyRate: 0,
         machineEstimatedCost: 0,
-        machine: {
-          machineRequired: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
+        machine: [],
         worker: {
           workerAssigned: null,
           startTime: null,
@@ -243,13 +238,16 @@ const getAllCustomers = async () => {
                 category: item.category,
                 estimatedManHours: item.estimatedManHours,
                 itemStatus: computedStatus,   // but computedStatus = item.status now
-                  machine: {
-                  machineRequired: item.machine?.machineRequired?.name || item.machine?.machineRequired || null,
-                  machineId: item.machine?.machineRequired?._id || null,
-                  startTime: item.machine?.startTime || null,
-                  endTime: item.machine?.endTime || null,
-                  actualDuration: item.machine?.actualDuration || null
-                },
+                 
+                machine: Array.isArray(item.machine) ?
+                item.machine.map(machine=>({
+                  machineRequired: machine.machineRequired?.name || machine.machineRequired || null,
+                  machineId: machine.machineRequired?._id || null,
+                  startTime: machine.startTime || null,
+                  endTime: machine.endTime || null,
+                  actualDuration: machine.actualDuration || null
+                }))
+                :[],
                
                workers: Array.isArray(item.workers)
                     ? item.workers.map(worker => ({
@@ -355,6 +353,66 @@ const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
     alert('Failed to assign worker. Please try again.');
   }
 };
+
+
+
+const addMachineToItem=(itemIndex)=>{
+  setFormData(prev=>{
+    const newJobs=[...prev.jobItems];
+    const item={...newJobs[itemIndex]};
+
+    item.machine=[
+      ...item.machine,
+      {
+        machineRequired: null,
+        machineHours: 0,
+        machineHourlyRate: 0,
+        machineEstimatedCost: 0,
+        startTime: null,
+        endTime: null,
+        actualDuration: null
+      }
+    ];
+    newJobs[itemIndex] = item;
+    return { ...prev, jobItems: newJobs };
+  });
+};
+
+
+const removeMachineFromItem = (itemIndex, machineIndex) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const item = { ...newJobItems[itemIndex] };
+    
+    item.machine = item.machine.filter((_, i) => i !== machineIndex);
+    
+    newJobItems[itemIndex] = item;
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+// Update a specific machine in a job item
+const updateMachineInItem = (itemIndex, machineIndex, field, value) => {
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const item = { ...newJobItems[itemIndex] };
+    
+    item.machine = item.machine.map((m, i) => {
+      if (i === machineIndex) {
+        return { ...m, [field]: value };
+      }
+      return m;
+    });
+    
+    newJobItems[itemIndex] = item;
+    return { ...prev, jobItems: newJobItems };
+  });
+};
+
+
+
+
+
 
 
 
@@ -636,12 +694,7 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
           machineHours: 0,
           machineHourlyRate: 0,
           machineEstimatedCost: 0,
-          machine: {
-            machineRequired: null,
-            startTime: null,
-            endTime: null,
-            actualDuration: null,
-          },
+          machine: [],
           worker: {
             workerAssigned: null,
             startTime: null,
@@ -667,10 +720,13 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
     0
   );
 
-  const machinesTotal = formData.jobItems.reduce(
-    (sum, item) => sum + (item.machineEstimatedCost || 0),
-    0
-  );
+  // ✅ Sum all machine costs from all machines in all items
+  const machinesTotal = formData.jobItems.reduce((sum, item) => {
+    const itemMachineTotal = Array.isArray(item.machine)
+      ? item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0)
+      : 0;
+    return sum + itemMachineTotal;
+  }, 0);
 
   const consumablesTotal = formData.jobItems.reduce((sum, item, itemIndex) => {
     const itemConsumableTotal = Array.isArray(item.consumable)
@@ -679,7 +735,6 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
           return s + (c.price || 0) * qty;
         }, 0)
       : 0;
-
     return sum + itemConsumableTotal;
   }, 0);
 
@@ -702,12 +757,12 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
           return s + (c.price || 0) * qty;
         }, 0)
       : 0;
-
     return sum + itemConsumableTotal;
   }, 0);
 
   return itemsTotal + consumablesTotal;
 };
+
 
 
 
@@ -750,64 +805,70 @@ const laborCost = actualHours * hourlyRate;
   
 
   const handleSaveJob = async () => {
-    const { formData: customerData, jobItems } = formData;
+  const { formData: customerData, jobItems } = formData;
 
-    if (!customerData.customer_name || !customerData.vehicle_number || !customerData.contact_number) {
-      alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
-      return;
-    }
+  if (!customerData.customer_name || !customerData.vehicle_number || !customerData.contact_number) {
+    alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
+    return;
+  }
 
-    const hasInvalidItems = jobItems.some(item => 
-      !item.itemData.description || item.estimatedPrice <= 0
-    );
-    if (hasInvalidItems) {
-      alert('Please fill in all job item descriptions and a valid estimated price');
-      return;
-    }
+  const hasInvalidItems = jobItems.some(item => 
+    !item.itemData.description || item.estimatedPrice <= 0
+  );
+  if (hasInvalidItems) {
+    alert('Please fill in all job item descriptions and a valid estimated price');
+    return;
+  }
 
+  // ✅ Calculate total machine cost for estimated price
+  const backendPayload = {
+    templateId: formData.templateId,
+    isVerifiedByUser: formData.isVerifiedByUser,
+    shopId: userInfo?.shopId,
+    formData: {
+      customer_name: customerData.customer_name,
+      vehicle_number: customerData.vehicle_number,
+      engine_number: customerData.engine_number || '',
+      vehicle_model: customerData.vehicle_model || '',
+      contact_number: customerData.contact_number
+    },
+    jobItems: jobItems.map(item => {
+      // Calculate total machine cost for this item
+      const totalMachineCost = Array.isArray(item.machine)
+        ? item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
+        : 0;
 
-    console.log("formdata" ,formData.numberOfWorkers );
-
-    const backendPayload = {
-      templateId: formData.templateId,
-      isVerifiedByUser: formData.isVerifiedByUser,
-      shopId: userInfo?.shopId,
-      formData: {
-        customer_name: customerData.customer_name,
-        vehicle_number: customerData.vehicle_number,
-        engine_number: customerData.engine_number || '',
-        vehicle_model: customerData.vehicle_model || '',
-        contact_number: customerData.contact_number
-      },
-      jobItems: jobItems.map(item => ({
+      return {
         itemData: {
           job_type: item.itemData.job_type || '',
           description: item.itemData.description,
           priority: item.itemData.priority || 'Medium'
         },
-        estimatedPrice: item.estimatedPrice + (item.machineEstimatedCost || 0),
-        numberOfWorkers: item.numberOfWorkers  || 1,
-        category:item.category,
-        estimatedManHours:item.estimatedManHours,
-        machine: {
-          machineRequired:
-            typeof item.machine.machineRequired === "string" && item.machine.machineRequired.trim() !== ""
-              ? item.machine.machineRequired
-              : null,
-          startTime: item.machine.startTime || null,
-          endTime: item.machine.endTime || null,
-          actualDuration: item.machine.actualDuration || null
-        },
+        estimatedPrice: item.estimatedPrice + totalMachineCost,
+        numberOfWorkers: item.numberOfWorkers || 1,
+        category: item.category,
+        estimatedManHours: item.estimatedManHours,
+        
+        // ✅ Send machines as array
+        machine: Array.isArray(item.machine)
+          ? item.machine
+              .filter(m => m.machineRequired && m.machineRequired.trim() !== "")
+              .map(m => ({
+                machineRequired: m.machineRequired,
+                startTime: m.startTime || null,
+                endTime: m.endTime || null,
+                actualDuration: m.actualDuration || null
+              }))
+          : [],
       
-            workers: Array.isArray(item.workers)
-              ? item.workers.map(w => ({
-                  workerAssigned: w.workerAssigned,
-                  startTime: w.startTime || null,
-                  endTime: w.endTime || null,
-                  actualDuration: w.actualDuration || null
-                }))
-              : []
-            ,
+        workers: Array.isArray(item.workers)
+          ? item.workers.map(w => ({
+              workerAssigned: w.workerAssigned,
+              startTime: w.startTime || null,
+              endTime: w.endTime || null,
+              actualDuration: w.actualDuration || null
+            }))
+          : [],
 
         consumable: Array.isArray(item.consumable)
           ? item.consumable
@@ -816,96 +877,64 @@ const laborCost = actualHours * hourlyRate;
                 name: c.name.trim(),
                 price: c.price,
                 available: c.available,
-                quantity: c.quantity ||  1
+                quantity: c.quantity || 1
               }))
           : []
-      }))
-    };
-
-    console.log('Backend Payload:', JSON.stringify(backendPayload, null, 2));
-
-    try {
-      const response = await axios.post('/jobs/new-job', backendPayload);
-      
-      if (response.data) {
-        const newJob = {
-          id: response.data.jobId || generateJobId(),
-          customer_name: customerData.customer_name,
-          vehicle_number: customerData.vehicle_number,
-          engine_number: customerData.engine_number,
-          vehicle_model: customerData.vehicle_model,
-          contact_number: customerData.contact_number,
-          date: new Date().toLocaleString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric', 
-            hour: '2-digit', minute: '2-digit'
-          }),
-          status: 'Not Assigned',
-          assignedEmployee: null,
-          items: jobItems.map(item => ({
-            jobType: item.itemData.job_type || '',
-            description: item.itemData.description,
-            estimatedPrice: item.estimatedPrice,
-            numberOfWorkers: item.numberOfWorkers,
-            category:item.category,
-            estimatedManHours:item.estimatedManHours,
-            itemStatus: 'stopped'
-          })),
-          machines: [],
-          consumables: []
-        };
-
-        await getAllJobs();
-
-        setFormData({
-          templateId: '68f50077a6d75c0ab83cd019',
-          isVerifiedByUser: true,
-          shopId: userInfo?.shopId || '',
-          formData: {
-            customer_name: '',
-            vehicle_number: '',
-            engine_number: '',
-            vehicle_model: '',
-            contact_number: '',
-          },
-          jobItems: [
-            {
-              itemData: {
-                job_type: '',
-                description: '',
-                priority: '',
-              },
-              estimatedPrice: 0,
-              category:'',
-              estimatedManHours:0,
-              numberOfWorkers:1,
-              machineHours: 0,
-              machineHourlyRate: 0,
-              machineEstimatedCost: 0,
-              machine: {
-                machineRequired: null,
-                startTime: null,
-                endTime: null,
-                actualDuration: null,
-              },
-              worker: {
-                workerAssigned: null,
-                startTime: null,
-                endTime: null,
-                actualDuration: null,
-              },
-              consumable: []
-            },
-          ]
-        });
-
-        setShowCreateJob(false);
-        alert('Job card created successfully!');
-      }
-    } catch (error) {
-      console.error('Error creating job:', error);
-      alert('Failed to create job card. Please try again.');
-    }
+      };
+    })
   };
+
+  console.log('Backend Payload:', JSON.stringify(backendPayload, null, 2));
+
+  try {
+    const response = await axios.post('/jobs/new-job', backendPayload);
+    
+    if (response.data) {
+      await getAllJobs();
+
+      // Reset form
+      setFormData({
+        templateId: '68f50077a6d75c0ab83cd019',
+        isVerifiedByUser: true,
+        shopId: userInfo?.shopId || '',
+        formData: {
+          customer_name: '',
+          vehicle_number: '',
+          engine_number: '',
+          vehicle_model: '',
+          contact_number: '',
+        },
+        jobItems: [
+          {
+            itemData: {
+              job_type: '',
+              description: '',
+              priority: '',
+            },
+            estimatedPrice: 0,
+            category: '',
+            estimatedManHours: 0,
+            numberOfWorkers: 1,
+            machine: [], // ✅ Reset as empty array
+            worker: {
+              workerAssigned: null,
+              startTime: null,
+              endTime: null,
+              actualDuration: null,
+            },
+            consumable: []
+          },
+        ]
+      });
+
+      setShowCreateJob(false);
+      alert('Job card created successfully!');
+    }
+  } catch (error) {
+    console.error('Error creating job:', error);
+    alert('Failed to create job card. Please try again.');
+  }
+};
 
   const handleJobTypeSelect = (index, serviceId) => {
     const selectedService = services.find(service => service._id === serviceId);
@@ -959,70 +988,84 @@ const laborCost = actualHours * hourlyRate;
   };
 
 // ✅ When a machine is selected
-  const handleMachineRequiredChange = async (itemIndex, machineId) => {
-    const selectedMachine = machines.find(m => m._id === machineId);
-    if (!selectedMachine) return;
+  const handleMachineRequiredChange = async (itemIndex, machineIndex, machineId) => {
+  const selectedMachine = machines.find(m => m._id === machineId);
+  if (!selectedMachine) return;
 
-    const type = selectedMachine.type;
-    const hourlyRate = await fetchHourlyRate(type); // ✅ Wait for rate
-    const machineHours = formData.jobItems[itemIndex]?.machineHours || 0;
-    const machineEstimatedCost = hourlyRate * machineHours;
+  const type = selectedMachine.type;
+  const hourlyRate = await fetchHourlyRate(type);
+  const machineHours = formData.jobItems[itemIndex]?.machine[machineIndex]?.machineHours || 0;
+  const machineEstimatedCost = hourlyRate * machineHours;
 
-    setFormData(prev => {
-      const newJobItems = [...prev.jobItems];
-      newJobItems[itemIndex] = {
-        ...newJobItems[itemIndex],
-        machine: {
-          ...newJobItems[itemIndex].machine,
-          machineRequired: machineId || null,
-        },
-        machineHourlyRate: hourlyRate,
-        machineEstimatedCost
-      };
-      return { ...prev, jobItems: newJobItems };
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const item = { ...newJobItems[itemIndex] };
+    
+    item.machine = item.machine.map((m, i) => {
+      if (i === machineIndex) {
+        return {
+          ...m,
+          machineRequired: machineId,
+          machineHourlyRate: hourlyRate,
+          machineEstimatedCost
+        };
+      }
+      return m;
     });
+    
+    newJobItems[itemIndex] = item;
+    return { ...prev, jobItems: newJobItems };
+  });
 
-    console.log("✅ Machine Selected:", {
-      machine: selectedMachine.name,
-      type,
-      hourlyRate,
-      machineHours,
-      machineEstimatedCost
-    });
-  };
+  console.log("✅ Machine Selected:", {
+    machine: selectedMachine.name,
+    type,
+    hourlyRate,
+    machineHours,
+    machineEstimatedCost
+  });
+};
 
 // ✅ When machine hours are updated
-  const handleMachineHoursChange = async (itemIndex, hours) => {
-    const newHours = parseFloat(hours) || 0;
-    const currentItem = formData.jobItems[itemIndex];
-    const machineId = currentItem.machine.machineRequired;
+  const handleMachineHoursChange = async (itemIndex, machineIndex, hours) => {
+  const newHours = parseFloat(hours) || 0;
+  const currentItem = formData.jobItems[itemIndex];
+  const machineId = currentItem.machine[machineIndex]?.machineRequired;
 
-    if (!machineId) return;
+  if (!machineId) return;
 
-    const selectedMachine = machines.find(m => m._id === machineId);
-    const type = selectedMachine?.type;
-    const hourlyRate = await fetchHourlyRate(type); // ✅ Wait for rate
+  const selectedMachine = machines.find(m => m._id === machineId);
+  const type = selectedMachine?.type;
+  const hourlyRate = await fetchHourlyRate(type);
+  const machineEstimatedCost = newHours * hourlyRate;
 
-    const machineEstimatedCost = newHours * hourlyRate;
-
-    setFormData(prev => {
-      const newJobItems = [...prev.jobItems];
-      newJobItems[itemIndex] = {
-        ...newJobItems[itemIndex],
-        machineHours: newHours,
-        machineHourlyRate: hourlyRate,
-        machineEstimatedCost
-      };
-      return { ...prev, jobItems: newJobItems };
+  setFormData(prev => {
+    const newJobItems = [...prev.jobItems];
+    const item = { ...newJobItems[itemIndex] };
+    
+    item.machine = item.machine.map((m, i) => {
+      if (i === machineIndex) {
+        return {
+          ...m,
+          machineHours: newHours,
+          machineHourlyRate: hourlyRate,
+          machineEstimatedCost
+        };
+      }
+      return m;
     });
+    
+    newJobItems[itemIndex] = item;
+    return { ...prev, jobItems: newJobItems };
+  });
 
-    console.log("✅ Machine Cost Calculated:", {
-      machineName: selectedMachine?.name,
-      hourlyRate,
-      hoursNum: newHours,
-      machineEstimatedCost
-    });
-  };
+  console.log("✅ Machine Cost Calculated:", {
+    machineName: selectedMachine?.name,
+    hourlyRate,
+    hoursNum: newHours,
+    machineEstimatedCost
+  });
+};
 
   const handleVerifyJob = async (jobId) => {
     if (!window.confirm("Are you sure you want to approve this job?")) return;
@@ -1339,14 +1382,23 @@ const laborCost = actualHours * hourlyRate;
                                 </div>
                               )}
 
-                              {item.machine.machineRequired && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Machine Used:</strong>
-                                  <div className="full-width">
-                                    <p className='machiene-name'><strong>Machine:</strong> {item.machine.machineRequired}</p>
+                              {Array.isArray(item.machine) && item.machine.length > 0 && (
+                                  <div className="job-items-container">
+                                    <strong className="job-items-title">Machines Used:</strong>
+                                    <div className="full-width">
+                                      {item.machine.map((m, mi) => (
+                                        <p key={mi} className='machine-name'>
+                                          <strong>Machine {mi + 1}:</strong> {m.machineRequired || 'N/A'}
+                                          {m.actualDuration && (
+                                            <span style={{ marginLeft: '10px', color: '#666' }}>
+                                              (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
+                                            </span>
+                                          )}
+                                        </p>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
                               {item.consumable && item.consumable.length > 0 && (
                                 <div className="job-items-container">
@@ -1444,16 +1496,24 @@ const laborCost = actualHours * hourlyRate;
 
 
                                     {/* show actual duration if available */}
-                                    {w?.actualDuration != null && (
-                                      <div className="job-items-container">
-                                        <strong className="job-items-title">Actual Time Used:</strong>
-                                        <div className="full-width">
-                                          <p className='time'>
-                                            ⏱ {w.actualDuration > 0 ? `${(w.actualDuration / 60).toFixed(2)} hrs` : "Less than 1 minute"}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
+                                   {w?.actualDuration != null && w.actualDuration > 0 && (
+                                            <div className="job-items-container">
+                                              <strong className="job-items-title">Actual Time Used:</strong>
+                                              <div className="full-width">
+                                                <p className='time'>
+                                                  ⏱ {(() => {
+                                                    const hours = Math.floor(w.actualDuration / 60);
+                                                    const minutes = Math.floor(w.actualDuration % 60);
+                                                    const seconds = Math.floor((w.actualDuration * 60) % 60);
+                                                    if(minutes==0 && hours==0 || w. actualDuration <1  ){
+                                                      return `Less Than A minute`;  
+                                                    }
+                                                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                                                  })()}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          )}
                                   </div>
                                 </div>
                               ))
@@ -1703,43 +1763,86 @@ const laborCost = actualHours * hourlyRate;
                           </select>
                         </div>
                       </div>
-                      <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>Machine Required (Optional)</label>
-                          <select 
-                            value={item.machine.machineRequired || ''} 
-                            onChange={(e) => handleMachineRequiredChange(index, e.target.value)}
-                          >
-                            <option value="">--No Machine Required--</option>
-                            {machines.map((machine) => (
+                      <div className="form-group">
+  <div className="form-group-machines-header">
+    <label>Machines Required (Optional)</label>
+    <button
+      type="button"
+        className="btn-add-job"
+      onClick={() => addMachineToItem(index)}
+    >
+                                 <span className="add-con-wrapper"><img src="/plus.png" alt="Plus Icon" className="plus-icon-con"/> Add Mchine</span>
 
-                                machine.isAvailable && (  
-                                  <option key={machine._id} value={machine._id}>
-                                {machine.name}
+    </button>
+  </div>
+            <div className="form-group">
+             <div className="form-group-consumables-header">
+              {Array.isArray(item.machine) && item.machine.length > 0 ? (
+                item.machine.map((machine, machineIndex) => (
+                  <div key={machineIndex} className="consumable-entry">
+                    <div className="machine-row">
+                        <select 
+                         className="consumable-quantity-input"
+                          value={machine.machineRequired || ''} 
+                          onChange={(e) => handleMachineRequiredChange(index, machineIndex, e.target.value)}
+                        >
+                          <option value="">--Select Machine--</option>
+                          {machines.map((m) => (
+                            m.isAvailable && (  
+                              <option key={m._id} value={m._id}>
+                                {m.name} - {m.type}
                               </option>
-                                )
-                              
-                              
-                            ))}
-                          </select>
-                        </div>
+                            )
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Hours"
+                          value={machine.machineHours || ''}
+                          onChange={(e) => handleMachineHoursChange(index, machineIndex, e.target.value)}
+                          min="0"
+                          step="0.5"
+                        />
+              
 
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>Machine Hours (hrs)</label>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            value={item.machineHours || ''}
-                            onChange={(e) => handleMachineHoursChange(index, e.target.value)}
-                            min="0"
-                          />
-                          {item.machineHourlyRate > 0 && (
-                            <p style={{ fontSize: '0.8rem', marginTop: '5px', color: '#444' }}>
-                              Rate: ${item.machineHourlyRate}/hr | Cost: ${item.machineEstimatedCost.toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                      {item.machine.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn-remove-machine"
+                          onClick={() => removeMachineFromItem(index, machineIndex)}
+                          title="Remove Machine"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+
+                    {machine.machineHourlyRate > 0 && (
+                      <p style={{ fontSize: '0.8rem', marginTop: '5px', color: '#444' }}>
+                        Rate: ${machine.machineHourlyRate}/hr | Cost: ${(machine.machineEstimatedCost || 0).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <button
+                  type="button"
+                  className="btn-add-machine-initial"
+                  onClick={() => addMachineToItem(index)}
+                >
+                  + Add Machine
+                </button>
+              )}
+              </div>
+              </div>
+
+              {/* Show total machine cost for this item */}
+              {Array.isArray(item.machine) && item.machine.length > 0 && (
+                <div style={{ marginTop: '10px', fontWeight: 'bold', color: '#2563eb' }}>
+                  Total Machine Cost: ${item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0).toFixed(2)}
+                </div>
+              )}
+            </div>
 
                       <div className="form-group">
                         <div className="form-group-consumables-header">
