@@ -82,3 +82,33 @@ export const getAllShopRejecetedJobsController= async (req, res) => {
     });
     }
 };
+
+export const deleteRejectedJobController = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!jobId) {
+      return res.status(400).json({ message: "Job ID is required" });
+    }
+
+    const deletedJob = await RejectedJobModel.findByIdAndDelete(jobId);
+
+    if (!deletedJob) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Job deleted successfully",
+      deletedJob
+    });
+
+  } catch (error) {
+    console.error("Error deleting job:", error);
+    res.status(500).send({
+      success: false,
+      message: "Server Error",
+      error: error.message
+    });
+  }
+};

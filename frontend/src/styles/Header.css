@@ -15,6 +15,13 @@
   font-weight: 600;
 }
 
+.dashboard-header-name-wrapper{
+  display: flex;
+  gap: 3vw;
+  align-items: center;
+  color: #2c3e50;
+}
+
 .header-right {
   display: flex;
   align-items: center;

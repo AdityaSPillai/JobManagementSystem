@@ -10,11 +10,12 @@ import { use } from 'react';
 function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, onLoginClick }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const[name, setName] = useState('');
-    const {userInfo, } = useAuth();
-  
+  const [name, setName] = useState('');
+  const {userInfo, } = useAuth();
   
   const navigate = useNavigate(); // Initialize useNavigate
+
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 const getShop=async () => {
     try {
@@ -87,7 +88,12 @@ const getShop=async () => {
   return (
     <>
       <header className="dashboard-header">
-        <h1> {name}</h1>
+        <div className="dashboard-header-name-wrapper">
+          <h1> {name}</h1>
+          <button className="user-btn"> 
+                {capitalize(userRole)}
+          </button>
+        </div>
         <div className="header-right">
           <span className="datetime">{getCurrentDateTime()}</span>
           <div className="container-user-btn">
@@ -105,7 +111,7 @@ const getShop=async () => {
             ) : (
               // Logged in: Button navigates to /dashboard
               <button className="user-btn" onClick={handleGoToDashboard}> 
-                {userRole}
+                Dashboard
               </button>
             )}
           </div>

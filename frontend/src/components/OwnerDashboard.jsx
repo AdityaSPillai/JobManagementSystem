@@ -474,35 +474,6 @@ function OwnerDashboard({ onLogout }) {
   return (
     <div className="owner-dashboard">
       <Header userRole="Owner" onLogout={onLogout} showLogin={false} />
-      <div className="dashboard-banner">
-        <div className="banner-top-row">
-          <div className="banner-content">
-            <h2>Owner Dashboard</h2>
-            <p>Manage jobs, assign employees, and track progress</p>
-          </div>
-          {!userInfo?.shopId &&<button className="btn-create-shop" onClick={() => setIsShopModalOpen(true)}>
-            + Create New Shop
-          </button> }
-        </div>
-        
-        <div className="stats-cards">
-          <div className="stat-card">
-            <span className="stat-label">All Employees</span>
-            <span className="stat-value">{empCount}</span>
-            <span className="stat-icon"><img src="/employee.png" alt="Employee Icon" className="stat-icon"/></span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-label">Available Machines</span>
-            <span className="stat-value">{machineCount}</span>
-            <span className="stat-icon"><img src="/machinecategory.png" alt="Machine Icon" className="stat-icon" /></span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-label">Total Jobs</span>
-            <span className="stat-value">{jobCount}</span>
-            <span className="stat-icon"><img src="/graph.png" alt="Graph Icon" className="stat-icon" /></span>
-          </div>
-        </div>
-      </div>
 
       <div className="dashboard-layout">
         <div className="sidebar-tabs">

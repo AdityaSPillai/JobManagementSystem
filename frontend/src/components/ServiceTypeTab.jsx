@@ -288,7 +288,7 @@ function ServiceTypeTab() {
           setEditingService(null);
         }}
         onSubmit={handleEditService}
-        ServiceData={editingService}
+        serviceData={editingService}
       />
     </div>
   );

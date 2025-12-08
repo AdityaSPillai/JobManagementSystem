@@ -108,6 +108,10 @@
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
+.table-content{
+  color: #1a202c;
+}
+
 /* Small responsiveness tweak */
 @media (max-width: 768px) {
   .radio-inputs {

@@ -26,6 +26,22 @@ function RejectedJobs() {
     }
   };
 
+  const deleteRejectedJob = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this job permanently?")) return;
+
+    try {
+      console.log(`${id}`)
+      const res = await axios.delete(`/reject/deleteJob/${id}`);
+      if (res.data.success) {
+        alert("Job deleted successfully");
+        getAllRejectedJobs();
+      }
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      alert("Failed to delete job");
+    }
+  };
+
   useEffect(() => {
     if (userInfo?.shopId) getAllRejectedJobs();
   }, [userInfo?.shopId]);
@@ -51,20 +67,49 @@ function RejectedJobs() {
                 <th>Rejected By</th>
                 <th>Reason</th>
                 <th>Rejected At</th>
+                <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
               {rejectedJobs.map((rej) => (
-                <tr
-                  key={rej._id}
-                  className="clickable-row"
-                  onClick={() => setSelectedJob(rej.fullJobData)}
-                >
-                  <td>{rej.fullJobData?.jobCardNumber}</td>
-                  <td>{rej.rejectedBy}</td>
-                  <td>{rej.rejectionReason}</td>
-                  <td>{new Date(rej.rejectedAt).toLocaleString()}</td>
+                <tr key={rej._id}>
+                  <td className="table-content">{rej.fullJobData?.jobCardNumber}</td>
+                  <td className="table-content">{rej.rejectedBy}</td>
+                  <td className="table-content">{rej.rejectionReason}</td>
+                  <td className="table-content">{new Date(rej.rejectedAt).toLocaleString()}</td>
+
+                  {/* DELETE BUTTON */}
+                  <td>
+                    <button
+                      style={{
+                        background: "#007bff",
+                        color: "white",
+                        padding: "6px 10px",
+                        marginRight: "8px",
+                        borderRadius: "6px",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setSelectedJob(rej.fullJobData)}
+                    >
+                      Open
+                    </button>
+
+                    <button
+                      style={{
+                        background: "red",
+                        color: "white",
+                        padding: "6px 10px",
+                        borderRadius: "6px",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => deleteRejectedJob(rej._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
