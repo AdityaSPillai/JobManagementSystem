@@ -407,6 +407,9 @@ function EmployeesTab() {
   const [error, setError] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [search, setSearch] = useState("");
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
+
 
   const { userInfo } = useAuth();
 
@@ -439,6 +442,7 @@ function EmployeesTab() {
     }
 
     setEmployees(users);
+    setFilteredEmployees(users); 
   } catch (error) {
     console.error('Error fetching employees:', error);
     setError(error.response?.data?.message || "Failed to fetch employees.");
@@ -446,6 +450,26 @@ function EmployeesTab() {
     setLoading(false);
   }
 };
+
+useEffect(() => {
+  if (!search.trim()) {
+    setFilteredEmployees(employees);
+    return;
+  }
+
+  const s = search.toLowerCase();
+
+  const filtered = employees.filter((emp) =>
+    emp.name.toLowerCase().includes(s) ||
+    emp.email.toLowerCase().includes(s) ||
+    emp.phone.includes(s) ||
+    (emp.employeeNumber || "").toLowerCase().includes(s) ||
+    (emp.specialization || "").toLowerCase().includes(s) ||
+    (emp.role || "").toLowerCase().includes(s)
+  );
+
+  setFilteredEmployees(filtered);
+}, [search, employees]);
 
   const handleAddEmployee = (employeeData) => {
     // Refresh the employee list after adding
@@ -488,9 +512,24 @@ function EmployeesTab() {
     <div>
       <div className="tab-header">
         <h3 className="section-title">Employee Management</h3>
-        <button className="btn-add-new" onClick={() => setIsModalOpen(true)}>
-          + Add New Employee
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <input
+            type="text"
+            placeholder="Search employees..."
+            className="customer-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "10px 14px",
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0",
+            }}
+          />
+
+          <button className="btn-add-new" onClick={() => setIsModalOpen(true)}>
+            + Add New Employee
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -500,8 +539,8 @@ function EmployeesTab() {
           <p>No employees found. Add your first employee to get started!</p>
         </div>
       ) : (
-        <div className="data-grid">
-          {employees.map(emp => (
+        <div className="data-grid1">
+          {filteredEmployees.map(emp => (
             <div key={emp._id} className="data-card">
               <div className="data-card-header">
                 <h4>{emp.name}</h4>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../utils/axios.js";
 import useAuth from "../context/context.jsx";
-import "../styles/CustomerTab.css";
+import "../styles/ConsumablesTab.css";
 
 function RejectedJobs() {
   const { userInfo } = useAuth();

@@ -89,6 +89,21 @@
   gap: 20px;
 }
 
+.data-grid1 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.customer-search{
+  background: grey;
+  color: white;
+}
+
+.customer-search::placeholder{
+  color: lightgray;
+}
+
 .data-card {
   background: #fff;
   border-radius: 12px;
@@ -240,4 +255,16 @@
   .data-card {
     padding: 16px;
   }
+}
+
+.job-info-grid{
+  color: #333;
+}
+
+.job-detail-item{
+  color: #333;
+}
+
+.table-content{
+  color: #333;
 }

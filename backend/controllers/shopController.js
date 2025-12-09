@@ -899,8 +899,6 @@ export const addLog = async (shopId, logData) => {
     });
 
     await shop.save();
-    
-    console.log("Inserted to Log:", logData.action);
   } catch (err) {
     console.error("Log Insert Error:", err.message);
     res.status(500).send({

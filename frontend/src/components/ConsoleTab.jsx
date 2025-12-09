@@ -19,7 +19,9 @@ export default function ConsoleTab() {
   }, []);
 
   useEffect(() => {
-    consoleRef.current?.scrollTo(0, consoleRef.current.scrollHeight);
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
   }, [logs]);
 
   const formatDate = (ts) => {
@@ -32,29 +34,28 @@ export default function ConsoleTab() {
       <h2 className="console-title">System Activity Log</h2>
 
       <div className="console-window" ref={consoleRef}>
-  {logs.length === 0 ? (
-    <div className="console-empty">No logs recorded.</div>
+        {logs.length === 0 ? (
+          <div className="console-empty">No logs recorded.</div>
         ) : (
-            logs.map((log, index) => (
+          logs.map((log, index) => (
             <div key={index} className="console-line">
-                <span className="console-timestamp">[{formatDate(log.timestamp)}]</span>
-
-                <span className="console-user">
+              <span className="console-timestamp">
+                [{formatDate(log.timestamp)}]
+              </span>
+              <span className="console-user">
                 {log.name} <span className="console-role">({log.auth})</span>
-                </span>
-
-                <span className="console-action">→ {log.action}</span>
-
-                <span
+              </span>
+              <span className="console-action">→ {log.action}</span>
+              <span
                 className="console-data-link"
                 onClick={() => setSelectedData(log.info)}
-                >
+              >
                 (Data)
-                </span>
+              </span>
             </div>
-            ))
+          ))
         )}
-    </div>
+      </div>
 
       {/* Modal */}
       {selectedData && (
