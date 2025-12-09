@@ -114,6 +114,10 @@ const JobCardSchema = new mongoose.Schema({
     enum: ['waiting','pending', 'in_progress', 'completed','approved', 'rejected'],
     default: 'pending'
   },
+   notes:{
+    type:String,
+    default:null,
+  },
   }],
   
   totalEstimatedAmount: {

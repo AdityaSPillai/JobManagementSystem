@@ -237,6 +237,7 @@ const getAllCustomers = async () => {
                 priority: item.itemData?.priority || '',
                 estimatedPrice: item.estimatedPrice || 0,
                 numberOfWorkers:item.numberOfWorkers || 1,
+                notes: item.notes || '',
                 category: item.category,
                 estimatedManHours: item.estimatedManHours,
                 itemStatus: computedStatus,   // but computedStatus = item.status now
@@ -1436,11 +1437,11 @@ const laborCost = actualHours * hourlyRate;
                               </div>
                               
                               {/*Notes to be displayed here if Notes is not NULL*/}
-                              {selectedJob.notes && selectedJob.notes.trim() !== '' && (
+                              {item.notes && item.notes.trim() !== '' && (
                                 <div className="job-items-container">
                                   <strong className="job-items-title">Notes:</strong>
                                   <div className="full-width">
-                                    <p className="job-notes-text">{selectedJob.notes}</p>
+                                    <p className="job-notes-text">{item.notes}</p>
                                   </div>
                                 </div>
                               )}

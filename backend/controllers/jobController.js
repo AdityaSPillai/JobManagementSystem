@@ -811,18 +811,13 @@ export const endWorkerTimer = async (req, res) => {
 
 export const qualityGoodController = async(req,res)=>{
   try {
-    const {jobId,userId }= req.params;
-   
-    const job= await JobCardModel.findOneAndUpdate(
-      {
-        _id:jobId
-      },{
-        $set:{workVerified:userId,
-          qualityStatus:'good',
-          status:'approved',
-        }
-        },{new:true}
-    );
+    const {jobId,userId,jobItemId }= req.params;
+  
+    const job = await JobCardModel.findOneAndUpdate({_id: jobId})
+    console.log(job)
+
+        const jobItem = job.jobItems.id(jobItemId);
+        console.log(jobId,jobItem)
     if (!job) {
       return res.status(404).send({
         success: false,
@@ -852,22 +847,31 @@ export const qualityGoodController = async(req,res)=>{
 
 export const qualityBadController = async(req,res)=>{
   try {
-    const {jobId,userId}= req.params;
+    const {jobId,jobItemId,userId}= req.params;
     const { notes } = req.body;
     const job=await JobCardModel.findById(jobId)
-
-    job.status='rejected',
-    job.qualityStatus='need-work',
-    job.notes=notes,
-    job.workVerified=userId,
-    await job.save();
-
-    if (!job) {
+    const jobItem = job.jobItems.id(jobItemId);
+    
+    // Check if job item exists
+    if (!jobItem) {
       return res.status(404).send({
         success: false,
-        message: "Job or job item not found"
+        message: "Job item not found"
       });
     }
+    
+    console.log("job item "+ jobItem);
+    job.status = 'rejected';
+    jobItem.status = 'rejected';
+    jobItem.qualityStatus = 'needs_work'; 
+    jobItem.notes = notes;
+    job.workVerified = userId;
+
+
+    await job.save();
+
+
+    console.log(job)
 
     res.status(200).json({
       success: true,
