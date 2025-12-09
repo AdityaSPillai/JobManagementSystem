@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import Header from './Header';
 import playIcon from '../assets/play.svg';
 import useAuth from '../context/context.jsx';
@@ -22,14 +24,14 @@ function EstimatorDashboard({ onLoginClick }) {
   const [machines, setMachines] = useState([]);
   const [consumables, setConsumables] = useState([]);
   const {userInfo, isAuthenticated, logout } = useAuth();
-  const[employees,setEmployees]=useState([]);
-  const[categories,setCategories]=useState([]);
-  const[ispaused,setIsPaused]=useState(false);
+  const [employees,setEmployees]=useState([]);
+  const [categories,setCategories]=useState([]);
+  const [ispaused,setIsPaused]=useState(false);
   const [consumableQty, setConsumableQty] = useState({});
-const [showCustomerPopup, setShowCustomerPopup] = useState(false);
-const [customers, setCustomers] = useState([]);
-const [selectedCustomerId, setSelectedCustomerId] = useState("");
-
+  const [showCustomerPopup, setShowCustomerPopup] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const jobCardRef = useRef();
 
 
 const [newCustomer, setNewCustomer] = useState({
@@ -1085,6 +1087,64 @@ const laborCost = actualHours * hourlyRate;
     }
   };
 
+  const downloadPDF = async () => {
+    const element = jobCardRef.current;
+
+    // Hide download button during capture
+    const downloadBtn = document.querySelector(".btn-download");
+    if (downloadBtn) downloadBtn.style.display = "none";
+
+    // Wait for the button to hide before capturing
+    await new Promise(res => setTimeout(res, 200));
+
+    // Capture with higher resolution
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // Custom margin
+    const margin = 10; // mm
+
+    // Scaled image width and height WITH margins
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    // First page
+    pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight - margin * 2;
+
+    // Add more pages if needed
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = margin;
+      pdf.addImage(
+        imgData,
+        "PNG",
+        margin,
+        position - (imgHeight - heightLeft),
+        imgWidth,
+        imgHeight
+      );
+      heightLeft -= pageHeight - margin * 2;
+    }
+
+    pdf.save(`${selectedJob.jobCardNumber}.pdf`);
+
+    // Restore button after PDF is created
+    if (downloadBtn) downloadBtn.style.display = "block";
+  };
+
   const handleRejectJob = async (jobId) => {
     const reason = prompt("Please provide a reason for rejecting this job:");
     if (!reason) {
@@ -1319,7 +1379,7 @@ const laborCost = actualHours * hourlyRate;
             )}
 
             {showJobDetails && selectedJob && (
-              <div className="job-details-view">
+              <div className="job-details-view" ref={jobCardRef}>
                 <div className="form-header">
                   <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
                   <button className="close-btn" onClick={() => {
@@ -1327,6 +1387,9 @@ const laborCost = actualHours * hourlyRate;
                     setSelectedJob(null);
                   }}>✕</button>
                 </div>
+                <button className="btn-download" onClick={downloadPDF}>
+                  📄 Download PDF
+                </button>
                 <div className="job-detail-content">
                   <div className="job-info-grid">
                     <div><strong>Job Number:</strong> <span>{selectedJob.jobCardNumber}</span></div>
