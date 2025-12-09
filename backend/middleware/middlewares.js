@@ -81,7 +81,8 @@ export const isAdmin = (req, res, next) => {
 
 export const isAllowed= async(req,res,next)=>{
    try {
-        const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+        const token = req.cookies?.token || req.headers.authorization?.split(' ')[2];
+
         
         if (!token) {
             return res.status(401).json({
@@ -91,7 +92,7 @@ export const isAllowed= async(req,res,next)=>{
         }
 
         const decoded = JWT.verify(token, process.env.JWT_SECRET);
-        const allowedRoles = ["desk_employee", "admin", "owner", "supervisor"];
+        const allowedRoles = ["desk_employee", "admin", "owner", "supervisor","qa_qc"];
         if (!decoded || !decoded.id || !allowedRoles.includes(decoded.role)) {
             return res.status(403).json({
                 success: false,
