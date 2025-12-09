@@ -15,19 +15,20 @@ import { createJobCard,
     pauseWrokerTImer,
     updateActualCostController
     } from "../controllers/jobController.js";
+import { logAction } from "../middleware/logMiddleware.js";
 
 const router= express.Router();
 
 
 //crete new job
-router.post('/new-job',createJobCard);
+router.post('/new-job',isAllowed,logAction("CREATE_JOB", req => ({ body: req.body })),createJobCard);
 
 
 //get all jobs available
 router.get('/allJobs',getAllJobs)
 
 //update job
-router.put('/update-job/:jobId',updateJobSettings)
+router.put('/update-job/:jobId',isAllowed,logAction("UPDATE_JOB", req=>({id: req.params.id, body: req.body})),updateJobSettings)
 
 //delete job
 router.delete('/delete-job/:jobId',deleteJobController)

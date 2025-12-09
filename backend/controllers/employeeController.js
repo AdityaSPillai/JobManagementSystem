@@ -180,7 +180,7 @@ export const deleteEmployeeController= async(req,res)=>{
 
         const res= await UserModel.findByIdAndDelete(empid);
         if(!res)
-        {console.log("Error while Dleting employee");
+        {console.log("Error while Deleting employee");
             return res.status(400).send({
                 success:false,
                 message:"unable to Delete employee"

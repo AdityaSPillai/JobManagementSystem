@@ -4,41 +4,40 @@ import JWT from "jsonwebtoken";
 
 // Main authentication middleware that checks both cookies and headers
 export const isOwner = async (req, res, next) => {
-    try {
-        const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
-        
-        if (token) {
-            const decoded = JWT.verify(token, process.env.JWT_SECRET);
-            if (!decoded || !decoded.id || !decoded.role==="owner") {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Invalid authentication token'
-                });
-            }
-    
-            // Attach user to request
-            // req.user = decoded;
-             req.body.userId = decoded.id;
-             console.log(req.body.userId)
+  try {
+    const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
 
-            // req.body.role=decoded.role;
-            next();
-        }
-        else
-        {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication required. Please login.'
-            });
-        }
-    } catch (error) {
-        console.error('Authentication error:', error);
-        res.status(401).json({
-            success: false,
-            message: 'Authentication failed',
-            error: error.message
-        });
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required. Please login."
+      });
     }
+
+    const decoded = JWT.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded || !decoded.id || decoded.role !== "owner") {
+      return res.status(403).json({
+        success: false,
+        message: "Owner access required"
+      });
+    }
+
+    // Correct way to store user information
+    req.user = {
+      id: decoded.id,
+      role: decoded.role
+    };
+
+    next();
+  } catch (error) {
+    console.error("Authentication error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Authentication failed",
+      error: error.message
+    });
+  }
 };
 
 export const isAdmin = (req, res, next) => {
@@ -92,11 +91,11 @@ export const isAllowed= async(req,res,next)=>{
         }
 
         const decoded = JWT.verify(token, process.env.JWT_SECRET);
-        
-        if (!decoded || !decoded.id || decoded.role !== "desk_employee") {
+        const allowedRoles = ["desk_employee", "admin", "owner", "supervisor"];
+        if (!decoded || !decoded.id || !allowedRoles.includes(decoded.role)) {
             return res.status(403).json({
                 success: false,
-                message: 'onlu desk_employee acces'
+                message: 'only desk_employee acces'
             });
         }
 

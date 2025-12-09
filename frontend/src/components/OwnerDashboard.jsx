@@ -12,7 +12,9 @@ import useAuth from "../context/context.jsx";
 import axios from "../utils/axios.js"
 import ManPowerCategoryTab from './ManPowerCategoryTab.jsx';
 import ServiceTypeTab from './ServiceTypeTab.jsx';
-import RejctedJobs from './RejectedJobs.jsx';
+import RejectedJobs from './RejectedJobs.jsx';
+import ConsoleTab from './ConsoleTab.jsx';
+import EditShopTab from './EditShopTab.jsx';
 
 // --- Shop Creation Modal Component ---
 function ShopCreationModal({ isVisible, onClose, onSubmit }) {
@@ -487,6 +489,8 @@ function OwnerDashboard({ onLogout }) {
           <button className={`sidebar-tab ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}><img src="/consumables.png" alt="Consumables Icon" className="sidebar-icon" /> Consumables</button>
           <button className={`sidebar-tab ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}><img src="/customer.png" alt="Customers Icon" className="sidebar-icon" /> Customers</button>
           <button className={`sidebar-tab ${activeTab === 'rejected' ? 'active' : ''}`} onClick={() => setActiveTab('rejected')}><img src="/rejected.png" alt="Rejected Jobs Icon" className="sidebar-icon" /> Rejected Jobs</button>
+          <button className={`sidebar-tab ${activeTab === 'console' ? 'active' : ''}`} onClick={() => setActiveTab('console')}><img src="/log.png" alt="Console Icon" className="sidebar-icon" /> Console</button>
+          <button className={`sidebar-tab ${activeTab === 'shopsetting' ? 'active' : ''}`} onClick={() => setActiveTab('shopsetting')}><img src="/settings.png" alt="Shop Setting Icon" className="sidebar-icon" /> Shop Setting</button>
 
         </div>
 
@@ -500,7 +504,9 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'machineCategory' && <MachineCategoryTab />}
           {activeTab === 'customers' && <CustomerTab />}
           {activeTab === 'consumables' && <ConsumablesTab />}
-          {activeTab === 'rejected' && <RejctedJobs />}
+          {activeTab === 'rejected' && <RejectedJobs />}
+          {activeTab === 'console' && <ConsoleTab />}
+          {activeTab === 'shopsetting' && <EditShopTab />}
         </div>
       </div>
       

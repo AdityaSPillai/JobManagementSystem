@@ -128,6 +128,16 @@ const shopSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+
+  logs: {
+    type: Array,
+    default: []
+  },
+  
+  logLimit: {
+      type: Number,
+      default: 1000
   }
 }, {
   timestamps: true

@@ -1,0 +1,112 @@
+.console-container {
+  background: #0d0d0d;
+  border-radius: 10px;
+  padding: 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #222;
+}
+
+.console-title {
+  color: #0f0;
+  font-family: monospace;
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.console-window {
+  flex: 1;
+  overflow-y: auto;
+  background: #000;
+  padding: 15px;
+  border-radius: 6px;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 14px;
+  border: 1px solid #333;
+}
+
+.console-line {
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.console-timestamp {
+  color: #03fc7b;
+}
+
+.console-user {
+  color: #0af;
+  margin-left: 8px;
+}
+
+.console-role {
+  color: #aaa;
+  font-size: 12px;
+}
+
+.console-action {
+  color: #f5f5f5;
+  margin-left: 10px;
+}
+
+.console-data-link {
+  color: #ffeb3b;
+  margin-left: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.console-data-link:hover {
+  color: #fff176;
+}
+
+/* Modal */
+.console-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.console-modal {
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  padding: 20px;
+  color: #0f0;
+  font-family: monospace;
+}
+
+.console-json {
+  background: #000;
+  padding: 15px;
+  border-radius: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  color: #0f0;
+}
+
+.console-close-btn {
+  margin-top: 15px;
+  background: #333;
+  color: #0f0;
+  border: 1px solid #555;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  float: right;
+}
+
+.console-close-btn:hover {
+  background: #444;
+}

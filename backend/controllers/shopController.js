@@ -121,7 +121,70 @@ export const getShop= async(req,res)=>{
   }
 }
 
+export const updateShopController = async (req, res) => {
+  try {
+    const { shopId } = req.params;
 
+    const {
+      shopName,
+      currency,
+      phone,
+      email,
+      street,
+      city,
+      state,
+      pincode,
+      logLimit
+    } = req.body;
+
+    const updates = {
+      ...(shopName && { shopName }),
+      ...(currency && { currency }),
+      ...(logLimit && { logLimit }),
+
+      contactInfo: {
+        ...(phone && { phone }),
+        ...(email && { email }),
+      },
+
+      address: {
+        ...(street && { street }),
+        ...(city && { city }),
+        ...(state && { state }),
+        ...(pincode && { pincode }),
+      }
+    };
+
+    const shop = await ShopModel.findByIdAndUpdate(shopId, updates, { new: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Shop updated successfully",
+      shop,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating shop",
+      error: err.message
+    });
+  }
+};
+
+export const getShopDetails = async (req, res) => {
+  try {
+    const shop = await ShopModel.findById(req.params.shopId);
+
+    if (!shop) {
+      return res.status(404).json({ success: false, message: "Shop not found" });
+    }
+
+    return res.status(200).json({ success: true, shop });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 
 export const addNewService= async(req,res)=>{
@@ -610,7 +673,7 @@ export const getAllShopJobsController= async(req,res)=>{
       })
     }
 
-    const allJobs=await JobCardModel.find({shopId:shopId}).populate('jobItems.machine.machineRequired', 'name')
+    const allJobs=await JobCardModel.find({shopId:shopId}).populate('jobItems.machine.machineRequired', 'name').sort({createdAt: -1})
     if(!allJobs)
     {
       return res.status(404).send({
@@ -815,5 +878,72 @@ export const deleteConsumableController = async (req, res) => {
       message: "Error deleting consumable",
       error: error.message
     });
+  }
+};
+
+export const addLog = async (shopId, logData) => {
+  try {
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return;
+
+    const limit = shop.logLimit || 1000;
+
+    // FIFO: remove oldest when exceeding
+    if (shop.logs.length >= limit) {
+      shop.logs.shift();
+    }
+
+    shop.logs.push({
+      ...logData,
+      timestamp: new Date()
+    });
+
+    await shop.save();
+    
+    console.log("Inserted to Log:", logData.action);
+  } catch (err) {
+    console.error("Log Insert Error:", err.message);
+    res.status(500).send({
+      success: false,
+      message:"Unable to Insert.",
+      err,
+    })
+  }
+};
+
+// GET LOGS
+export const getLogs = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+
+    const shop = await ShopModel.findById(shopId).select("logs");
+    if (!shop) {
+      return res.status(404).json({ success: false, message: "Shop not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      logs: shop.logs
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching logs" });
+  }
+};
+
+// UPDATE LOG LIMIT
+export const updateLogLimit = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const { limit } = req.body;
+
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return res.status(404).json({ success: false, message: "Shop not found" });
+
+    shop.logLimit = limit;
+    await shop.save();
+
+    res.status(200).json({ success: true, message: "Log limit updated" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Unable to update log limit" });
   }
 };

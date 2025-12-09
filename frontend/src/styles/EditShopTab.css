@@ -1,0 +1,118 @@
+/* --- Page Layout --- */
+.edit-shop-container {
+  padding: 20px;
+  width: 100%;
+}
+
+.edit-shop-card {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-top: 15px;
+}
+
+/* --- Titles --- */
+.edit-shop-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 15px;
+  margin-top: 0;
+}
+
+.edit-shop-subtitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* --- Form Styles --- */
+.edit-shop-form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.edit-shop-form-group label {
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #444;
+}
+
+.edit-shop-form-group input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #333;
+  border: 1px solid #dcdcdc;
+  background: #fafafa;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.edit-shop-form-group input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* --- Grid Layout --- */
+.edit-shop-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.edit-shop-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+/* --- Save Button --- */
+.edit-shop-save-btn {
+  width: fit-content;
+  padding: 12px 26px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: all 0.2s ease;
+}
+
+.edit-shop-save-btn:hover {
+  background: #3a7acc;
+}
+
+.edit-shop-save-btn:disabled {
+  background: #9bbbe8;
+  cursor: not-allowed;
+}
+
+/* --- Message Text --- */
+.edit-shop-message {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #009944; /* success green */
+}
+
+.edit-shop-message.error {
+  color: #d9534f;
+}
+
+/* --- Small Loading Placeholder --- */
+.edit-shop-loading {
+  font-size: 16px;
+  padding: 20px;
+  font-weight: 600;
+  text-align: center;
+}

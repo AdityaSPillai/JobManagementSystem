@@ -450,7 +450,11 @@ function EmployeesTab() {
   const handleAddEmployee = (employeeData) => {
     // Refresh the employee list after adding
     fetchEmployees();
-    console.log("New Employee:", employeeData);
+    console.log("LOG EVENT:", {
+      action: "CREATE_EMPLOYEE",
+      data: employeeData,
+      time: new Date().toLocaleString()
+    });
   };
 
   const handleDeleteEmployee = async (employeeId) => {
@@ -461,6 +465,7 @@ function EmployeesTab() {
 
     if (response.data.success) {
       alert("✅ Employee deleted successfully!");
+      window.location.reload();
       fetchEmployees(); // refresh list
     } else {
       alert(response.data.message || "Failed to delete employee.");
