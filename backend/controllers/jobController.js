@@ -183,59 +183,86 @@ export const updateJobSettings = async (req, res) => {
     }
 
     if (jobItems) {
-      // ✅ Match total cost calculation from createJobCard
       const totalEstimatedAmount = jobItems.reduce((sum, item) => {
         const itemPrice = item.estimatedPrice || 0;
+
         const consumablePrice = Array.isArray(item.consumable)
-          ? item.consumable.reduce((cSum, c) => cSum + (c.price || 0), 0)
+          ? item.consumable.reduce((s, c) => s + (c.price || 0), 0)
           : 0;
-        const machineCost = item.machineEstimatedCost || 0;
+
+        const machineCost = Array.isArray(item.machine)
+          ? item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0)
+          : 0;
+
         return sum + itemPrice + consumablePrice + machineCost;
       }, 0);
 
-      // ✅ Maintain same item structure as createJobCard
-      updateData.jobItems = jobItems.map((item) => ({
+      updateData.jobItems = jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
         category: item.category,
         estimatedManHours: item.estimatedManHours,
+        numberOfWorkers: item.numberOfWorkers,
         estimatedPrice: item.estimatedPrice || 0,
-        machine: item.machine || {},
-        worker: item.worker || {},
+
+        machine: Array.isArray(item.machine)
+          ? item.machine.map(m => ({
+              machineRequired: m.machineRequired || null,
+              startTime: m.startTime || null,
+              endTime: m.endTime || null,
+              actualDuration: m.actualDuration || null,
+            }))
+          : [],
+
+        workers: Array.isArray(item.workers) ? item.workers : [],
         consumable: Array.isArray(item.consumable) ? item.consumable : [],
       }));
 
       updateData.totalEstimatedAmount = totalEstimatedAmount;
 
-      // ✅ Restore old machines
-      const oldMachineIds = existingJob.jobItems
-        .filter((item) => item.machine?.machineRequired)
-        .map((item) => item.machine.machineRequired);
+      // ✅ RELEASE OLD MACHINES
+      const oldMachineIds = [];
+      existingJob.jobItems.forEach(item => {
+        if (Array.isArray(item.machine)) {
+          item.machine.forEach(m => {
+            if (m.machineRequired) {
+              oldMachineIds.push(m.machineRequired);
+            }
+          });
+        }
+      });
 
       if (oldMachineIds.length > 0) {
         await MachineModel.updateMany(
           { _id: { $in: oldMachineIds } },
-          {
-            isAvailable: true,
-            jobId: null,
-          }
+          { isAvailable: true, jobId: null }
         );
       }
 
-      // ✅ Assign new machines
-      const newMachineUpdatePromises = jobItems
-        .filter((item) => item.machine?.machineRequired)
-        .map(async (item) => {
-          return MachineModel.findByIdAndUpdate(
-            item.machine.machineRequired,
-            {
-              isAvailable: false,
-              jobId,
-            },
-            { new: true }
-          );
-        });
+      // ✅ ASSIGN NEW MACHINES
+      const machineUpdatePromises = [];
+      jobItems.forEach((item, itemIndex) => {
+        if (Array.isArray(item.machine)) {
+          item.machine.forEach((machine, machineIndex) => {
+            if (machine.machineRequired) {
+              machineUpdatePromises.push(
+                MachineModel.findByIdAndUpdate(
+                  machine.machineRequired,
+                  { isAvailable: false, jobId },
+                  { new: true }
+                ).catch(error => {
+                  console.error(
+                    `Error updating machine ${machine.machineRequired} for item ${itemIndex}, machine ${machineIndex}:`,
+                    error
+                  );
+                  return null;
+                })
+              );
+            }
+          });
+        }
+      });
 
-      await Promise.all(newMachineUpdatePromises);
+      await Promise.all(machineUpdatePromises);
     }
 
     if (status) {
@@ -244,7 +271,6 @@ export const updateJobSettings = async (req, res) => {
 
     updateData.updatedAt = Date.now();
 
-    // ✅ Perform the update
     const updatedJob = await JobCardModel.findByIdAndUpdate(jobId, updateData, {
       new: true,
       runValidators: true,
@@ -252,7 +278,7 @@ export const updateJobSettings = async (req, res) => {
       .populate("templateId")
       .populate("createdBy")
       .populate("jobItems.machine.machineRequired")
-      .populate("jobItems.worker.workerAssigned");
+      .populate("jobItems.workers.workerAssigned");
 
     if (!updatedJob) {
       return res.status(400).json({
@@ -274,6 +300,7 @@ export const updateJobSettings = async (req, res) => {
     });
   }
 };
+
 
 
 
