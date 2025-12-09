@@ -684,7 +684,7 @@ export const endWorkerTimer = async (req, res) => {
     if (allWorkersCompleted && jobItem.workers.length > 0) {
       jobItem.status = 'completed';
       console.log(`Job item ${jobItemId} marked as completed`);
-      let actualManHours=item.workers.reduce((sum,w)=>sum+(w.actualDuration ||0),0)
+      let actualManHours=jobItem.workers.reduce((sum,w)=>sum+(w.actualDuration ||0),0)
 
       job.actualManHours += actualManHours;
 
