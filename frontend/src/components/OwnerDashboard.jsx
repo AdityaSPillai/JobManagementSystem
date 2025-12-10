@@ -16,8 +16,9 @@ import RejectedJobs from './RejectedJobs.jsx';
 import ConsoleTab from './ConsoleTab.jsx';
 import EditShopTab from './EditShopTab.jsx';
 
+
 // --- Shop Creation Modal Component ---
-function ShopCreationModal({ isVisible, onClose, onSubmit }) {
+ export function ShopCreationModal({ isVisible, onClose, onSubmit }) {
   const {userInfo}=useAuth();
   const [formData, setFormData] = useState({
     shopName: '',
