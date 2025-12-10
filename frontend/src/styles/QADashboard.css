@@ -2,7 +2,7 @@
 .qa-dashboard { min-height: 100vh; background-color: #f7fafc; }
 
 /* --- QA Banner --- */
-.dashboard-banner.qa-banner { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 32px; margin-bottom: 0; border-radius: 12px 12px 0 0; }
+.dashboard-banner.qa-banner { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 32px;margin:2vw; margin-bottom: 0; border-radius: 12px 12px 0 0; }
 .banner-content h2 { margin: 0 0 8px 0; font-size: 28px; }
 .banner-content p { margin: 0; opacity: 0.9; }
 .stats-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; } /* Adjusted columns */
