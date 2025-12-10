@@ -5,7 +5,14 @@ import UserModel from "../schema/userSchema.js";
 export const createEmployeeController = async(req, res) => {
     try {
         const {name, email, password, role, shopId, phone, specialization,employeeNumber, experience} = req.body;
-
+        if (role === "supervisor") {
+            if (req.user?.role !== "owner") {
+                return res.status(403).send({
+                    success: false,
+                    message: "Only owners can create supervisor accounts"
+                });
+            }
+        }
         // Basic validations
         if(!name) return res.status(400).send({success: false, message: "Name is Required"});
         if(!email) return res.status(400).send({success: false, message: "Email is Required"});

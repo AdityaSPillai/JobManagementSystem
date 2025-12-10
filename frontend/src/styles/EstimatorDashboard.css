@@ -795,8 +795,6 @@
 }
 .consumable-entry-select{
   width: 45% !important;
-
-
 }
 
 .form-group-consumables-header{
@@ -804,6 +802,15 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2vh;
+}
+
+.form-group-machine-header{
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2vh;
+  margin-top: 2vh;
 }
 
 .job-items-section {
@@ -1227,4 +1234,78 @@
 
 .btn-download:hover {
   background: #1d4ed8;
+}
+
+/* ==========================
+   MACHINE UI (Mirrors Consumables)
+   ========================== */
+
+.machine-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1vw;
+  margin-bottom: 1vh;
+  width: 100%;
+}
+
+.machine-entry-select {
+  width: fit-content !important;
+  height: min-content;
+  margin-top: 5px;
+}
+
+.machine-quantity-input {
+  width: 20% !important;
+}
+
+.machine-quantity-input:focus {
+  outline: none;
+  border-color: #3182ce;
+}
+
+.machine-remove-btn {
+  background: #fed7d7;
+  border: none;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.machine-remove-btn:hover {
+  background: #fc8181;
+}
+
+/* Left group */
+.machine-left {
+  display: flex;
+  gap: 1vw;
+  align-items: center;
+}
+
+/* Right group always reserves space */
+.machine-right {
+  min-width: 220px;   /* Match width of largest right-side text */
+  text-align: right;
+}
+
+/* If empty, keep space but hide content */
+.machine-right:empty {
+  visibility: hidden;
+}
+
+.machine-cost-info {
+  font-size: 0.9rem;
+  color: #2c5aa0;;
+}
+
+.machine-total-cost{
+  font-weight: bold;
+  color: #2c5aa0;;
 }

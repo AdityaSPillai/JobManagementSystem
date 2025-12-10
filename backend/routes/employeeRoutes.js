@@ -1,5 +1,5 @@
 import express from "express";
-import { isOwner } from "../middleware/middlewares.js";
+import { isManager } from "../middleware/middlewares.js";
 import { createEmployeeController,deleteEmployeeController,getEmployeeController,updateEmployeeController } from "../controllers/employeeController.js";
 import { logAction } from "../middleware/logMiddleware.js";
 
@@ -10,21 +10,21 @@ router.get('/get/:empid',getEmployeeController)
 
 router.post(
   '/createEmployee',
-  isOwner,
+  isManager,
   logAction("CREATE_EMPLOYEE", req => ({ body: req.body })),
   createEmployeeController
 );
 
 router.put(
   '/updateEmployee/:empid',
-  isOwner,
+  isManager,
   logAction("UPDATE_EMPLOYEE", req => ({ id: req.params.empid, body: req.body })),
   updateEmployeeController
 );
 
 router.delete(
   '/deleteEmployee/:empid',
-  isOwner,
+  isManager,
   logAction("DELETE_EMPLOYEE", req => ({ id: req.params.empid })),
   deleteEmployeeController
 );

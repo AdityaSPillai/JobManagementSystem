@@ -116,6 +116,46 @@ export const isQA = (req, res, next) => {
     }
 }
 
+export const isManager = (req, res, next) => {
+    try {
+        const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authentication required. Please login.'
+            });
+        }
+
+        const decoded = JWT.verify(token, process.env.JWT_SECRET);
+        
+        
+        const allowedRoles = ["owner", "supervisor"];
+        if (!decoded || !decoded.id || !allowedRoles.includes(decoded.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Manager access required'
+            });
+        }
+
+        // Better: Use req.user instead of req.body
+        req.user = {
+            id: decoded.id,
+            role: decoded.role
+        };
+        
+        console.log("Manager auth completed");
+        next();
+        
+    } catch (error) {
+        console.error("Auth error:", error.message);
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid or expired token'
+        });
+    }
+}
+
 
 export const isAllowed= async(req,res,next)=>{
    try {
@@ -131,7 +171,7 @@ export const isAllowed= async(req,res,next)=>{
 
         const decoded = JWT.verify(token, process.env.JWT_SECRET);
 
-        const allowedRoles = ["desk_employee", "admin", "owner", "supervisor","qa_qc"];
+        const allowedRoles = ["desk_employee", "admin", "owner", "supervisor", "qa_qc"];
         if (!decoded || !decoded.id || !allowedRoles.includes(decoded.role)) {
             return res.status(403).json({
                 success: false,

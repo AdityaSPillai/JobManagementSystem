@@ -1828,85 +1828,102 @@ const laborCost = actualHours * hourlyRate;
                         </div>
                       </div>
                       <div className="form-group">
-  <div className="form-group-machines-header">
-    <label>Machines Required (Optional)</label>
-    <button
-      type="button"
-        className="btn-add-job"
-      onClick={() => addMachineToItem(index)}
-    >
-                                 <span className="add-con-wrapper"><img src="/plus.png" alt="Plus Icon" className="plus-icon-con"/> Add Mchine</span>
+                        <div className="form-group-machines-header">
+                          <label>Machines Required (Optional)</label>
+                          <button
+                            type="button"
+                            className="btn-add-job"
+                            onClick={() => addMachineToItem(index)}
+                          >
+                            <span className="add-con-wrapper">
+                              <img src="/plus.png" alt="Plus Icon" className="plus-icon-con" />
+                              Add Machine
+                            </span>
+                          </button>
+                        </div>
 
-    </button>
-  </div>
-            <div className="form-group">
-             <div className="form-group-consumables-header">
-              {Array.isArray(item.machine) && item.machine.length > 0 ? (
-                item.machine.map((machine, machineIndex) => (
-                  <div key={machineIndex} className="consumable-entry">
-                    <div className="machine-row">
-                        <select 
-                         className="consumable-quantity-input"
-                          value={machine.machineRequired || ''} 
-                          onChange={(e) => handleMachineRequiredChange(index, machineIndex, e.target.value)}
-                        >
-                          <option value="">--Select Machine--</option>
-                          {machines.map((m) => (
-                            m.isAvailable && (  
-                              <option key={m._id} value={m._id}>
-                                {m.name} - {m.type}
-                              </option>
-                            )
-                          ))}
-                        </select>
-                        <input
-                          type="number"
-                          placeholder="Hours"
-                          value={machine.machineHours || ''}
-                          onChange={(e) => handleMachineHoursChange(index, machineIndex, e.target.value)}
-                          min="0"
-                          step="0.5"
-                        />
-              
+                        <div className="form-group-machines-header">
+                          {Array.isArray(item.machine) && item.machine.length > 0 ? (
+                            item.machine.map((machine, machineIndex) => (
+                              <div key={machineIndex} className="machine-entry">
+                                <div className="machine-left">
+                                  {/* SAME AS consumable-entry-select */}
+                                  <select
+                                    className="machine-entry-select"
+                                    value={machine.machineRequired || ""}
+                                    onChange={(e) =>
+                                      handleMachineRequiredChange(index, machineIndex, e.target.value)
+                                    }
+                                  >
+                                    <option value="">--Select Machine--</option>
 
-                      {item.machine.length > 1 && (
-                        <button
-                          type="button"
-                          className="btn-remove-machine"
-                          onClick={() => removeMachineFromItem(index, machineIndex)}
-                          title="Remove Machine"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
+                                    {machines.map((m) =>
+                                      m.isAvailable ? (
+                                        <option key={m._id} value={m._id}>
+                                          {m.name} - {m.type}
+                                        </option>
+                                      ) : null
+                                    )}
+                                  </select>
 
-                    {machine.machineHourlyRate > 0 && (
-                      <p style={{ fontSize: '0.8rem', marginTop: '5px', color: '#444' }}>
-                        Rate: ${machine.machineHourlyRate}/hr | Cost: ${(machine.machineEstimatedCost || 0).toFixed(2)}
-                      </p>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <button
-                  type="button"
-                  className="btn-add-machine-initial"
-                  onClick={() => addMachineToItem(index)}
-                >
-                  + Add Machine
-                </button>
-              )}
-              </div>
-              </div>
+                                  {/* SAME AS consumable-quantity-input */}
+                                  <input
+                                    type="number"
+                                    className="machine-quantity-input"
+                                    placeholder="Hours"
+                                    value={machine.machineHours || ""}
+                                    onChange={(e) =>
+                                      handleMachineHoursChange(index, machineIndex, e.target.value)
+                                    }
+                                    min="0"
+                                    step="0.5"
+                                  />
 
-              {/* Show total machine cost for this item */}
-              {Array.isArray(item.machine) && item.machine.length > 0 && (
-                <div style={{ marginTop: '10px', fontWeight: 'bold', color: '#2563eb' }}>
-                  Total Machine Cost: ${item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0).toFixed(2)}
-                </div>
-              )}
-            </div>
+                                  {/* REMOVE BUTTON (mirrors consumable) */}
+                                  {item.machine.length > 0 && (
+                                    <button
+                                      type="button"
+                                      className="machine-remove-btn"
+                                      onClick={() => removeMachineFromItem(index, machineIndex)}
+                                    >
+                                      ❌
+                                    </button>
+                                  )}
+                                </div>
+                                
+                                <div className="machine-right">
+                                  {/* Machine Cost Display */}
+                                  {machine.machineHourlyRate > 0 && (
+                                    <p className="machine-cost-info">
+                                      Rate: ${machine.machineHourlyRate}/hr | Cost: $
+                                      {(machine.machineEstimatedCost || 0).toFixed(2)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            // <button
+                            //   type="button"
+                            //   className="btn-add-job"
+                            //   onClick={() => addMachineToItem(index)}
+                            // >
+                            //   <img src="/plus.png" alt="Plus Icon" className="plus-icon-con" /> Add Machine
+                            // </button>
+                            <span></span>
+                          )}
+                        </div>
+
+                        {/* Leave original class name as requested */}
+                        {Array.isArray(item.machine) && item.machine.length > 0 && (
+                          <div className="machine-total-cost">
+                            Total Machine Cost: $
+                            {item.machine
+                              .reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
+                              .toFixed(2)}
+                          </div>
+                        )}
+                      </div>
 
                       <div className="form-group">
                         <div className="form-group-consumables-header">
@@ -1922,7 +1939,6 @@ const laborCost = actualHours * hourlyRate;
                                 const selectedId = e.target.value;
 
                                 if (selectedId === "manual") {
-                                  // Manual input mode
                                   const updatedConsumables = [...item.consumable];
                                   updatedConsumables[ci] = { name: "", price: 0, available: true, isManual: true };
                                   updateJobItemField(index, "consumable", updatedConsumables);
@@ -1951,36 +1967,36 @@ const laborCost = actualHours * hourlyRate;
                               ))}
                               <option value="manual">+ Add Manual Consumable</option>
                             </select>
-                          <input
-                        type="number"
-                        placeholder="Quantity"
-                        className='consumable-quantity-select'
-                        value={consumableQty[`${index}-${ci}`] || ""}
-                        onChange={(e) => {
-                          const qty = Number(e.target.value);
-                          setConsumableQty(prev => ({
-                            ...prev,
-                            [`${index}-${ci}`]: qty
-                          }));
-                        }}
-                      />
-
-
+                          {!c.isManual && (
+                            <input
+                              type="number"
+                              placeholder="Quantity"
+                              className='consumable-quantity-select'
+                              value={consumableQty[`${index}-${ci}`] || ""}
+                              onChange={(e) => {
+                                const qty = Number(e.target.value);
+                                setConsumableQty(prev => ({
+                                  ...prev,
+                                  [`${index}-${ci}`]: qty
+                                }));
+                              }}
+                            />
+                          )}
                             {/* Manual input fields */}
                             {c.isManual && (
                               <div className="manual-consumable-fields">
                                  <input
-                        type="number"
-                        placeholder="Quantity"
-                        value={consumableQty[`${index}-${ci}`] || ""}
-                        onChange={(e) => {
-                          const qty = Number(e.target.value);
-                          setConsumableQty(prev => ({
-                            ...prev,
-                            [`${index}-${ci}`]: qty
-                          }));
-                        }}
-                      />
+                                    type="number"
+                                    placeholder="Quantity"
+                                    value={consumableQty[`${index}-${ci}`] || ""}
+                                    onChange={(e) => {
+                                      const qty = Number(e.target.value);
+                                      setConsumableQty(prev => ({
+                                        ...prev,
+                                        [`${index}-${ci}`]: qty
+                                      }));
+                                    }}
+                                  />
                                 <input
                                   type="text"
                                   placeholder="Consumable Name"
