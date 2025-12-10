@@ -580,7 +580,7 @@ const handleJobCategorySelect = (index, categoryName) => {
               <label>Select Job ID</label>
               <select className="employee-select" value={selectedJobIdInternal} onChange={(e) => handleJobSelect(e.target.value)}>
                 <option value="">-- Select a Job --</option>
-                {jobs.map(job => (<option key={job.id} value={job.id}>{job.id} - {job.customer_name} ({job.vehicle_number})</option>))}
+                {jobs.map(job => (<option key={job.id} value={job.id}>{`Job-${job.jobCardNumber?.split("-").pop()}`} - {job.customer_name} ({job.vehicle_number})</option>))}
               </select>
             </div>
           </div>
@@ -1171,9 +1171,9 @@ useEffect(() => {
       <div className="dashboard-banner supervisor-banner">
          <div className="banner-content"><h2>Supervisor Dashboard</h2><p>Assign jobs, edit details, and track progress</p></div>
          <div className="stats-cards">
-           <div className="stat-card"><span className="stat-label">Active Jobs</span><span className="stat-value">{jobs.filter(j => j.status === 'In Progress' || j.status === 'Assigned').length}</span><span className="stat-icon"><img src={refreshIcon} alt="Active"/></span></div>
-           <div className="stat-card"><span className="stat-label">Not Assigned</span><span className="stat-value">{jobs.filter(j => j.status === 'Not Assigned').length}</span><span className="stat-icon"><img src={infoIcon} alt="Info"/></span></div>
-           <div className="stat-card"><span className="stat-label">Completed</span><span className="stat-value">{jobs.filter(j => j.status === 'Completed').length}</span><span className="stat-icon"><img src={tickIcon} alt="Completed"/></span></div>
+           <div className="stat-card"><span className="stat-label">Active Jobs</span><span className="stat-value">{jobs.filter(j => j.status === 'rejected' || j.status === 'pending').length}</span><span className="stat-icon"><img src={refreshIcon} alt="Active"/></span></div>
+           <div className="stat-card"><span className="stat-label">Completed</span><span className="stat-value">{jobs.filter(j => j.status === 'completed').length}</span><span className="stat-icon"><img src={infoIcon} alt="Info"/></span></div>
+           <div className="stat-card"><span className="stat-label">Approved</span><span className="stat-value">{jobs.filter(j => j.status === 'approved').length}</span><span className="stat-icon"><img src={tickIcon} alt="Completed"/></span></div>
          </div>
       </div>
 
@@ -1198,7 +1198,9 @@ useEffect(() => {
               filteredJobs.map((job) => (
                 <div key={job.id} className={`job-card ${selectedJob?.id === job.id ? 'selected' : ''}`} onClick={() => { setSelectedJob(job); setShowJobDetails(true);}}>
                   <div className="job-header">
-                    <span className="job-number">{job.id}</span>
+                    <span className="job-number">
+                      {`Job-${job.jobCardNumber?.split("-").pop()}`}
+                    </span>
                     <span className={`status-badge ${ job.status === 'In Progress' ? 'status-progress' : job.status === 'Completed' ? 'status-completed' : job.status === 'Assigned' ? 'status-assigned-active' : 'status-assigned' }`}>{job.status}</span>
                   </div>
                   <p className="job-owner">{job.customer_name}</p>
@@ -1231,12 +1233,7 @@ useEffect(() => {
                           <div className="job-details-view">
                             <div className="form-header">
                               <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
-                              <button className="close-btn" onClick={() => {
-                                setShowJobDetails(false);
-                                setSelectedJob(null);
-                              }}>✕</button>
-                            <button className="btn-action" onClick={openGeneralEditModal}><img src={editIcon} alt="Edit" className="btn-icon-left" /> Edit Job</button>
-
+                              <button className="btn-action" onClick={openEditModalForSelected}><img src={editIcon} alt="Edit" className="btn-icon-left" /> Edit Job</button>
                             </div>
                             <div className="job-detail-content">
                               <div className="job-info-grid">

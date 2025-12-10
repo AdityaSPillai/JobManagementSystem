@@ -2,7 +2,7 @@
 .supervisor-dashboard { min-height: 100vh; background-color: #f7fafc; }
 
 /* --- Supervisor Banner --- */
-.dashboard-banner.supervisor-banner { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; padding: 32px; margin-bottom: 0; border-radius: 12px 12px 0 0; }
+.dashboard-banner.supervisor-banner { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; padding: 32px; margin:2vw; margin-bottom: 0; border-radius: 12px 12px 0 0; }
 .banner-content h2 { margin: 0 0 8px 0; font-size: 28px; }
 .banner-content p { margin: 0; opacity: 0.9; }
 .stats-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
