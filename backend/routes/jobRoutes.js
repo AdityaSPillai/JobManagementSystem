@@ -54,7 +54,7 @@ router.post('/end-worker-timer/:jobId/:jobItemId/:workerObjectId',endWorkerTimer
 
 
 //perform quality check
-router.put('/qualityGood/:jobId/:jobItemId/',qualityGoodController)
+router.put('/qualityGood/:jobId/:jobItemId/:userId',qualityGoodController)
 router.post('/qualityBad/:jobId/:jobItemId/:userId',qualityBadController)
 
 //vuser verification of job

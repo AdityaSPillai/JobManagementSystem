@@ -133,7 +133,7 @@ function QADashboard({ onLogout }) {
 
     try {
       const res = await axios.put(
-        `/jobs/qualityGood/${jobId}/${jobItemId}`
+        `/jobs/qualityGood/${jobId}/${jobItemId}/${userInfo.id}`,
       );
 
       if (!res.data?.success) {

@@ -813,18 +813,28 @@ export const qualityGoodController = async(req,res)=>{
   try {
     const {jobId,userId,jobItemId }= req.params;
   
-    const job = await JobCardModel.findOneAndUpdate({_id: jobId})
+    const job = await JobCardModel.findById(jobId);
     console.log(job)
 
         const jobItem = job.jobItems.id(jobItemId);
         console.log(jobId,jobItem)
-    if (!job) {
+
+
+
+    // Check if job item exists
+    if (!jobItem) {
       return res.status(404).send({
         success: false,
-        message: "Job or job item not found"
+        message: "Job item not found"
       });
     }
+    job.status = 'approved';
+    jobItem.status = 'approved';
+    jobItem.qualityStatus = 'good'; 
+    job.workVerified = userId;
 
+    await job.save();
+    console.log(job)
     res.status(200).json({
       success: true,
       message: "Status assigned successfully",
