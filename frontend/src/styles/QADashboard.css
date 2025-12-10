@@ -208,10 +208,10 @@
 }
 
 /* Scrollbar Styling */
-.job-list-section::-webkit-scrollbar, .details-section::-webkit-scrollbar { width: 8px; }
-.job-list-section::-webkit-scrollbar-track, .details-section::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-.job-list-section::-webkit-scrollbar-thumb, .details-section::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
-.job-list-section::-webkit-scrollbar-thumb:hover, .details-section::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+.job-list-sectionqa::-webkit-scrollbar, .details-section::-webkit-scrollbar { width: 8px; }
+.job-list-sectionqa::-webkit-scrollbar-track, .details-section::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+.job-list-sectionqa::-webkit-scrollbar-thumb, .details-section::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+.job-list-sectionqa::-webkit-scrollbar-thumb:hover, .details-section::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
 
 
 
