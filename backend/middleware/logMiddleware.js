@@ -5,51 +5,62 @@ export const logAction = (action, infoExtractor = null) => {
   return async (req, res, next) => {
     let logged = false;
 
+    // ---- WRAP RES BEFORE ANYTHING ----
+    const oldJson = res.json.bind(res);
+    res.json = function (data) {
+      doLog(data).finally(() => oldJson(data));
+      return res;
+    };
+
+    const oldSend = res.send.bind(res);
+    res.send = function (data) {
+      let parsed = data;
+      try {
+        if (typeof data === "string") parsed = JSON.parse(data);
+      } catch {}
+      doLog(parsed).finally(() => oldSend(data));
+      return res;
+    };
+
+    // --------------------------
+    // DOLOG FUNCTION
+    // --------------------------
     const doLog = async (payload) => {
       if (logged) return;
       logged = true;
 
       try {
-        // Only log if success is true or missing
+        // Only log successful responses
         if (payload?.success === false) return;
 
-        const userId = req.body.userId || req.user?.id;
-        const user = userId ? await UserModel.findById(userId) : null;
+        // READ USER ID CORRECTLY
+        const userId =
+          req.params.userId ||
+          req.body.userId ||
+          req.user?.id;
 
-        await addLog(user?.shopId, {
-          auth: user?.role || "unknown",
-          id: user?._id || "n/a",
-          name: user?.name || "Unknown User",
+        if (!userId) {
+          console.error("Logging error: Missing userId");
+          return;
+        }
+
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+          console.error("Logging error: User not found");
+          return;
+        }
+
+        await addLog(user.shopId, {
+          auth: user.role,
+          id: user._id,
+          name: user.name,
           action,
           info: infoExtractor ? infoExtractor(req) : {},
         });
       } catch (err) {
         console.error("Logging error:", err.message);
       }
-    };
-
-    // ---- WRAP res.json ----
-    const oldJson = res.json.bind(res);
-    res.json = function(data) {
-      doLog(data).finally(() => oldJson(data));
-      return res;
-    };
-
-    // ---- WRAP res.send ----
-    const oldSend = res.send.bind(res);
-    res.send = function(data) {
-      let parsed = data;
-
-      try {
-        if (typeof data === "string") {
-          parsed = JSON.parse(data);
-        }
-      } catch (e) {
-        // If not JSON, skip logging
-      }
-
-      doLog(parsed).finally(() => oldSend(data));
-      return res;
     };
 
     next();
