@@ -129,7 +129,7 @@ export const getCustomerById= async (req,res)=>{
 export const updateCustomerById= async (req,res)=>{
     try {
         const {id}= req.params;
-        const {updates}= req.body;
+        const updates= req.body;
         const updatedCustomer= await CustomerModel.findByIdAndUpdate(id,updates,{new:true});
         if(!updatedCustomer){
             return res.status(404).send({
