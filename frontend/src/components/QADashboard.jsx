@@ -17,7 +17,6 @@ import tickIcon from '../assets/tick.svg';
 function QADashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
-  const [qaReviewerName, setQaReviewerName] = useState('');
   const { userInfo } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [showNotesPopup, setShowNotesPopup] = useState(null); // Changed to store itemId
@@ -229,45 +228,13 @@ function QADashboard({ onLogout }) {
     }
   };
 
-  const handleMarkQualityChecked = (jobId) => {
-    if (!selectedJob || selectedJob.status !== 'completed') return;
-    if (!qaReviewerName.trim()) {
-      alert('Please enter your name in the "Reviewed by" field.');
-      return;
-    }
-
-    const allItemsRated = selectedJob.items.every(item => item.qualityStatus !== null);
-    if (!allItemsRated) {
-      if (!window.confirm("Not all tasks have been assigned a quality status. Mark as Quality Checked anyway?")) {
-        return;
-      }
-    }
-
-    setJobs(prevJobs => prevJobs.map(job => {
-      if (job.id === jobId) {
-        return { ...job, status: 'Quality Checked', qaStatus: 'Checked', qaCheckedBy: qaReviewerName };
-      }
-      return job;
-    }));
-
-    setSelectedJob(prev => {
-      if (prev && prev.id === jobId) {
-        return { ...prev, status: 'Quality Checked', qaStatus: 'Checked', qaCheckedBy: qaReviewerName };
-      }
-      return prev;
-    });
-    alert(`Job ${jobId} marked as Quality Checked by ${qaReviewerName}.`);
-  };
+  
 
   // Calculate stats for banner
-  const pendingReviewCount = jobs.filter(j => j.status === 'completed').length;
-  const qualityCheckedCount = jobs.filter(j => j.status === 'Quality Checked').length;
-  const needsWorkCount = jobs.reduce((count, job) => {
-    if (job.status === 'Quality Checked') {
-      count += job.items.filter(item => item.qualityStatus === 'Needs Work').length;
-    }
-    return count;
-  }, 0);
+  
+  const pendingReviewCount = jobs.filter(j => j.status === "completed").length;
+  const qualityCheckedCount = jobs.filter(j => j.status === "approved").length;
+  const needsWorkCount = jobs.filter(j => j.status === "rejected").length;
 
   return (
     <div className="qa-dashboard">
@@ -324,8 +291,9 @@ function QADashboard({ onLogout }) {
                   onClick={() => setSelectedJob(job)}
                 >
                   <div className="job-header">
-                    <span className="job-number">{job.id}</span>
-                    <span className={`status-badge ${job.status === 'completed' ? 'status-review' : job.status === 'Quality Checked' ? 'status-completed' : 'status-assigned'}`}>
+                      <span className="job-number">
+                      {`Job-${job.jobCardNumber?.split("-").pop()}`}
+                    </span>                    <span className={`status-badge ${job.status === 'completed' ? 'status-review' : job.status === 'approved                   ' ? 'status-completed' : 'status-assigned'}`}>
                       {job.status === 'completed' ? 'Ready for QA' : job.status}
                     </span>
                   </div>
@@ -473,23 +441,7 @@ function QADashboard({ onLogout }) {
                   </div>
 
                   {/* Final QA Confirmation Section */}
-                  {selectedJob.status === 'completed' && (
-                    <div className="qa-final-section job-items-container">
-                      <div className="reviewed-by">
-                        <span>Reviewed by:</span>
-                        <input
-                          type="text"
-                          className="reviewer-input"
-                          placeholder="Enter your name"
-                          value={qaReviewerName}
-                          onChange={(e) => setQaReviewerName(e.target.value)}
-                        />
-                      </div>
-                      <button className="btn-mark-checked" onClick={() => handleMarkQualityChecked(selectedJob.id)}>
-                        <img src={tickIcon} alt="Check" className="btn-icon-left small" /> Mark Job as Quality Checked
-                      </button>
-                    </div>
-                  )}
+                  
                   {selectedJob.status === 'Quality Checked' && (
                     <div className="qa-final-section job-items-container reviewed-indicator">
                       <span><img src={tickIcon} alt="Checked" className="inline-icon" /> This job has been Quality Checked by {selectedJob.qaCheckedBy || 'QA'}.</span>
