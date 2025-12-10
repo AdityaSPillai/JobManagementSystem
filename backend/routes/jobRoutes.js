@@ -1,5 +1,5 @@
 import express from "express";
-import { isAllowed, isQA } from "../middleware/middlewares.js";
+import { isAllowed, isManager, isQA } from "../middleware/middlewares.js";
 import { createJobCard,
     deleteJobController,
     getAllJobs,
@@ -58,7 +58,7 @@ router.put('/qualityGood/:jobId/:jobItemId/:userId',isQA,logAction("JOB_ACCEPTED
 router.post('/qualityBad/:jobId/:jobItemId/:userId',isQA,logAction("JOB_NEED_WORK", req => ({ body: req.body })),qualityBadController)
 
 //vuser verification of job
-router.post('/verifyJob/:jobId',verifyJobController)
+router.post('/verifyJob/:jobId',isManager,logAction("ACCEPTED_BY_CUSTOMER", req => ({ body: req.body })),verifyJobController)
 
 
 router.put(`/actual-cost/:jobId`, updateActualCostController);
