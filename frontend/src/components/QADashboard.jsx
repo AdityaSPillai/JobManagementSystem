@@ -6,7 +6,7 @@ import Header from './Header.jsx';
 import userIcon from '../assets/user.svg';
 import calendarIcon from '../assets/calendar.svg';
 
-function QADashboard() {
+function QADashboard({onLogout}) {
   const { userInfo } = useAuth();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -109,13 +109,13 @@ function QADashboard() {
   const totalJobs = jobs.length;
   const approvedJobs = jobs.filter(j => j.status === 'approved').length;
   const rejectedJobs = jobs.filter(j => j.status === 'rejected').length;
-  const pendingJobs = jobs.filter(j => j.status === 'completed').length;
+  const pendingJobs = jobs.filter(j => j.status === 'supapproved').length;
 
   // -----------------------------
   // FILTERS
   // -----------------------------
   const getFilteredJobs = () => {
-    if (activeTab === 'pending') return jobs.filter(j => j.status === 'completed');
+    if (activeTab === 'pending') return jobs.filter(j => j.status === 'supapproved');
     if (activeTab === 'approved') return jobs.filter(j => j.status === 'approved');
     if (activeTab === 'rejected') return jobs.filter(j => j.status === 'rejected');
     return [];
@@ -130,7 +130,7 @@ function QADashboard() {
   // ACTIONS
   // -----------------------------
   const approveItem = async (jobId, itemId) => {
-     if (!selectedJob || selectedJob.status !== 'completed') return;
+     if (!selectedJob || selectedJob.status !== 'supapproved') return;
     console.log("Marking item as Good:", jobId, itemId);
 
     try {
@@ -167,7 +167,7 @@ function QADashboard() {
   };
 
   const rejectItem = async (jobId, itemId) => {
-     if (!selectedJob || selectedJob.status !== 'completed') return;
+     if (!selectedJob || selectedJob.status !== 'supapproved') return;
     console.log("Marking item as Needs Work:", jobId, itemId, notes);
 
     try {
@@ -208,7 +208,7 @@ function QADashboard() {
 
   return (
     <>
-      <Header role="qa" />
+      <Header userRole="QA/QC" onLogout={onLogout} showLogin={false} />
 
       <div className="qa-dashboard">
 

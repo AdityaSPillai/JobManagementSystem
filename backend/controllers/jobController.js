@@ -808,6 +808,65 @@ export const endWorkerTimer = async (req, res) => {
 };
 
 
+export const supervisorApproval = async (req, res) => { {
+  try {
+    const { jobId } = req.params;
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).send({ 
+        success: false, 
+        message: "Job not found" 
+      });
+    }
+    job.status = 'supapproved';
+    await job.save();
+    res.status(200).json({
+      success: true,
+      message: "Supervisor approval recorded successfully",
+      job
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Unable to record supervisor approval",
+      error,
+    });
+  }
+
+}};
+
+
+export const supervisorRejection = async (req, res) => { {
+  try {
+    const { jobId } = req.params;
+    const { notes } = req.body;
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).send({ 
+        success: false, 
+        message: "Job not found" 
+      });
+    }
+    job.status = 'rejected';
+    job.notes = notes;
+    await job.save();
+    res.status(200).json({
+      success: true,
+      message: "Supervisor rejection recorded successfully",
+      job
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      message: "Unable to record supervisor rejection",
+      error,
+    });
+  }
+}};
+
+
 
 export const qualityGoodController = async(req,res)=>{
   try {

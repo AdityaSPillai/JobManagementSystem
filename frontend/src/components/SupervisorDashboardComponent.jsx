@@ -1160,6 +1160,50 @@ useEffect(() => {
   }
 }, [selectedJob]);
 
+
+
+const handleSupervisorApprove = async (jobId) => {
+  if (!window.confirm("Approve this job and send to QAQC?")) return;
+
+  try {
+    const res = await axios.put(`jobs/supervisor-approve/${jobId}`);
+    if (res.data.success) {
+      alert("✅ Job approved and sent to QAQC");
+      getAllJobs();
+      setSelectedJob(null);
+      setShowJobDetails(false);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to approve job");
+  }
+};
+
+
+
+const handleQualityBad = async (jobId,userId) => {
+  const notes = prompt("Reason for rework:");
+  if (!notes) return;
+
+  try {
+    const res = await axios.post(
+      `jobs/qualityBad/${jobId}/${userId}`,
+      { notes }
+    );
+
+    if (res.data.success) {
+      alert("❌ Job item marked for rework");
+      getAllJobs();
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to mark job as bad");
+  }
+};
+
+
+
+
   return (
     <div className="supervisor-dashboard">
       {/* Supervisor Banner */}
@@ -1403,12 +1447,32 @@ useEffect(() => {
                                             </option>
                                           ))
                                         }
-            
-                                                </select>
+                    
+                                         </select>
                                       </div>
                                     </div>
-                                  </div> 
                                   
+                                    <div className="quality-buttons">
+                                      <button
+                                        className="btn-good"
+                                        onClick={() => handleSupervisorApprove(selectedJob.id)}
+                                      >
+                                        ✅ Approve & Send to QAQC
+                                      </button>
+                                      <button
+                                    className="btn-needs-work"
+                                      onClick={() =>
+                                        handleQualityBad(
+                                          selectedJob.id,
+                                          userInfo.id
+                                        )
+                                      }
+                                    >
+                                      ❌ Need Rework
+                                    </button>
+                                    </div>
+                               
+                                  </div> 
                                 ))}
                               </div>
             
@@ -1429,11 +1493,9 @@ useEffect(() => {
                     )}
              
                 </div>
-                            </div>
-            
-                           
-                          </div>
-                        )}
+              </div>
+            </div>
+              )}
           </div>
         </div>
       </div>

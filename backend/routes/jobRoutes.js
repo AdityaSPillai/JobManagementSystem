@@ -13,7 +13,9 @@ import { createJobCard,
     qualityBadController,
     verifyJobController,
     pauseWrokerTImer,
-    updateActualCostController
+    updateActualCostController,
+    supervisorApproval,
+    supervisorRejection
     } from "../controllers/jobController.js";
 import { logAction } from "../middleware/logMiddleware.js";
 
@@ -51,6 +53,12 @@ router.post('/start-worker-timer/:jobId/:jobItemId/:workerObjectId',startWorkerT
 router.post('/pause-worker-timer/:jobId/:jobItemId/:workerObjectId',pauseWrokerTImer)
 
 router.post('/end-worker-timer/:jobId/:jobItemId/:workerObjectId',endWorkerTimer)
+
+//supervisor approval
+router.put('/supervisor-approve/:jobId',logAction("SUPERVISOR_APPROVED", req => ({ body: req.body })),supervisorApproval)
+
+//supervosor quality check bad
+router.post('/qualityBad/:jobId/:userId',logAction("SUPERVISOR_JOB_REJECTED", req => ({ body: req.body })),supervisorRejection)
 
 
 //perform quality check
