@@ -282,6 +282,11 @@ const getAllCustomers = async () => {
     }
   };
 
+  const getMaxAllowedWorkers = (item, jobStatus) => {
+  const base = item.numberOfWorkers || 1;
+  return jobStatus === 'rejected' ? base * 2 : base;
+};
+
 const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
   console.log("Assigning worker:", employeeId, jobId, itemIndex);
 
@@ -291,13 +296,17 @@ const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
   const item = job.items[itemIndex];
   if (!item) return;
 
-  const maxWorkers = item.numberOfWorkers || 1;
+  const maxWorkers = getMaxAllowedWorkers(item, job.status);
   const currentWorkers = Array.isArray(item.workers) ? item.workers.length : 0;
 
   if (currentWorkers >= maxWorkers) {
-    alert(`You can assign only ${maxWorkers} worker(s) to this task.`);
-    return;
-  }
+  alert(
+    job.status === 'rejected'
+      ? `You can assign up to ${maxWorkers} workers (including previous workers) for rejected jobs.`
+      : `You can assign only ${maxWorkers} worker(s) to this task.`
+  );
+  return;
+}
 
   const itemId = item.itemId;
   console.log("Assigning worker:", employeeId, jobId, itemId);
@@ -350,6 +359,7 @@ const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
       );
 
       alert(`Worker ${employee?.name || employeeId} assigned successfully!`);
+      window.console.log("Worker assigned successfully");
     }
   } catch (error) {
     console.error('Error assigning worker:', error);
@@ -1489,7 +1499,7 @@ const laborCost = actualHours * hourlyRate;
                            
                           </div>
                           <div className="full-width">
-                            <p className="employee-select-label"><strong>Assign Employee for this task:</strong></p>
+                            <p className="employee-select-label"><strong>Assign   Employee for this task:</strong></p>
 
 
                                    {Array.isArray(item.workers) && item.workers.length > 0 ? (
@@ -1586,7 +1596,11 @@ const laborCost = actualHours * hourlyRate;
                             )}
 
 
-
+                              {selectedJob.status === 'rejected' && (
+                                <p style={{ color: '#d9534f', fontSize: '0.85rem' }}>
+                                  ⚠ Rejected job: You can assign up to {item.numberOfWorkers * 2} workers (including previous assignments)
+                                </p>
+                              )}
 
                             <select
                               className="employee-select"
@@ -1597,14 +1611,17 @@ const laborCost = actualHours * hourlyRate;
                                   handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
                                 }
                               }}
-                              disabled={
-                                selectedJob.status === 'waiting' ||
-                                item.itemStatus === 'completed' ||
-                                item.itemStatus === 'approved' ||
-                                selectedJob.status === 'approved' ||
-                                selectedJob.status === 'completed'||
-                                 (Array.isArray(item.workers) && item.workers.length >= (item.numberOfWorkers || 1))
-                              }
+                                disabled={
+                                  item.itemStatus === 'completed' ||
+                                  item.itemStatus === 'approved' ||
+                                  selectedJob.status === 'approved' ||
+                                  selectedJob.status === 'completed' ||
+                                  (
+                                    selectedJob.status !== 'rejected' &&
+                                    Array.isArray(item.workers) &&
+                                    item.workers.length >= (item.numberOfWorkers || 1)
+                                  )
+                                }
 
                             >
                             <option value="">Select Employee</option>
