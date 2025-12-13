@@ -1169,6 +1169,7 @@ const laborCost = actualHours * hourlyRate;
       const res = await axios.post(`/reject/rejectJob`, { jobId, shopId: userInfo?.shopId, reason, rejectedBy: name });
       if (res.data?.success) {
         alert("❌ Job rejected and deleted successfully!");
+        window.location.reload();
         await getAllJobs();
         setShowJobDetails(false);
         setSelectedJob(null);
@@ -1615,6 +1616,7 @@ const laborCost = actualHours * hourlyRate;
                                   item.itemStatus === 'completed' ||
                                   item.itemStatus === 'approved' ||
                                   selectedJob.status === 'approved' ||
+                                  selectedJob.status === 'waiting' ||
                                   selectedJob.status === 'completed' ||
                                   (
                                     selectedJob.status !== 'rejected' &&
@@ -2075,12 +2077,13 @@ const laborCost = actualHours * hourlyRate;
                             <span className="add-con-wrapper"><img src="/plus.png" alt="Plus Icon" className="plus-icon-con"/> Add Consumable</span>
                           </button>
                         )}
-                        <div>
-                          <button className="btn-add-task-job" onClick={addJobItem}>+ Add Task</button>
-                        </div>
+                        
                       </div>
                     </div>
                   ))}
+                </div>
+                <div>
+                  <button className="btn-add-task-job" onClick={addJobItem}>+ Add Task</button>
                 </div>
                 <div className="form-footer">
                   <div className="total-amount">
