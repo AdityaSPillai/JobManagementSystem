@@ -1451,7 +1451,7 @@ const handleQualityBad = async (jobId,userId) => {
                                          </select>
                                       </div>
                                     </div>
-                                  
+                                  {selectedJob.status === 'completed' && (
                                     <div className="quality-buttons">
                                       <button
                                         className="btn-good"
@@ -1471,6 +1471,7 @@ const handleQualityBad = async (jobId,userId) => {
                                       ❌ Need Rework
                                     </button>
                                     </div>
+                                        )}
                                
                                   </div> 
                                 ))}
