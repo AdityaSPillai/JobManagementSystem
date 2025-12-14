@@ -14,6 +14,17 @@ export default function CustomerTab() {
   
   const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
+  const CUSTOMER_FIELDS = [
+    { name: "name", placeholder: "Name" },
+    { name: "email", placeholder: "Email" },
+    { name: "phone", placeholder: "Phone" },
+    { name: "address", placeholder: "Address" },
+    { name: "productId", placeholder: "Product ID" },
+    { name: "productModel", placeholder: "Product Model" },
+    { name: "productIdentification", placeholder: "Product Identification" },
+    { name: "trnNumber", placeholder: "TRN Number" },
+  ];
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -205,15 +216,14 @@ export default function CustomerTab() {
 
             <div className="modal-form">
               <div className="form-grid cols-2">
-
-                {Object.keys(form).map((field) => (
-                  <div className="form-group" key={field}>
-                    <label>{capitalize(field)}</label>
+                {CUSTOMER_FIELDS.map(({ name, placeholder }) => (
+                  <div className="form-group" key={name}>
+                    <label>{placeholder}</label>
                     <input
                       type="text"
-                      value={form[field]}
+                      value={form[name]}
                       onChange={(e) =>
-                        setForm({ ...form, [field]: e.target.value })
+                        setForm({ ...form, [name]: e.target.value })
                       }
                     />
                   </div>
