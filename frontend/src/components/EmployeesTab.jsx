@@ -157,7 +157,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
             <div className="form-group">
               <label htmlFor="phone">Phone *</label>
               <input 
-                type="tel" 
+                type="number" 
                 id="phone" 
                 name="phone" 
                 value={formData.phone} 
@@ -345,7 +345,7 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
             </div>
             <div className="form-group">
               <label>Phone</label>
-              <input type="tel" name="phone" value={formData.phone || ''} onChange={handleChange} required />
+              <input type="number" name="phone" value={formData.phone || ''} onChange={handleChange} required />
             </div>
             <div className="form-group">
               <label htmlFor="specialization">Specialization *</label>
@@ -558,7 +558,7 @@ useEffect(() => {
                 )}
               </div>
               <div className="data-card-footer">
-                <button 
+                {emp.role === "owner" ? (<div></div>):(<button 
                   className="btn-card-action"
                   onClick={() => {
                     setSelectedEmployee(emp);
@@ -566,7 +566,7 @@ useEffect(() => {
                   }}
                 >
                   Edit
-                </button>
+                </button>)}
                 <button className="btn-card-action btn-danger" onClick={() => handleDeleteEmployee(emp._id)}>Remove</button>
               </div>
             </div>

@@ -179,33 +179,40 @@ export const getSingleUserController= async(req,res)=>{
     }
 }
 
-
-export const deleteEmployeeController= async(req,res)=>{
+export const deleteEmployeeController = async (req, res) => {
     try {
+        const { id } = req.params;
 
-        const {id}= req.params;
+        const user = await UserModel.findById(id);
 
-        const user= await UserModel.findByIdAndDelete({_id:id});
-        if(!user)
-        {
-             return res.status(404).send({
-                success:false,
-                message:"Unable to delete"
-             })
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: "User not found",
+            });
         }
 
+        if (user.role === "owner") {
+            return res.status(403).send({
+                success: false,
+                message: "Owner cannot be deleted",
+            });
+        }
+
+        await UserModel.findByIdAndDelete(id);
+
         res.status(200).send({
-            succes:true,
-            message:"Employee Deleted Succesfully",
+            success: true,
+            message: "Employee deleted successfully",
             user,
-        })
-        
+        });
+
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).send({
-            success:false,
-            message:"Unable to Delete the user",
-            error
-        })
+            success: false,
+            message: "Unable to delete the user",
+            error,
+        });
     }
 }
