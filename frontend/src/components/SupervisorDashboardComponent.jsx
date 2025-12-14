@@ -683,7 +683,7 @@ const handleJobCategorySelect = (index, categoryName) => {
     
     <div key={index} className="job-item-row">
       <div className="form-group">
-                            <label>Employee Category</label>
+                            <label>Man Power Category</label>
                         <select 
                             value={item.category || ''} 
                             onChange={(e) => handleJobCategorySelect(index, e.target.value)}

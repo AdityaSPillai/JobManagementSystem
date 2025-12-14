@@ -1094,7 +1094,7 @@ const laborCost = actualHours * hourlyRate;
       }
     } catch (error) {
       console.error("Error approving job:", error);
-      alert("Error while approving job. Please try again.");
+      alert("Error while approving job. Please try again as a Manager.");
     }
   };
 

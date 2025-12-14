@@ -2,6 +2,7 @@ import './App.css';
 import EstimatorDashboard from './components/EstimatorDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
 import SupervisorDashboard from './components/SupervisorDashboard';
+import DeskEmployeeDashboard from './components/DeskEmployeeDashboard';
 import QADashboard from './components/QADashboard';
 import useAuth from './context/context';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -17,6 +18,8 @@ const getRoleDashboard = (userInfo, onLogout) => {
       return <OwnerDashboard onLogout={onLogout} />;
     case 'supervisor':
       return <SupervisorDashboard onLogout={onLogout} />;
+    case 'desk_employee':
+      return <DeskEmployeeDashboard onLogout={onLogout} />;
     case 'qa_qc':
       return <QADashboard onLogout={onLogout} />;
     default:

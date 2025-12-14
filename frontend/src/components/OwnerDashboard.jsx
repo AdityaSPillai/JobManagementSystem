@@ -492,7 +492,6 @@ function OwnerDashboard({ onLogout }) {
           <button className={`sidebar-tab ${activeTab === 'rejected' ? 'active' : ''}`} onClick={() => setActiveTab('rejected')}><img src="/rejected.png" alt="Rejected Jobs Icon" className="sidebar-icon" /> Rejected Jobs</button>
           <button className={`sidebar-tab ${activeTab === 'console' ? 'active' : ''}`} onClick={() => setActiveTab('console')}><img src="/log.png" alt="Console Icon" className="sidebar-icon" /> Console</button>
           <button className={`sidebar-tab ${activeTab === 'shopsetting' ? 'active' : ''}`} onClick={() => setActiveTab('shopsetting')}><img src="/settings.png" alt="Shop Setting Icon" className="sidebar-icon" /> Shop Setting</button>
-
         </div>
 
         <div className="main-content-area">
