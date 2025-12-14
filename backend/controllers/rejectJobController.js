@@ -3,18 +3,44 @@ import RejectedJobModel from "../schema/rejectedJobSchema.js";
 
 export const rejectedJobController = async (req, res) => {
   try {
-    const { jobId, reason, rejectedBy,shopId } = req.body;
+    const { jobId, reason, rejectedBy, shopId } = req.body;
 
     if (!jobId || !reason || !rejectedBy || !shopId) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const job = await JobCardModel.findById(jobId);
-
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
 
+    // ✅ 1. Collect all machine IDs used in this job
+    const machineIds = [];
+
+    job.jobItems.forEach(item => {
+      if (Array.isArray(item.machine)) {
+        item.machine.forEach(m => {
+          if (m.machineRequired) {
+            machineIds.push(m.machineRequired);
+          }
+        });
+      }
+    });
+
+    // ✅ 2. Release all machines
+    if (machineIds.length > 0) {
+      await MachineModel.updateMany(
+        { _id: { $in: machineIds } },
+        {
+          $set: {
+            isAvailable: true,
+            jobId: null
+          }
+        }
+      );
+    }
+
+    // ✅ 3. Move job to rejected collection
     const rejectedJob = await RejectedJobModel.create({
       originalJobId: job._id,
       rejectionReason: reason,
@@ -24,23 +50,25 @@ export const rejectedJobController = async (req, res) => {
       rejectedAt: new Date()
     });
 
+    // ✅ 4. Delete original job
     await JobCardModel.findByIdAndDelete(jobId);
 
-    res.status(200).send({
+    res.status(200).json({
       success: true,
-      message: "Job rejected and moved successfully",
+      message: "Job rejected, machines released, and job archived",
       rejectedJob
     });
 
   } catch (error) {
     console.error("Error rejecting job:", error);
-    res.status(500).send({
+    res.status(500).json({
       success: false,
       message: "Server Error",
       error: error.message
     });
   }
 };
+
 
 
 

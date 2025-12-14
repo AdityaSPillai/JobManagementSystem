@@ -423,9 +423,11 @@ function QADashboard({onLogout}) {
                       {showNotesPopup === item.itemId && (
                         <div className="popup-overlay">
                           <div className="popup-container">
+                            <h2 className='reject-reason' >Rejection Reason</h2>
                             <textarea
                               className="notes-textarea"
                               value={notes}
+                              placeholder='Enter the reason'
                               onChange={e => setNotes(e.target.value)}
                             />
                             <div className="popup-buttons">
