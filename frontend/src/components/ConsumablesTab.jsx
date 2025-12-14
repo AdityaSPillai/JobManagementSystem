@@ -6,7 +6,14 @@ import Switch from "./Switch.jsx";
 // Add Consumable Modal
 function AddConsumableModal({ isVisible, onClose, onSubmit }) {
   const { userInfo } = useAuth();
-  const [formData, setFormData] = useState({ name: "", price: "", unitOfMeasure: "", available: true });
+  const initialFormState = {
+    name: "",
+    price: "",
+    unitOfMeasure: "",
+    quantity: "",
+    available: true,
+  };
+  const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,6 +37,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
       if (res.data.success) {
         onSubmit();
         onClose();
+        setFormData(initialFormState);
       } else {
         setError("Error adding consumable");
       }
