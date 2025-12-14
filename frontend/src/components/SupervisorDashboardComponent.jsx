@@ -824,7 +824,8 @@ const handleJobCategorySelect = (index, categoryName) => {
 
 
       <div className="form-group">
-        <label>Estimated Price ($)</label>
+        {/* <label>Estimated Price ($)</label> */}
+        <label>Estimated Price</label>
         <input
           type="number"
           value={item.estimatedPrice || ''}

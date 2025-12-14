@@ -45,7 +45,8 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="hourlyRate">Hourly Rate ($)</label>
+              {/* <label htmlFor="hourlyRate">Hourly Rate ($)</label> */}
+              <label htmlFor="hourlyRate">Hourly Rate</label>
               <input
                 type="number"
                 id="hourlyRate"
@@ -115,7 +116,8 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="edit-hourlyRate">Hourly Rate ($)</label>
+              {/* <label htmlFor="edit-hourlyRate">Hourly Rate ($)</label> */}
+              <label htmlFor="edit-hourlyRate">Hourly Rate</label>
               <input
                 type="number"
                 id="edit-hourlyRate"

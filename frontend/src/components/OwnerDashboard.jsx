@@ -333,7 +333,8 @@ import EditShopTab from './EditShopTab.jsx';
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor={`category-rate-${index}`}>Hourly Rate ($)</label>
+                    {/* <label htmlFor={`category-rate-${index}`}>Hourly Rate ($)</label> */}
+                    <label htmlFor={`category-rate-${index}`}>Hourly Rate</label>
                     <input
                       type="number"
                       id={`category-rate-${index}`}
@@ -379,7 +380,8 @@ import EditShopTab from './EditShopTab.jsx';
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor={`mc-rate-${index}`}>Hourly Rate ($)</label>
+                      {/* <label htmlFor={`mc-rate-${index}`}>Hourly Rate ($)</label> */}
+                      <label htmlFor={`mc-rate-${index}`}>Hourly Rate</label>
                       <input
                         type="number"
                         id={`mc-rate-${index}`}

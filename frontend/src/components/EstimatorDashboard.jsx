@@ -2028,7 +2028,8 @@ const laborCost = actualHours * hourlyRate;
                                 />
                                 <input
                                   type="number"
-                                  placeholder="Price ($)"
+                                  // placeholder="Price ($)"
+                                  placeholder="Price"
                                   value={c.price || ""}
                                   onChange={(e) => {
                                     const updated = [...item.consumable];

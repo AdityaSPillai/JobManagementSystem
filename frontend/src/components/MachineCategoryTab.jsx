@@ -29,7 +29,8 @@ function AddMachineCategoryModal({ isVisible, onClose, onSubmit }) {
               <input name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label>Hourly Rate ($)</label>
+              {/* <label>Hourly Rate ($)</label> */}
+              <label>Hourly Rate</label>
               <input name="hourlyRate" type="number" value={formData.hourlyRate} onChange={handleChange} required />
             </div>
           </div>
@@ -69,7 +70,8 @@ function EditMachineCategoryModal({ isVisible, onClose, onSubmit, categoryData }
               <input type="text" value={categoryData?.name || ''} disabled />
             </div>
             <div className="form-group">
-              <label>Hourly Rate ($)</label>
+              {/* <label>Hourly Rate ($)</label> */}
+              <label>Hourly Rate</label>
               <input
                 type="number"
                 value={hourlyRate}
