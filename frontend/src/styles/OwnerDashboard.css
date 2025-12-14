@@ -523,6 +523,12 @@
   flex-direction: column;
 }
 
+.available-button{
+  display: flex;
+  flex-direction: row;
+  gap: 2vw;
+}
+
 .modal-form .form-group label,
 .modal-form .form-label-group {
   display: block;

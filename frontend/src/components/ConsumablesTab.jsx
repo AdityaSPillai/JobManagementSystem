@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../utils/axios.js";
 import useAuth from "../context/context.jsx";
+import Switch from "./Switch.jsx";
 
 // Add Consumable Modal
 function AddConsumableModal({ isVisible, onClose, onSubmit }) {
@@ -98,13 +99,14 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
               />
             </div>
             <div className="form-group form-group-checkbox">
-              <input
-                type="checkbox"
-                name="available"
-                checked={formData.available}
-                onChange={handleChange}
-              />
-              <label>Available</label>
+              <div className="available-button">
+                <label>Available</label>
+                <Switch
+                  name="available"
+                  checked={formData.available || false}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
           </div>
 
@@ -213,15 +215,15 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
               />
             </div>
             <div className="form-group form-group-checkbox">
-              <input
-                type="checkbox"
-                name="available"
-                checked={formData.available || false}
-                onChange={handleChange}
-              />
-              <label>Available</label>
+              <div className="available-button">
+                <label>Available</label>
+                <Switch
+                  name="available"
+                  checked={formData.available || false}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
-             
           </div>
 
           <button type="submit" className="btn-submit" disabled={loading}>
