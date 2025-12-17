@@ -7,6 +7,10 @@ const customerSchema= new mongoose.Schema({
     required: true,
     trim: true
   },
+  customerIDNumber: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,

@@ -15,7 +15,8 @@ import { createJobCard,
     pauseWrokerTImer,
     updateActualCostController,
     supervisorApproval,
-    supervisorRejection
+    supervisorRejection,
+    getAllJobsByCustomerID
     } from "../controllers/jobController.js";
 import { logAction } from "../middleware/logMiddleware.js";
 
@@ -28,6 +29,9 @@ router.post('/new-job',isAllowed,logAction("CREATE_JOB", req => ({ body: req.bod
 
 //get all jobs available
 router.get('/allJobs',getAllJobs)
+
+//get all jobs by the customer id
+router.get('/jobbycustomer/:customerIDNumber',getAllJobsByCustomerID)
 
 //update job
 router.put('/update-job/:jobId',isAllowed,logAction("UPDATE_JOB", req=>({id: req.params.id, body: req.body})),updateJobSettings)

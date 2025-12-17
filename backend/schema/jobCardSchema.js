@@ -15,6 +15,11 @@ const JobCardSchema = new mongoose.Schema({
     required: true
   },
   
+  customerIDNumber: {
+    type: String,
+    required: true,
+  },
+  
   // Dynamic form data stored as key-value pairs
   formData: {
     type: Map,

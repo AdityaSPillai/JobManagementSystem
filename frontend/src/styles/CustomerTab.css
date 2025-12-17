@@ -1,0 +1,273 @@
+/* ================================
+   CUSTOMER TAB – BASE
+================================ */
+.customer-search {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  font-size: 14px;
+  min-width: 240px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+/* ================================
+   TABLE LAYOUT
+================================ */
+.table-container {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  margin-top: 16px;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.modern-table thead th {
+  text-align: left;
+  padding: 12px;
+  background: #f8fafc;
+  color: #4a5568;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modern-table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+
+.table-primary-text {
+  font-weight: 600;
+  color: #2b6cb0;
+}
+
+.th-actions {
+  text-align: right;
+}
+
+.modern-table tbody tr:hover {
+  background: #fff9f8;
+}
+
+/* ================================
+   TABLE ACTION BUTTONS
+================================ */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.table-cta {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  background: #edf2f7;
+  color: #2d3748;
+  transition: all 0.2s ease;
+}
+
+.table-cta:hover {
+  background: #e2e8f0;
+}
+
+.table-cta-danger {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.table-cta-danger:hover {
+  background: #feb2b2;
+}
+
+/* ================================
+   JOB CARDS (INSIDE MODAL)
+================================ */
+.job-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  color:black;
+  transition: all 0.2s ease;
+}
+
+.job-card.clickable:hover {
+  border-color: #3182ce;
+  background: #f0f8ff;
+}
+
+.job-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+/* ================================
+   JOB DETAILS VIEW
+================================ */
+.job-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 20px;
+  margin-bottom: 16px;
+}
+
+.job-info-grid p {
+  font-size: 14px;
+  color: #2d3748;
+}
+
+.job-detail-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.job-detail-item p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+/* ================================
+   MODALS – COMMON
+================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-large {
+  max-width: 900px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-header button {
+  background: #fc5858;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-header-h4{
+    color: #2b6cb0;
+}
+
+/* ================================
+   MODAL FORMS
+================================ */
+.modal-form {
+  padding: 20px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-grid.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+  color: #4a5568;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3182ce;
+}
+
+/* ================================
+   BUTTONS
+================================ */
+.btn-add-new,
+.btn-submit {
+  background: #3182ce;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-add-new:hover,
+.btn-submit:hover {
+  background: #2b6cb0;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  .job-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}

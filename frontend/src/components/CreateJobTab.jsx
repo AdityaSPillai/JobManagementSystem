@@ -20,6 +20,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
 
   const [formData, setFormData] = useState({
     templateId: "68f50077a6d75c0ab83cd019",
+    customerIDNumber: "",
     isVerifiedByUser: false,
     shopId: userInfo?.shopId || "",
     formData: {
@@ -263,6 +264,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
       templateId: formData.templateId,
       isVerifiedByUser: false,
       shopId: userInfo.shopId,
+      customerIDNumber: formData.customerIDNumber,
       formData: formData.formData,
       jobItems: formData.jobItems.map(item => ({
         itemData: item.itemData,
@@ -315,6 +317,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
                     if (selectedCustomer) {
                       setFormData(prev => ({
                         ...prev,
+                        customerIDNumber: selectedCustomer.customerIDNumber, 
                         formData: {
                           ...prev.formData,
                           customer_name: selectedCustomer.name,

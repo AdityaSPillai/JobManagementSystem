@@ -2,6 +2,10 @@ import CustomerModel from "../schema/customerSchema.js";
 
 export const createNewCustomer= async (req,res)=>{
     try {
+        const customercount = await CustomerModel.countDocuments();
+        const now = new Date();
+        const formattedDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+        const customerIDNumber = `CUS-${formattedDate}-${String(customercount + 1).padStart(6, '0')}`;
 
         const {name,email,phone,address, productId,productModel,productIdentification,shopId,trnNumber}= req.body;
         if(!name || !email || !phone || !address || !shopId|| !productId || !productModel || !productIdentification || !trnNumber){
@@ -12,6 +16,7 @@ export const createNewCustomer= async (req,res)=>{
         }
         const newCustomer= new CustomerModel({
             name,
+            customerIDNumber,
             email,
             phone,
             address,

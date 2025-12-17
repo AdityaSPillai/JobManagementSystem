@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../utils/axios";
 import useAuth from "../context/context";
+import "../styles/CustomerTab.css";
 
 export default function CustomerTab() {
   const { userInfo } = useAuth();
@@ -11,22 +12,27 @@ export default function CustomerTab() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
+  const [jobs, setJobs] = useState([]);
+  const [jobsModalOpen, setJobsModalOpen] = useState(false);
+
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
 
   const CUSTOMER_FIELDS = [
-    { name: "name", placeholder: "Name" },
-    { name: "email", placeholder: "Email" },
-    { name: "phone", placeholder: "Phone" },
-    { name: "address", placeholder: "Address" },
-    { name: "productId", placeholder: "Product ID" },
-    { name: "productModel", placeholder: "Product Model" },
-    { name: "productIdentification", placeholder: "Product Identification" },
-    { name: "trnNumber", placeholder: "TRN Number" },
+    { name: "name", label: "Name" },
+    { name: "email", label: "Email" },
+    { name: "phone", label: "Phone" },
+    { name: "address", label: "Address" },
+    { name: "productId", label: "Product ID" },
+    { name: "productModel", label: "Product Model" },
+    { name: "productIdentification", label: "Serial Number" },
+    { name: "trnNumber", label: "TRN Number" },
   ];
 
   const [form, setForm] = useState({
     name: "",
+    customerIDNumber: "",
     email: "",
     phone: "",
     address: "",
@@ -36,15 +42,25 @@ export default function CustomerTab() {
     trnNumber: "",
   });
 
-  // Fetch customers
+  /* ================= FETCH ================= */
+
   const fetchCustomers = async () => {
     try {
       const res = await axios.get(`/customer/list/${userInfo.shopId}`);
-      const list = res.data.customers || [];
-      setCustomers(list);
-      setFiltered(list);
+      setCustomers(res.data.customers || []);
+      setFiltered(res.data.customers || []);
     } catch (err) {
       console.error("Error fetching customers:", err);
+    }
+  };
+
+  const openCustomerJobs = async (customerIDNumber) => {
+    try {
+      const res = await axios.get(`/jobs/jobbycustomer/${customerIDNumber}`);
+      setJobs(res.data.jobs || []);
+      setJobsModalOpen(true);
+    } catch (err) {
+      alert("No jobs found for this customer");
     }
   };
 
@@ -52,10 +68,10 @@ export default function CustomerTab() {
     if (userInfo?.shopId) fetchCustomers();
   }, [userInfo]);
 
-  // Search filter
+  /* ================= SEARCH ================= */
+
   useEffect(() => {
     if (!search.trim()) return setFiltered(customers);
-
     const s = search.toLowerCase();
     setFiltered(
       customers.filter(
@@ -68,11 +84,13 @@ export default function CustomerTab() {
     );
   }, [search, customers]);
 
-  // Add new customer modal
+  /* ================= CRUD ================= */
+
   const openAddModal = () => {
     setEditingId(null);
     setForm({
       name: "",
+      customerIDNumber: "",
       email: "",
       phone: "",
       address: "",
@@ -84,23 +102,12 @@ export default function CustomerTab() {
     setModalOpen(true);
   };
 
-  // Edit customer modal
   const openEditModal = (c) => {
     setEditingId(c._id);
-    setForm({
-      name: c.name || "",
-      email: c.email || "",
-      phone: c.phone || "",
-      address: c.address || "",
-      productId: c.productId || "",
-      productModel: c.productModel || "",
-      productIdentification: c.productIdentification || "",
-      trnNumber: c.trnNumber || "",
-    });
+    setForm({ ...c });
     setModalOpen(true);
   };
 
-  // Save customer
   const saveCustomer = async () => {
     try {
       if (editingId) {
@@ -111,7 +118,6 @@ export default function CustomerTab() {
           shopId: userInfo.shopId,
         });
       }
-
       setModalOpen(false);
       fetchCustomers();
     } catch (err) {
@@ -119,10 +125,8 @@ export default function CustomerTab() {
     }
   };
 
-  // Delete customer
   const deleteCustomer = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
-
+    if (!window.confirm("Delete this customer?")) return;
     try {
       await axios.delete(`/customer/${id}`);
       fetchCustomers();
@@ -131,111 +135,172 @@ export default function CustomerTab() {
     }
   };
 
-  return (
-    <div>
+  /* ================= UI ================= */
 
-      {/* Header identical to EmployeesTab */}
+  return (
+    <div className="customer-tab">
       <div className="tab-header">
         <h3 className="section-title">Customer Management</h3>
-
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: 10 }}>
           <input
             type="text"
             placeholder="Search customers..."
-            className="customer-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              padding: "10px 14px",
-              borderRadius: "8px",
-              border: "1px solid #e2e8f0",
-            }}
+            className="customer-search"
           />
-
           <button className="btn-add-new" onClick={openAddModal}>
-            + Add New Customer
+            + Add Customer
           </button>
         </div>
       </div>
 
-      {/* CUSTOMER GRID - Uses data-grid & data-card styling */}
-      <div className="data-grid1">
-        {filtered.map((c) => (
-          <div key={c._id} className="data-card">
+      {/* ================= TABLE ================= */}
+      <div className="table-container">
+        <table className="modern-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Customer ID</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Product ID</th>
+              <th>Model</th>
+              <th className="th-actions">Actions</th>
+            </tr>
+          </thead>
 
-            <div className="data-card-header">
-              <h4>{c.name}</h4>
-              <span className="data-card-role">Customer</span>
-            </div>
+          <tbody>
+            {filtered.map((c) => (
+              <tr key={c._id}>
+                <td className="table-primary-text">{c.name}</td>
+                <td>{c.customerIDNumber}</td>
+                <td>{c.phone}</td>
+                <td>{c.email}</td>
+                <td>{c.productId}</td>
+                <td>{c.productModel}</td>
 
-            <div className="data-card-body">
-              <p><strong>Email:</strong> {c.email}</p>
-              <p><strong>Phone:</strong> {c.phone}</p>
-              <p><strong>Address:</strong> {c.address}</p>
-
-              <p><strong>TRN Number:</strong> {c.trnNumber}</p>
-              <p><strong>Product ID:</strong> {c.productId}</p>
-              <p><strong>Identification:</strong> {c.productIdentification}</p>
-              <p><strong>Model:</strong> {c.productModel}</p>
-            </div>
-
-            <div className="data-card-footer">
-              <button
-                className="btn-card-action"
-                onClick={() => openEditModal(c)}
-              >
-                Edit
-              </button>
-
-              <button
-                className="btn-card-action btn-danger"
-                onClick={() => deleteCustomer(c._id)}
-              >
-                Delete
-              </button>
-            </div>
-
-          </div>
-        ))}
+                <td>
+                  <div className="table-actions">
+                    {c.customerIDNumber && (
+                      <button
+                      className="table-cta"
+                      onClick={() => openCustomerJobs(c.customerIDNumber)}
+                    >
+                      Open
+                    </button>
+                    )}
+                    <button
+                      className="table-cta"
+                      onClick={() => openEditModal(c)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="table-cta table-cta-danger"
+                      onClick={() => deleteCustomer(c._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* MODAL (Same style as Employee modal) */}
+      {/* ================= ADD / EDIT MODAL ================= */}
       {modalOpen && (
         <div className="modal-overlay">
           <div className="modal-content modal-large">
-
             <div className="modal-header">
               <h3>{editingId ? "Edit Customer" : "Add Customer"}</h3>
-              <button
-                className="modal-close-btn"
-                onClick={() => setModalOpen(false)}
-              >
-                ✕
-              </button>
+              <button onClick={() => setModalOpen(false)}>✕</button>
             </div>
 
             <div className="modal-form">
               <div className="form-grid cols-2">
-                {CUSTOMER_FIELDS.map(({ name, placeholder }) => (
-                  <div className="form-group" key={name}>
-                    <label>{placeholder}</label>
+                {CUSTOMER_FIELDS.map((f) => (
+                  <div key={f.name} className="form-group">
+                    <label>{f.label}</label>
                     <input
-                      type="text"
-                      value={form[name]}
+                      value={form[f.name] || ""}
                       onChange={(e) =>
-                        setForm({ ...form, [name]: e.target.value })
+                        setForm({ ...form, [f.name]: e.target.value })
                       }
                     />
                   </div>
                 ))}
-
               </div>
-
               <button className="btn-submit" onClick={saveCustomer}>
                 Save
               </button>
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* ================= JOB LIST MODAL ================= */}
+      {jobsModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-large">
+            <div className="modal-header">
+              <h3>Customer Jobs</h3>
+              <button onClick={() => setJobsModalOpen(false)}>✕</button>
+            </div>
+
+            {jobs.map((job) => (
+              <div
+                key={job._id}
+                className="job-card clickable"
+                onClick={() => {
+                  setSelectedJob(job);
+                  setJobDetailsOpen(true);
+                }}
+              >
+                <p><strong>Job No:</strong> {job.jobCardNumber}</p>
+                <p><strong>Status:</strong> {job.status}</p>
+                <p><strong>Amount:</strong> ₹{job.totalEstimatedAmount}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ================= JOB DETAILS MODAL ================= */}
+      {jobDetailsOpen && selectedJob && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-large">
+            <div className="modal-header">
+              <h3>Job Card Details</h3>
+              <button onClick={() => setJobDetailsOpen(false)}>✕</button>
+            </div>
+
+            <div className="job-info-grid">
+              <p><strong>Job Number:</strong> {selectedJob.jobCardNumber}</p>
+              <p><strong>Status:</strong> {selectedJob.status}</p>
+              <p><strong>Customer:</strong> {selectedJob.formData?.customer_name}</p>
+              <p><strong>Contact:</strong> {selectedJob.formData?.contact_number}</p>
+              <p><strong>Product ID:</strong> {selectedJob.formData?.vehicle_number}</p>
+              <p><strong>Model:</strong> {selectedJob.formData?.vehicle_model}</p>
+              <p><strong>Serial No:</strong> {selectedJob.formData?.engine_number}</p>
+            </div>
+
+            <hr />
+
+            <h4 className="modal-header-h4">Job Tasks</h4>
+            {selectedJob.jobItems.map((item, i) => (
+              <div key={i} className="job-detail-item">
+                <p><strong>Task {i + 1}:</strong> {item.itemData?.description}</p>
+                <p>Category: {item.category}</p>
+                <p>Priority: {item.itemData?.priority}</p>
+                <p>Estimated Price: ₹{item.estimatedPrice}</p>
+              </div>
+            ))}
+
+            <hr />
+            <h4 className="modal-header-h4">Total Estimated Amount: ₹{selectedJob.totalEstimatedAmount}</h4>
           </div>
         </div>
       )}

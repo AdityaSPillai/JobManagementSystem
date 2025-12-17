@@ -11,7 +11,7 @@ let endingtime= new Date();
 
 export const createJobCard = async (req, res) => {
   try {
-    const { templateId,workVerified,shopId, formData, jobItems } = req.body;
+    const { templateId,workVerified,shopId,customerIDNumber, formData, jobItems } = req.body;
     
     // Validate template exists
     const template = await FormTemplateModel.findById(templateId);
@@ -49,6 +49,7 @@ const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')
     const jobCard = await JobCardModel.create({
       jobCardNumber,
       templateId,
+      customerIDNumber,
       shopId,
       isVerifiedByUser:false,
       workVerified,
@@ -162,6 +163,38 @@ export const getAllJobs= async(req,res)=>{
     });
   }
 }
+
+export const getAllJobsByCustomerID = async (req, res) => {
+  try {
+    const { customerIDNumber } = req.params;
+    console.log("PARAM:", customerIDNumber);
+   
+
+    const jobs = await JobCardModel.find({
+      customerIDNumber,
+    });
+    
+    console.log("FOUND JOBS:", jobs.length);
+    if (!jobs.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No jobs found for this customer"
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "All jobs done by customer found",
+      jobs
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 export const updateJobSettings = async (req, res) => {
   try {

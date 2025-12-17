@@ -152,6 +152,7 @@ const getAllCustomers = async () => {
 
   const [formData, setFormData] = useState({
     templateId: '68f50077a6d75c0ab83cd019',
+    customerIDNumber: "",
     isVerifiedByUser: false,
     workVerified:null,
     notes:null,
@@ -609,6 +610,13 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
     }));
   };
 
+  const handleCustomerIDChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      customerIDNumber: value
+    }));
+  };
+
   const updateJobItemField = (itemIndex, key, value, subObject = null) => {
     setFormData(prev => {
       const newJobItems = [...prev.jobItems];
@@ -838,6 +846,7 @@ const laborCost = actualHours * hourlyRate;
     templateId: formData.templateId,
     isVerifiedByUser: formData.isVerifiedByUser,
     shopId: userInfo?.shopId,
+    customerIDNumber: formData.customerIDNumber,
     formData: {
       customer_name: customerData.customer_name,
       vehicle_number: customerData.vehicle_number,
@@ -1235,6 +1244,7 @@ const laborCost = actualHours * hourlyRate;
       // ✅ Auto-fill job form with new customer + product
       setFormData(prev => ({
         ...prev,
+        customerIDNumber: created.customerIDNumber,
         formData: {
           ...prev.formData,
           customer_name: created.name,
@@ -1710,6 +1720,7 @@ const laborCost = actualHours * hourlyRate;
                         if (selectedCustomer) {
                           setFormData(prev => ({
                             ...prev,
+                            customerIDNumber: selectedCustomer.customerIDNumber, 
                             formData: {
                               ...prev.formData,
                               customer_name: selectedCustomer.name,
@@ -1749,9 +1760,15 @@ const laborCost = actualHours * hourlyRate;
                     <input type="text" placeholder="e.g., Toyota Camry 2018" value={formData.formData.vehicle_model} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
                   </div>
                 </div>
-                <div className="form-group">
-                  <label>Serial Number</label>
-                  <input type="text" placeholder="Enter engine identification number" value={formData.formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
+                <div className='form-row'>
+                  <div className="form-group">
+                    <label>Serial Number</label>
+                    <input type="text" placeholder="Enter engine identification number" value={formData.formData.engine_number} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>Customer ID</label>
+                    <input type="text" placeholder="Select Customer First" value={formData.customerIDNumber} readOnly />
+                  </div>
                 </div>
                 <div className="job-items-section">
                   <div className="section-title">
