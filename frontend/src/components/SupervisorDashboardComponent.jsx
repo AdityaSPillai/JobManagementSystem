@@ -1312,20 +1312,16 @@ const handleQualityBad = async (jobId,userId) => {
                                           <div className="item-description-container">
                                             <div className="item-description">{item.description}</div>
                                             <div className="item-description">Priority: {item.priority}</div>
-                                          
                                             <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
-                                            <p className="item-status-badge">
-                                          Status: <strong>{item.itemStatus}</strong>
-                                        </p>
-            
+                                            <div className="item-status-badge">Status: <strong>{item.itemStatus}</strong></div>
                                           </div>
                                           
                                           {/*Notes to be displayed here if Notes is not NULL*/}
-                                          {selectedJob.notes && selectedJob.notes.trim() !== '' && (
+                                          {item.notes && item.notes.trim() !== '' && (
                                             <div className="job-items-container">
                                               <strong className="job-items-title">Notes:</strong>
                                               <div className="full-width">
-                                                <p className="job-notes-text">{selectedJob.notes}</p>
+                                                <p className="job-notes-text">{item.notes}</p>
                                               </div>
                                             </div>
                                           )}
@@ -1407,7 +1403,7 @@ const handleQualityBad = async (jobId,userId) => {
                                           <p style={{ color: '#666' }}>No workers assigned yet for this task</p>
                                         )}
                                    <div className="item-price">
-                                            <p><strong>Estimated Price:</strong> $
+                                            <p><strong>Estimated Price:</strong>
                                             ${(
                                               (item.estimatedPrice || 0) +
                                               (Array.isArray(item.consumable) ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0) : 0)
