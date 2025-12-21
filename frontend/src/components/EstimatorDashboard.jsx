@@ -33,7 +33,6 @@ function EstimatorDashboard({ onLoginClick }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const jobCardRef = useRef();
 
-
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
@@ -210,6 +209,7 @@ function EstimatorDashboard({ onLoginClick }) {
         const transformedJobs = res.data.allJobs.map(job => ({
           id: job._id,
           jobCardNumber: job.jobCardNumber,
+          customerIDNumber: job.customerIDNumber || '',
           customer_name: job.formData?.customer_name || '',
           vehicle_number: job.formData?.vehicle_number || '',
           engine_number: job.formData?.engine_number || '',
@@ -267,9 +267,11 @@ function EstimatorDashboard({ onLoginClick }) {
                 ? item.consumable
                   .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
                   .map(c => ({
+                    _id: c._id,
                     name: c.name.trim(),
                     price: c.price,
                     available: c.available,
+                    numberOfUsed: c.numberOfUsed || 0,
                   }))
                 : []
             };
@@ -1191,7 +1193,24 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
+  const handleUseConsumable = async (jobId, jobItemId, consumableId, qty) => {
+    try {
+      const res = await axios.put(
+        `/jobs/usedConsumable/${jobId}/${jobItemId}/${consumableId}`,
+        { usedQty: qty }
+      );
 
+      if (!res.data.success) {
+        alert("Failed to update consumable usage");
+        return;
+      }
+      getAllJobs();
+
+    } catch (error) {
+      console.error("Consumable usage error:", error);
+      alert("Error using consumable");
+    }
+  };
 
 
 
@@ -1289,12 +1308,14 @@ function EstimatorDashboard({ onLoginClick }) {
               <p>Create job cards and track order history</p>
             </div>
             <div className="action-buttons">
-              <button className="btn-action-primary" onClick={() => {
-                setShowCreateJob(!showCreateJob);
-                setShowJobDetails(false);
-              }}>
-                + Add Job Card
-              </button>
+              {userInfo?.role !== 'worker' &&
+                <button className="btn-action-primary" onClick={() => {
+                  setShowCreateJob(!showCreateJob);
+                  setShowJobDetails(false);
+                }}>
+                  + Add Job Card
+                </button>
+              }
             </div>
           </div>
         </div>
@@ -1402,7 +1423,10 @@ function EstimatorDashboard({ onLoginClick }) {
             {showJobDetails && selectedJob && (
               <div className="job-details-view" ref={jobCardRef}>
                 <div className="form-header">
-                  <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
+                  <div className="form-header-left">
+                    <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
+                    <span className="job-number-title">({selectedJob.jobCardNumber})</span>
+                  </div>
                   <button className="close-btn" onClick={() => {
                     setShowJobDetails(false);
                     setSelectedJob(null);
@@ -1412,8 +1436,8 @@ function EstimatorDashboard({ onLoginClick }) {
                   📄 Download PDF
                 </button>
                 <div className="job-detail-content">
-                  <div className="job-info-grid">
-                    <div><strong>Job Number:</strong> <span>{selectedJob.jobCardNumber}</span></div>
+                  <div className="job-info-grid-ed">
+                    <div><strong>Customer ID Number:</strong> <span>{selectedJob.customerIDNumber}</span></div>
                     <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div>
                     <div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div>
                     <div><strong>Model:</strong> <span>{selectedJob.vehicle_model || 'N/A'}</span></div>
@@ -1432,7 +1456,8 @@ function EstimatorDashboard({ onLoginClick }) {
                     </div>
 
                   </div>
-                  <div className="job-items-container">
+                  <div className="job-items-container-ed">
+                    <div className="breaker-btw-section"></div>
                     <strong className="job-items-title">Job Tasks:</strong>
                     {selectedJob.items.map((item, index) => (
 
@@ -1449,15 +1474,16 @@ function EstimatorDashboard({ onLoginClick }) {
                                 <div className="item-description">Priority: {item.priority}</div>
 
                                 <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
-                                <p className="item-status-badge">
+                                <div className="item-description">
                                   Status: <strong>{item.itemStatus}</strong>
-                                </p>
+                                </div>
 
                               </div>
 
                               {/*Notes to be displayed here if Notes is not NULL*/}
                               {item.notes && item.notes.trim() !== '' && (
-                                <div className="job-items-container">
+                                <div className="job-items-container-ed">
+                                  <div className="breaker-btw-section"></div>
                                   <strong className="job-items-title">Notes:</strong>
                                   <div className="full-width">
                                     <p className="job-notes-text">{item.notes}</p>
@@ -1466,154 +1492,255 @@ function EstimatorDashboard({ onLoginClick }) {
                               )}
 
                               {Array.isArray(item.machine) && item.machine.length > 0 && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Machines Used:</strong>
-                                  <div className="full-width">
-                                    {item.machine.map((m, mi) => (
-                                      <p key={mi} className='machine-name'>
-                                        <strong>Machine {mi + 1}:</strong> {m.machineRequired || 'N/A'}
-                                        {m.actualDuration && (
-                                          <span style={{ marginLeft: '10px', color: '#666' }}>
-                                            (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
-                                          </span>
-                                        )}
-                                      </p>
-                                    ))}
+                                <div className="job-items-container-ed">
+                                  <div className="breaker-btw-section"></div>
+                                  <strong className="job-items-title">Machines:</strong>
+
+                                  <div className="machine-table-wrapper">
+                                    <table className="machine-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Sl No.</th>
+                                          <th>Name</th>
+                                          <th>Action</th>
+                                        </tr>
+                                      </thead>
+
+                                      <tbody>
+                                        {item.machine.map((m, mi) => (
+                                          <tr key={mi}>
+                                            <td>{mi + 1}</td>
+
+                                            <td>
+                                              {m.machineRequired || 'N/A'}
+                                              {m.actualDuration && (
+                                                <div className="machine-duration">
+                                                  {(m.actualDuration / 60).toFixed(2)} hrs
+                                                </div>
+                                              )}
+                                            </td>
+
+                                            <td>
+                                              <div className="machine-actions">
+                                                {selectedJob.status === 'waiting' ? (
+                                                  <span className="machine-waiting">
+                                                    Waiting for Manager Approval
+                                                  </span>
+                                                ) : (
+                                                  <>
+                                                    <button className="machine-btn start">Start</button>
+                                                    <button className="machine-btn pause">Pause</button>
+                                                    <button className="machine-btn stop">Stop</button>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 </div>
                               )}
 
                               {item.consumable && item.consumable.length > 0 && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Consumables Used:</strong>
-                                  <div className="full-width">
-                                    {item.consumable.map((c, i) => (
-                                      <p key={i} style={{ color: 'black' }}>
-                                        {c.name} — ${c.price} {c.available ? "(Available)" : "(Not Available)"}
-                                      </p>
-                                    ))}
+                                <div className="job-items-container-ed">
+                                  <div className="breaker-btw-section"></div>
+                                  <strong className="job-items-title">Consumables:</strong>
+
+                                  <div className="consumable-table-wrapper">
+                                    <table className="consumable-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Sl No.</th>
+                                          <th>Name</th>
+                                          <th>Price</th>
+                                          <th>Used</th>
+                                          <th>Action</th>
+                                        </tr>
+                                      </thead>
+
+                                      <tbody>
+                                        {item.consumable.map((c, i) => (
+                                          <tr key={i}>
+                                            <td>{i + 1}</td>
+
+                                            <td>{c.name}</td>
+
+                                            <td>${c.price}</td>
+
+                                            <td>{c.numberOfUsed}</td>
+
+                                            <td>
+                                              <div className="consumable-actions">
+                                                {selectedJob.status === 'waiting' ? (
+                                                  <span className="consumable-waiting">
+                                                    Waiting for Manager Approval
+                                                  </span>
+                                                ) : (
+                                                  <>
+                                                    <button
+                                                      className="consumable-btn"
+                                                      onClick={() =>
+                                                        handleUseConsumable(
+                                                          selectedJob.id,
+                                                          item.itemId,
+                                                          c._id,
+                                                          1
+                                                        )
+                                                      }
+                                                    >
+                                                      Used 1
+                                                    </button>
+
+                                                    <button
+                                                      className="consumable-btn"
+                                                      onClick={() =>
+                                                        handleUseConsumable(
+                                                          selectedJob.id,
+                                                          item.itemId,
+                                                          c._id,
+                                                          5
+                                                        )
+                                                      }
+                                                    >
+                                                      Used 5
+                                                    </button>
+
+                                                    <button
+                                                      className="consumable-btn"
+                                                      onClick={() =>
+                                                        handleUseConsumable(
+                                                          selectedJob.id,
+                                                          item.itemId,
+                                                          c._id,
+                                                          10
+                                                        )
+                                                      }
+                                                    >
+                                                      Used 10
+                                                    </button>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 </div>
                               )}
-                              <div className="item-price">
-                                ${(
-                                  (item.estimatedPrice || 0) +
-                                  (Array.isArray(item.consumable) ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0) : 0)
-                                ).toFixed(2)}
-                              </div>
                             </div>
                             <br></br>
                             <br></br>
                             {/* Workers list & per-worker timer controls */}
 
                           </div>
-                          <div className="full-width">
-                            <p className="employee-select-label"><strong>Assign   Employee for this task:</strong></p>
-
+                          <div className="job-items-container-ed">
+                            <div className="breaker-btw-section"></div>
+                            <strong className="job-items-title">Workers:</strong>
 
                             {Array.isArray(item.workers) && item.workers.length > 0 ? (
-                              item.workers.map((w, wi) => (
-                                <div key={w._id || wi} className="item-timer-section">
-                                  <div className="worker-row">
-                                    <div className="worker-info">
-                                      <strong>Worker:</strong> { /* show name if you can resolve, else id */}
-                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned} {employees.find(e => e._id === w.workerAssigned)?.employeeNumber || ''}
-                                    </div>
+                              <div className="worker-table-wrapper">
+                                <table className="worker-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Sl No.</th>
+                                      <th>Name</th>
+                                      <th>Worker ID</th>
+                                      <th>Action</th>
+                                    </tr>
+                                  </thead>
 
-                                    <div className="item-timer-controls">
-                                      {(w.endTime || selectedJob.status.toLowerCase() === "completed" || selectedJob.status.toLowerCase() === "approved") ? (
-                                        <div className="completed-badge-small">
-                                          <img src={tickIcon} alt="Completed" className="btn-icon" />
-                                        </div>
-                                      ) : (
-                                        <>
-                                          {/* NOT STARTED */}
-                                          {(!w.startTime && !w.endTime) && (
-                                            <button
-                                              title="Start"
-                                              className="btn-timer-small btn-start"
-                                              onClick={() => handleStartItemTimer(selectedJob.id, index, w.workerAssigned)}
-                                            >
-                                              <img src={playIcon} alt="Start" className="btn-icon" />
-                                            </button>
-                                          )}
+                                  <tbody>
+                                    {item.workers.map((w, wi) => {
+                                      const employee = employees.find(
+                                        e => e._id === w.workerAssigned
+                                      );
 
-                                          {/* PAUSED → ONLY PLAY */}
-                                          {(w.startTime && !w.endTime && ispaused) && (
-                                            <button
-                                              title="Resume"
-                                              className="btn-timer-small btn-start"
-                                              onClick={() => handleStartItemTimer(selectedJob.id, index, w.workerAssigned)}
-                                            >
-                                              <img src={playIcon} alt="Start" className="btn-icon" />
-                                            </button>
-                                          )}
+                                      const isStopped = !!w.endTime;
+                                      const isStarted = !!w.startTime && !w.endTime;
+                                      const isRunning = isStarted && !ispaused;
+                                      const isPaused = isStarted && ispaused;
 
-                                          {/* RUNNING → PAUSE + END */}
-                                          {(w.startTime && !w.endTime && !ispaused) && (
-                                            <>
-                                              <button
-                                                title="End"
-                                                className="btn-timer-small btn-end"
-                                                onClick={() => handleEndItemTimer(selectedJob.id, index, w.workerAssigned)}
-                                              >
-                                                <img src={tickIcon} alt="End" className="btn-icon" />
-                                              </button>
+                                      return (
+                                        <tr key={w._id || wi}>
+                                          <td>{wi + 1}</td>
 
-                                              <button
-                                                title="Pause"
-                                                className="btn-timer-small btn-pause"
-                                                onClick={() => handlePauseTimer(selectedJob.id, index, w.workerAssigned)}
-                                              >
-                                                <img src={pause} alt="Pause" className="btn-icon" />
-                                              </button>
-                                            </>
-                                          )}
+                                          <td>{employee?.name || 'Unknown'}</td>
 
-                                          {(w.startTime && !w.endTime && !ispaused) && (
-                                            <p className="job-running-label">🟢 Working</p>
-                                          )}
-                                        </>
-                                      )}
-                                    </div>
+                                          <td>{employee?.employeeNumber || w.workerAssigned}</td>
 
+                                          <td>
+                                            <div className="worker-actions">
+                                              {isStopped && selectedJob.status !== 'rejected' ? (
+                                                <span className="worker-stopped">Stopped</span>
+                                              ) : (
+                                                <>
+                                                  {/* START */}
+                                                  <button
+                                                    className="worker-btn start"
+                                                    disabled={isRunning}
+                                                    onClick={() =>
+                                                      handleStartItemTimer(
+                                                        selectedJob.id,
+                                                        index,
+                                                        w.workerAssigned
+                                                      )
+                                                    }
+                                                  >
+                                                    Start
+                                                  </button>
 
-                                    {/* show actual duration if available */}
-                                    {w?.actualDuration != null && w.actualDuration > 0 && (
-                                      <div className="job-items-container">
-                                        <strong className="job-items-title">Actual Time Used:</strong>
-                                        <div className="full-width">
-                                          <p className='time'>
-                                            ⏱ {(() => {
-                                              const hours = Math.floor(w.actualDuration / 60);
-                                              const minutes = Math.floor(w.actualDuration % 60);
-                                              const seconds = Math.floor((w.actualDuration * 60) % 60);
-                                              if (minutes == 0 && hours == 0 || w.actualDuration < 1) {
-                                                return `Less Than A minute`;
-                                              }
-                                              return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                                            })()}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))
+                                                  {/* PAUSE */}
+                                                  <button
+                                                    className="worker-btn pause"
+                                                    disabled={!isRunning}
+                                                    onClick={() =>
+                                                      handlePauseTimer(
+                                                        selectedJob.id,
+                                                        index,
+                                                        w.workerAssigned
+                                                      )
+                                                    }
+                                                  >
+                                                    Pause
+                                                  </button>
+
+                                                  {/* STOP */}
+                                                  <button
+                                                    className="worker-btn stop"
+                                                    disabled={!isStarted}
+                                                    onClick={() =>
+                                                      handleEndItemTimer(
+                                                        selectedJob.id,
+                                                        index,
+                                                        w.workerAssigned
+                                                      )
+                                                    }
+                                                  >
+                                                    Stop
+                                                  </button>
+                                                </>
+                                              )}
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+
+                              </div>
                             ) : (
-                              <p style={{ color: '#666' }}>No workers assigned yet for this task</p>
-                            )}
-
-
-                            {selectedJob.status === 'rejected' && (
-                              <p style={{ color: '#d9534f', fontSize: '0.85rem' }}>
-                                ⚠ Rejected job: You can assign up to {item.numberOfWorkers * 2} workers (including previous assignments)
+                              <p style={{ color: '#666' }}>
+                                No workers assigned yet for this task
                               </p>
                             )}
-
                             <select
                               className="employee-select"
-                              value={''} // leave empty so user can add multiple workers; selection does not represent a single assigned worker
+                              value=""
                               onChange={(e) => {
                                 const selectedEmployeeId = e.target.value;
                                 if (selectedEmployeeId) {
@@ -1632,26 +1759,21 @@ function EstimatorDashboard({ onLoginClick }) {
                                   item.workers.length >= (item.numberOfWorkers || 1)
                                 )
                               }
-
                             >
                               <option value="">Select Employee</option>
 
                               {employees
                                 .filter(emp => emp.specialization === item.category)
-
                                 .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
                                 .map(emp => (
                                   <option key={emp._id} value={emp._id}>
                                     {emp.name} {emp.employeeNumber} — {emp.specialization}
                                   </option>
-                                ))
-                              }
-
+                                ))}
                             </select>
                           </div>
                         </div>
                       </div>
-
                     ))}
                   </div>
 

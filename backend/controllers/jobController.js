@@ -3,16 +3,16 @@ import FormTemplateModel from "../schema/formTemplateSchema.js";
 import JobCardModel from "../schema/jobCardSchema.js";
 import MachineModel from "../schema/machieneModel.js";
 
-let endingtime= new Date();
-    function timeDifference(start, end) {
-      return Math.round((end - start) / (1000 * 60));
-    } ;
+let endingtime = new Date();
+function timeDifference(start, end) {
+  return Math.round((end - start) / (1000 * 60));
+};
 
 
 export const createJobCard = async (req, res) => {
   try {
-    const { templateId,workVerified,shopId,customerIDNumber, formData, jobItems } = req.body;
-    
+    const { templateId, workVerified, shopId, customerIDNumber, formData, jobItems } = req.body;
+
     // Validate template exists
     const template = await FormTemplateModel.findById(templateId);
     if (!template) {
@@ -29,73 +29,73 @@ export const createJobCard = async (req, res) => {
         const consumablePrice = Array.isArray(item.consumable)
           ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
           : 0;
-       const machineCost= Array.isArray(item.machine)?
-       item.machine.reduce((sum,m)=> sum+m.machineEstimatedCost||0,0):0;
-             return sum + itemPrice + consumablePrice + machineCost
+        const machineCost = Array.isArray(item.machine) ?
+          item.machine.reduce((sum, m) => sum + m.machineEstimatedCost || 0, 0) : 0;
+        return sum + itemPrice + consumablePrice + machineCost
 
       },
       0
     );
-    
+
     // Generate job number
     const count = await JobCardModel.countDocuments();
- 
-// Generate job number with date and time
-const now = new Date();
-const formattedDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
-const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')}`;
-    
+
+    // Generate job number with date and time
+    const now = new Date();
+    const formattedDate = now.toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+    const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')}`;
+
     // Create job card
     const jobCard = await JobCardModel.create({
       jobCardNumber,
       templateId,
       customerIDNumber,
       shopId,
-      isVerifiedByUser:false,
+      isVerifiedByUser: false,
       workVerified,
       formData: new Map(Object.entries(formData)),
       jobItems: jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
-        category:item.category,
-        estimatedManHours:item.estimatedManHours,
-        numberOfWorkers:item.numberOfWorkers,
+        category: item.category,
+        estimatedManHours: item.estimatedManHours,
+        numberOfWorkers: item.numberOfWorkers,
         estimatedPrice: item.estimatedPrice || 0,
-       machine: Array.isArray(item.machine) 
+        machine: Array.isArray(item.machine)
           ? item.machine.map(m => ({
-              machineRequired: m.machineRequired || null,
-              startTime: m.startTime || null,
-              endTime: m.endTime || null,
-              actualDuration: m.actualDuration || null
-            }))
+            machineRequired: m.machineRequired || null,
+            startTime: m.startTime || null,
+            endTime: m.endTime || null,
+            actualDuration: m.actualDuration || null
+          }))
           : [],
 
         workers: Array.isArray(item.workers) ? item.workers : [],
         consumable: Array.isArray(item.consumable) ? item.consumable : [],
       })),
-      status:'waiting',
+      status: 'waiting',
       totalEstimatedAmount,
       createdBy: req.user?._id
     });
 
     // Update machine availability for all machines assigned
     const machineUpdatePromises = jobItems
-    .filter(item => item.machine?.machineRequired && item.machine.machineRequired !== null)
-    .map(async (item, index) => {
-      try {
-        if (mongoose.isValidObjectId(item.machine.machineRequired)) {
-          return MachineModel.findByIdAndUpdate(
-            item.machine.machineRequired,
-            { 
-              isAvailable: false,
-              jobId: jobCard._id
-            },
-            { new: true }
-          );
+      .filter(item => item.machine?.machineRequired && item.machine.machineRequired !== null)
+      .map(async (item, index) => {
+        try {
+          if (mongoose.isValidObjectId(item.machine.machineRequired)) {
+            return MachineModel.findByIdAndUpdate(
+              item.machine.machineRequired,
+              {
+                isAvailable: false,
+                jobId: jobCard._id
+              },
+              { new: true }
+            );
+          }
+        } catch (error) {
+          console.error(`Error updating machine for job item ${index}:`, error);
         }
-      } catch (error) {
-        console.error(`Error updating machine for job item ${index}:`, error);
-      }
-    });
+      });
 
 
     res.status(201).json({
@@ -107,31 +107,30 @@ const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')
     console.error("Error creating job card:", error);
     res.status(500).json({
       success: false,
-      message: "Error occuerd "+ error.message
+      message: "Error occuerd " + error.message
     });
   }
 };
 
-export const getAllJobs= async(req,res)=>{
-    try {
-        const jobs=await JobCardModel.find();
+export const getAllJobs = async (req, res) => {
+  try {
+    const jobs = await JobCardModel.find();
 
-        if(jobs.length==0)
-        {
-            console.log("No jobs added");
-            return res.status(400).send({
-                success:false,
-                message:"No jobs available"
-        })
-        }
+    if (jobs.length == 0) {
+      console.log("No jobs added");
+      return res.status(400).send({
+        success: false,
+        message: "No jobs available"
+      })
+    }
 
-        res.status(200).send({
-            success:true,
-            message:"All jobs available",
-            jobs
-        })
-        
-   } catch (error) {
+    res.status(200).send({
+      success: true,
+      message: "All jobs available",
+      jobs
+    })
+
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message
@@ -143,12 +142,12 @@ export const getAllJobsByCustomerID = async (req, res) => {
   try {
     const { customerIDNumber } = req.params;
     console.log("PARAM:", customerIDNumber);
-   
+
 
     const jobs = await JobCardModel.find({
       customerIDNumber,
     });
-    
+
     console.log("FOUND JOBS:", jobs.length);
     if (!jobs.length) {
       return res.status(404).json({
@@ -214,11 +213,11 @@ export const updateJobSettings = async (req, res) => {
 
         machine: Array.isArray(item.machine)
           ? item.machine.map(m => ({
-              machineRequired: m.machineRequired || null,
-              startTime: m.startTime || null,
-              endTime: m.endTime || null,
-              actualDuration: m.actualDuration || null,
-            }))
+            machineRequired: m.machineRequired || null,
+            startTime: m.startTime || null,
+            endTime: m.endTime || null,
+            actualDuration: m.actualDuration || null,
+          }))
           : [],
 
         workers: Array.isArray(item.workers) ? item.workers : [],
@@ -227,8 +226,8 @@ export const updateJobSettings = async (req, res) => {
 
       updateData.totalEstimatedAmount = totalEstimatedAmount;
 
-  
-      
+
+
 
 
       await Promise.all(machineUpdatePromises);
@@ -275,24 +274,23 @@ export const updateJobSettings = async (req, res) => {
 
 
 
-export const deleteJobController= async(req,res)=>{
+export const deleteJobController = async (req, res) => {
   try {
-    const {jobId}=req.params;
+    const { jobId } = req.params;
 
-    const job= await JobCardModel.findByIdAndDelete(jobId);
+    const job = await JobCardModel.findByIdAndDelete(jobId);
 
-    if(!job)
-    {
+    if (!job) {
       console.log("Job was not deleted ");
     }
-    
+
     res.status(200).send({
-      success:true,
-      message:"Job deleted Succesfully",
+      success: true,
+      message: "Job deleted Succesfully",
       job
-      
+
     })
-   } catch (error) {
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message
@@ -461,31 +459,31 @@ export const endMachineForJobItem = async (req, res) => {
     let machineFound = false;
 
     for (const item of jobItem.jobItems) {
-     for (const m of item.machine) {
-  if (m.machineRequired?.toString() === machineId) {
-        item.machine.endTime = new Date();
-        timeDifference(item.machine.startTime, item.machine.endTime);
-        item.machine.actualDuration = endingtime
-        machineFound = true;
+      for (const m of item.machine) {
+        if (m.machineRequired?.toString() === machineId) {
+          item.machine.endTime = new Date();
+          timeDifference(item.machine.startTime, item.machine.endTime);
+          item.machine.actualDuration = endingtime
+          machineFound = true;
 
 
-        // ✅ Update MachineModel as well
-        await MachineModel.findByIdAndUpdate(
-          machineId,
-          {
-            isAvailable: true,
-            endTime: new Date(),
-            actualDuration:endingtime,
-            jobId: null,
-          },
-          { new: true }
-        );
+          // ✅ Update MachineModel as well
+          await MachineModel.findByIdAndUpdate(
+            machineId,
+            {
+              isAvailable: true,
+              endTime: new Date(),
+              actualDuration: endingtime,
+              jobId: null,
+            },
+            { new: true }
+          );
 
-        console.log("Machine timer started at", item.machine.startTime);
-        break;
+          console.log("Machine timer started at", item.machine.startTime);
+          break;
+        }
       }
     }
-  }
 
 
     if (!machineFound) {
@@ -534,14 +532,14 @@ export const startWorkerTimer = async (req, res) => {
     if (!jobItem) {
       return res.status(404).json({ success: false, message: "Job item not found" });
     }
-    console.log("Job Item found:", jobItem.workers);  
+    console.log("Job Item found:", jobItem.workers);
 
     const worker = jobItem.workers.find(w => w.workerAssigned.toString() === workerObjectId);
     if (!worker) {
       return res.status(404).json({ success: false, message: "Worker not found" });
     }
 
-    
+
     worker.startTime = new Date();
     jobItem.status = "in_progress";
 
@@ -560,60 +558,72 @@ export const startWorkerTimer = async (req, res) => {
 
 
 
-export const pauseWrokerTImer= async (req, res) => {
+export const pauseWorkerTImer = async (req, res) => {
   try {
-      const {jobId,jobItemId,workerObjectId} = req.params;
-    if(!jobId|| !jobItemId|| !workerObjectId){
+    const { jobId, jobItemId, workerObjectId } = req.params;
+    if (!jobId || !jobItemId || !workerObjectId) {
       console.error("Please provide valid jobId and userId and workerObjectId");
       return res.status(400).json({
-        success:false,
-        message:"Please provide valid jobId and userId",
+        success: false,
+        message: "Please provide valid jobId and userId",
       })
     }
-    const job=await JobCardModel.findById(jobId);
-    if(!job){
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
       console.error("Job item not found");
       return res.status(404).json({
-        success:false,
-        message:"Job item not found",
+        success: false,
+        message: "Job item not found",
       })
     }
 
-    const jobItem=job.jobItems.find(i=>i._id.toString()===jobItemId);
-    if(!jobItem){
+    const jobItem = job.jobItems.find(i => i._id.toString() === jobItemId);
+    if (!jobItem) {
       return res.status(404).json({
         success: false,
         message: "Job item not found",
       });
     }
     console.log("Job Item found:", jobItem.workers);
-    let workerFound= false;
-for(const worker of jobItem.workers){
-      console.log("Checking workerAssigned:", worker?.workerAssigned?.toString());
-      if(worker?.workerAssigned?.toString()=== workerObjectId){
-        worker.endTime= new Date();
-        timeDifference(worker.startTime, worker.endTime);
-        worker.actualDuration += endingtime;
-        console.log("Worker timer ended at", worker.endTime);
-        worker.endTime= null;
-        worker.startTime=null;
+    let workerFound = false;
+    for (const worker of jobItem.workers) {
+      if (worker?.workerAssigned?.toString() === workerObjectId) {
 
-        workerFound= true;
-        jobItem.status='completed';
+        if (!worker.startTime) {
+          return res.status(400).json({
+            success: false,
+            message: "Worker timer is not running",
+          });
+        }
+
+        const pauseTime = new Date();
+
+        const sessionDuration = Math.floor(
+          (pauseTime - new Date(worker.startTime)) / (1000 * 60)
+        );
+
+        worker.actualDuration =
+          (worker.actualDuration || 0) + sessionDuration;
+
+        worker.startTime = null;
+        worker.endTime = null;
+
+        workerFound = true;
+        jobItem.status = 'in_progress';
         break;
       }
     }
 
- await job.save()
-        if(!workerFound){
-              console.error("Worker not found in job items");
-              return res.status(404).json({
-                success:false,
-                message:"Worker not found in job items",
-              })
-            }
+    await job.save()
+    if (!workerFound) {
+      console.error("Worker not found in job items");
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found in job items",
+      })
+    }
 
-     res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Worker timer ended successfully",
       job,
@@ -631,7 +641,7 @@ for(const worker of jobItem.workers){
 export const endWorkerTimer = async (req, res) => {
   try {
     const { jobId, jobItemId, workerObjectId } = req.params;
-    
+
     if (!jobId || !jobItemId || !workerObjectId) {
       console.error("Please provide valid jobId, jobItemId and workerObjectId");
       return res.status(400).json({
@@ -658,7 +668,7 @@ export const endWorkerTimer = async (req, res) => {
     }
 
     let workerFound = false;
-    
+
     for (const worker of jobItem.workers) {
       if (worker?.workerAssigned?.toString() === workerObjectId) {
 
@@ -677,15 +687,15 @@ export const endWorkerTimer = async (req, res) => {
         }
 
         worker.endTime = new Date();
-        
+
         // Calculate duration for this work session in minutes
         const startTime = new Date(worker.startTime);
         const endTime = new Date(worker.endTime);
         const sessionDurationInMinutes = Math.floor((endTime - startTime) / (1000 * 60));
-        
-    
+
+
         worker.actualDuration = (worker.actualDuration || 0) + sessionDurationInMinutes;
-        
+
         console.log(`Worker timer ended. Session Duration: ${sessionDurationInMinutes} minutes, Total Accumulated: ${worker.actualDuration} minutes`);
         workerFound = true;
         break;
@@ -700,14 +710,14 @@ export const endWorkerTimer = async (req, res) => {
       });
     }
 
-    
+
     let allWorkersCompleted = true;
-    
+
     if (jobItem.workers.length === 0) {
       allWorkersCompleted = false;
     } else {
       for (const w of jobItem.workers) {
-      
+
         if (!w.endTime) {
           allWorkersCompleted = false;
           break;
@@ -719,11 +729,11 @@ export const endWorkerTimer = async (req, res) => {
     if (allWorkersCompleted && jobItem.workers.length > 0) {
       jobItem.status = 'completed';
       console.log(`Job item ${jobItemId} marked as completed`);
-      let actualManHours=jobItem.workers.reduce((sum,w)=>sum+(w.actualDuration ||0),0)
+      let actualManHours = jobItem.workers.reduce((sum, w) => sum + (w.actualDuration || 0), 0)
 
       job.actualManHours += actualManHours;
 
-      
+
       // Release all machines assigned to this completed job item
       if (Array.isArray(jobItem.machine) && jobItem.machine.length > 0) {
         const machineReleasePromises = jobItem.machine
@@ -732,7 +742,7 @@ export const endWorkerTimer = async (req, res) => {
             try {
               return await MachineModel.findByIdAndUpdate(
                 machine.machineRequired,
-                { 
+                {
                   isAvailable: true,
                   jobId: null
                 },
@@ -743,7 +753,7 @@ export const endWorkerTimer = async (req, res) => {
               return null;
             }
           });
-        
+
         await Promise.all(machineReleasePromises);
         console.log(`Released ${machineReleasePromises.length} machine(s) for job item ${jobItemId}`);
       }
@@ -790,10 +800,10 @@ export const endWorkerTimer = async (req, res) => {
 };
 
 
-  export const assignWorkerController = async (req, res) => {
+export const assignWorkerController = async (req, res) => {
   try {
     const { userId, jobId, jobItemId } = req.params;
-    
+
     if (!userId || !jobId || !jobItemId) {
       return res.status(400).send({
         success: false,
@@ -801,20 +811,20 @@ export const endWorkerTimer = async (req, res) => {
       });
     }
 
-    const workObject={
-      workerAssigned:userId,
-      startTime:null,
-      endTime:null,
-      actualDuration:null
+    const workObject = {
+      workerAssigned: userId,
+      startTime: null,
+      endTime: null,
+      actualDuration: null
     }
 
     const job = await JobCardModel.findOneAndUpdate(
-      { 
+      {
         _id: jobId,
         "jobItems._id": jobItemId
       },
-      { 
-        $addToSet: { "jobItems.$.workers":workObject }
+      {
+        $addToSet: { "jobItems.$.workers": workObject }
       },
       { new: true }
     );
@@ -844,69 +854,73 @@ export const endWorkerTimer = async (req, res) => {
 
 
 
-export const supervisorApproval = async (req, res) => { {
-  try {
-    const { jobId } = req.params;
-    const job = await JobCardModel.findById(jobId);
-    if (!job) {
-      return res.status(404).send({ 
-        success: false, 
-        message: "Job not found" 
+export const supervisorApproval = async (req, res) => {
+  {
+    try {
+      const { jobId } = req.params;
+      const job = await JobCardModel.findById(jobId);
+      if (!job) {
+        return res.status(404).send({
+          success: false,
+          message: "Job not found"
+        });
+      }
+      job.status = 'supapproved';
+      await job.save();
+      res.status(200).json({
+        success: true,
+        message: "Supervisor approval recorded successfully",
+        job
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({
+        success: false,
+        message: "Unable to record supervisor approval",
+        error,
       });
     }
-    job.status = 'supapproved';
-    await job.save();
-    res.status(200).json({
-      success: true,
-      message: "Supervisor approval recorded successfully",
-      job
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send({
-      success: false,
-      message: "Unable to record supervisor approval",
-      error,
-    });
+
   }
+};
 
-}};
 
-
-export const supervisorRejection = async (req, res) => { {
-  try {
-    const { jobId } = req.params;
-    const { notes } = req.body;
-    const job = await JobCardModel.findById(jobId);
-    if (!job) {
-      return res.status(404).send({ 
-        success: false, 
-        message: "Job not found" 
+export const supervisorRejection = async (req, res) => {
+  {
+    try {
+      const { jobId } = req.params;
+      const { notes } = req.body;
+      const job = await JobCardModel.findById(jobId);
+      if (!job) {
+        return res.status(404).send({
+          success: false,
+          message: "Job not found"
+        });
+      }
+      job.status = 'rejected';
+      job.notes = notes;
+      await job.save();
+      res.status(200).json({
+        success: true,
+        message: "Supervisor rejection recorded successfully",
+        job
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({
+        success: false,
+        message: "Unable to record supervisor rejection",
+        error,
       });
     }
-    job.status = 'rejected';
-    job.notes = notes;
-    await job.save();
-    res.status(200).json({
-      success: true,
-      message: "Supervisor rejection recorded successfully",
-      job
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send({
-      success: false,
-      message: "Unable to record supervisor rejection",
-      error,
-    });
   }
-}};
+};
 
 
 
-export const qualityGoodController = async(req,res)=>{
+export const qualityGoodController = async (req, res) => {
   try {
-    const {jobId,userId,jobItemId }= req.params;
+    const { jobId, userId, jobItemId } = req.params;
     const job = await JobCardModel.findById(jobId);
     const jobItem = job.jobItems.id(jobItemId);
     // Check if job item exists
@@ -918,7 +932,7 @@ export const qualityGoodController = async(req,res)=>{
     }
     job.status = 'approved';
     jobItem.status = 'approved';
-    jobItem.qualityStatus = 'good'; 
+    jobItem.qualityStatus = 'good';
     job.workVerified = userId;
 
     await job.save();
@@ -929,8 +943,8 @@ export const qualityGoodController = async(req,res)=>{
       job
     });
 
-    
-   } catch (error) {
+
+  } catch (error) {
     console.log(error);
     return res.status(500).send({
       success: false,
@@ -943,13 +957,13 @@ export const qualityGoodController = async(req,res)=>{
 
 
 
-export const qualityBadController = async(req,res)=>{
+export const qualityBadController = async (req, res) => {
   try {
-    const {jobId,jobItemId,userId}= req.params;
+    const { jobId, jobItemId, userId } = req.params;
     const { notes } = req.body;
-    const job=await JobCardModel.findById(jobId)
+    const job = await JobCardModel.findById(jobId)
     const jobItem = job.jobItems.id(jobItemId);
-    
+
     // Check if job item exists
     if (!jobItem) {
       return res.status(404).send({
@@ -957,10 +971,10 @@ export const qualityBadController = async(req,res)=>{
         message: "Job item not found"
       });
     }
-    
+
     job.status = 'rejected';
     jobItem.status = 'rejected';
-    jobItem.qualityStatus = 'needs_work'; 
+    jobItem.qualityStatus = 'needs_work';
     jobItem.notes = notes;
     job.workVerified = userId;
     await job.save();
@@ -970,8 +984,8 @@ export const qualityBadController = async(req,res)=>{
       job
     });
 
-    
-   } catch (error) {
+
+  } catch (error) {
     console.log(error);
     return res.status(500).send({
       success: false,
@@ -983,16 +997,16 @@ export const qualityBadController = async(req,res)=>{
 
 
 
-export const verifyJobController =async(req,res)=>{
- 
-     try {
+export const verifyJobController = async (req, res) => {
+
+  try {
     const { jobId } = req.params;
-  if (!jobId ) {
+    if (!jobId) {
       return res.status(400).json({
         success: false,
         message: "Please provide valid jobId and ",
       });
-    } 
+    }
 
     const jobItem = await JobCardModel.findById(jobId);
     if (!jobItem) {
@@ -1000,20 +1014,20 @@ export const verifyJobController =async(req,res)=>{
         success: false,
         message: "Job item not found",
       });
-    } 
+    }
 
     console.log(jobItem)
-    jobItem.isVerifiedByUser=true;
-    jobItem.status='pending';
+    jobItem.isVerifiedByUser = true;
+    jobItem.status = 'pending';
     await jobItem.save();
     res.status(200).send({
-      success:true,
-      message:"Job verified succesfylly",
+      success: true,
+      message: "Job verified succesfylly",
       jobItem
     })
 
-    
-    } catch (error) {
+
+  } catch (error) {
     console.log(error);
     return res.status(500).send({
       success: false,
@@ -1050,6 +1064,59 @@ export const updateActualCostController = async (req, res) => {
       success: false,
       message: error.errorResponse.errmsg || "Unable to update actual cost",
       error,
+    });
+  }
+};
+
+export const usedConsumableController = async (req, res) => {
+  try {
+    const { jobId, jobItemId, consumableId } = req.params;
+    const { usedQty } = req.body;
+
+    if (!usedQty || usedQty <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid used quantity"
+      });
+    }
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({ success: false, message: "Job item not found" });
+    }
+
+    const consumable = jobItem.consumable.id(consumableId);
+    if (!consumable) {
+      return res.status(404).json({ success: false, message: "Consumable not found" });
+    }
+
+    consumable.numberOfUsed += usedQty;
+
+    if (consumable.numberOfUsed > 0) {
+      consumable.available = true;
+    }
+
+    job.actualTotalAmount += consumable.price * usedQty;
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Consumable usage updated",
+      consumable,
+      actualTotalAmount: job.actualTotalAmount
+    });
+
+  } catch (error) {
+    console.error("Consumable usage error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
