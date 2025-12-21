@@ -23,10 +23,10 @@ function EstimatorDashboard({ onLoginClick }) {
   const [services, setServices] = useState([]);
   const [machines, setMachines] = useState([]);
   const [consumables, setConsumables] = useState([]);
-  const {userInfo, isAuthenticated, logout } = useAuth();
-  const [employees,setEmployees]=useState([]);
-  const [categories,setCategories]=useState([]);
-  const [ispaused,setIsPaused]=useState(false);
+  const { userInfo, isAuthenticated, logout } = useAuth();
+  const [employees, setEmployees] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [ispaused, setIsPaused] = useState(false);
   const [consumableQty, setConsumableQty] = useState({});
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -34,16 +34,16 @@ function EstimatorDashboard({ onLoginClick }) {
   const jobCardRef = useRef();
 
 
-const [newCustomer, setNewCustomer] = useState({
-  name: '',
-  phone: '',
-  email: '',
-  trnNumber: '',
-  address: '',
-  productId: '',
-  productModel: '',
-  productIdentification: ''
-});
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    trnNumber: '',
+    address: '',
+    productId: '',
+    productModel: '',
+    productIdentification: ''
+  });
 
   const shopId = userInfo?.shopId;
 
@@ -91,15 +91,15 @@ const [newCustomer, setNewCustomer] = useState({
     }
   };
 
-  const getAllWorkers=async()=>{
+  const getAllWorkers = async () => {
     try {
-      const res= await axios.get(`/shop/getAllEmployees/${userInfo?.shopId}`);
-      if(res.data?.users?.length>0){
+      const res = await axios.get(`/shop/getAllEmployees/${userInfo?.shopId}`);
+      if (res.data?.users?.length > 0) {
         setEmployees(res.data.users)
       }
-      
+
     } catch (error) {
-        console.error("Error fetching Workers:", error);
+      console.error("Error fetching Workers:", error);
     }
   };
 
@@ -118,17 +118,17 @@ const [newCustomer, setNewCustomer] = useState({
     }
   };
 
-const getAllCustomers = async () => {
-  try {
-    const res = await axios.get(`/customer/list/${userInfo?.shopId}`);
-    if (res.data?.customers) {
-      setCustomers(res.data.customers);
-      console.log("Customers fetched:", res.data.customers);
+  const getAllCustomers = async () => {
+    try {
+      const res = await axios.get(`/customer/list/${userInfo?.shopId}`);
+      if (res.data?.customers) {
+        setCustomers(res.data.customers);
+        console.log("Customers fetched:", res.data.customers);
+      }
+    } catch (error) {
+      console.error("Error fetching customers:", error);
     }
-  } catch (error) {
-    console.error("Error fetching customers:", error);
-  }
-};
+  };
 
 
 
@@ -154,8 +154,8 @@ const getAllCustomers = async () => {
     templateId: '68f50077a6d75c0ab83cd019',
     customerIDNumber: "",
     isVerifiedByUser: false,
-    workVerified:null,
-    notes:null,
+    workVerified: null,
+    notes: null,
     shopId: userInfo?.shopId || '',
     formData: {
       customer_name: '',
@@ -172,9 +172,9 @@ const getAllCustomers = async () => {
           priority: '',
         },
         estimatedPrice: 0,
-        category:'',
-        estimatedManHours:0,
-        numberOfWorkers:1,
+        category: '',
+        estimatedManHours: 0,
+        numberOfWorkers: 1,
         machineHours: 0,
         machineHourlyRate: 0,
         machineEstimatedCost: 0,
@@ -186,7 +186,7 @@ const getAllCustomers = async () => {
           actualDuration: null,
         },
         consumable: [],
-        id:null
+        id: null
       },
     ],
     machines: [],
@@ -216,64 +216,64 @@ const getAllCustomers = async () => {
           vehicle_model: job.formData?.vehicle_model || '',
           contact_number: job.formData?.contact_number || '',
           date: new Date(job.createdAt || Date.now()).toLocaleString('en-US', {
-            month: 'short', 
-            day: 'numeric', 
+            month: 'short',
+            day: 'numeric',
             year: 'numeric',
-            hour: '2-digit', 
+            hour: '2-digit',
             minute: '2-digit'
           }),
           status: job.status || 'Not Assigned',
           notes: (job.notes || ''),
           totalEstimatedAmount: job.totalEstimatedAmount || 0,
           items: job.jobItems?.map(item => {
-            
 
-              // Determine status from backend timestamps
-             const computedStatus = item.status || 'pending';
 
-              return {
-                itemId: item._id,
-                jobType: item.itemData?.job_type || '',
-                description: item.itemData?.description || '',
-                priority: item.itemData?.priority || '',
-                estimatedPrice: item.estimatedPrice || 0,
-                numberOfWorkers:item.numberOfWorkers || 1,
-                notes: item.notes || '',
-                category: item.category,
-                estimatedManHours: item.estimatedManHours,
-                itemStatus: computedStatus,   // but computedStatus = item.status now
-                 
-                machine: Array.isArray(item.machine) ?
-                item.machine.map(machine=>({
+            // Determine status from backend timestamps
+            const computedStatus = item.status || 'pending';
+
+            return {
+              itemId: item._id,
+              jobType: item.itemData?.job_type || '',
+              description: item.itemData?.description || '',
+              priority: item.itemData?.priority || '',
+              estimatedPrice: item.estimatedPrice || 0,
+              numberOfWorkers: item.numberOfWorkers || 1,
+              notes: item.notes || '',
+              category: item.category,
+              estimatedManHours: item.estimatedManHours,
+              itemStatus: computedStatus,   // but computedStatus = item.status now
+
+              machine: Array.isArray(item.machine) ?
+                item.machine.map(machine => ({
                   machineRequired: machine.machineRequired?.name || machine.machineRequired || null,
                   machineId: machine.machineRequired?._id || null,
                   startTime: machine.startTime || null,
                   endTime: machine.endTime || null,
                   actualDuration: machine.actualDuration || null
                 }))
-                :[],
-               
-               workers: Array.isArray(item.workers)
-                    ? item.workers.map(worker => ({
-                        workerAssigned: worker.workerAssigned,
-                        startTime: worker.startTime,
-                        endTime: worker.endTime,
-                        actualDuration: worker.actualDuration,
-                      }))
-                    : [],
+                : [],
 
-                
-                consumable: Array.isArray(item.consumable)
-                  ? item.consumable
-                      .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
-                      .map(c => ({
-                        name: c.name.trim(),
-                        price: c.price,
-                        available: c.available,
-                      }))
-                  : []
-              };
-            }) || []
+              workers: Array.isArray(item.workers)
+                ? item.workers.map(worker => ({
+                  workerAssigned: worker.workerAssigned,
+                  startTime: worker.startTime,
+                  endTime: worker.endTime,
+                  actualDuration: worker.actualDuration,
+                }))
+                : [],
+
+
+              consumable: Array.isArray(item.consumable)
+                ? item.consumable
+                  .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
+                  .map(c => ({
+                    name: c.name.trim(),
+                    price: c.price,
+                    available: c.available,
+                  }))
+                : []
+            };
+          }) || []
 
         }));
         setJobs(transformedJobs);
@@ -284,144 +284,144 @@ const getAllCustomers = async () => {
   };
 
   const getMaxAllowedWorkers = (item, jobStatus) => {
-  const base = item.numberOfWorkers || 1;
-  return jobStatus === 'rejected' ? base * 2 : base;
-};
+    const base = item.numberOfWorkers || 1;
+    return jobStatus === 'rejected' ? base * 2 : base;
+  };
 
-const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
-  console.log("Assigning worker:", employeeId, jobId, itemIndex);
+  const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
+    console.log("Assigning worker:", employeeId, jobId, itemIndex);
 
-  const job = jobs.find(j => j.id === jobId);
-  if (!job) return;
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
 
-  const item = job.items[itemIndex];
-  if (!item) return;
+    const item = job.items[itemIndex];
+    if (!item) return;
 
-  const maxWorkers = getMaxAllowedWorkers(item, job.status);
-  const currentWorkers = Array.isArray(item.workers) ? item.workers.length : 0;
+    const maxWorkers = getMaxAllowedWorkers(item, job.status);
+    const currentWorkers = Array.isArray(item.workers) ? item.workers.length : 0;
 
-  if (currentWorkers >= maxWorkers) {
-  alert(
-    job.status === 'rejected'
-      ? `You can assign up to ${maxWorkers} workers (including previous workers) for rejected jobs.`
-      : `You can assign only ${maxWorkers} worker(s) to this task.`
-  );
-  return;
-}
-
-  const itemId = item.itemId;
-  console.log("Assigning worker:", employeeId, jobId, itemId);
-
-  try {
-    if (!employeeId || !jobId || !itemId) {
-      console.log("All IDs not received");
+    if (currentWorkers >= maxWorkers) {
+      alert(
+        job.status === 'rejected'
+          ? `You can assign up to ${maxWorkers} workers (including previous workers) for rejected jobs.`
+          : `You can assign only ${maxWorkers} worker(s) to this task.`
+      );
       return;
     }
 
-    // call backend to push a new worker into the jobItem.workers array
-    const response = await axios.put(
-      `/jobs/assign-worker/${employeeId}/${jobId}/${itemId}`
-    );
+    const itemId = item.itemId;
+    console.log("Assigning worker:", employeeId, jobId, itemId);
 
-    if (response.data.success) {
-      const employee = employees.find(e => e._id === employeeId);
+    try {
+      if (!employeeId || !jobId || !itemId) {
+        console.log("All IDs not received");
+        return;
+      }
 
-      // Update local UI by pushing the new worker object into item.workers
-      setJobs(prevJobs =>
-        prevJobs.map(job => {
-          if (job.id === jobId) {
-            const newItems = [...job.items];
-            const item = { ...newItems[itemIndex] };
-
-            // Ensure workers array exists
-            const currWorkers = Array.isArray(item.workers) ? [...item.workers] : [];
-
-            // Push a minimal placeholder — backend will return the full object on next fetch.
-            currWorkers.push({
-              _id: response.data.workerObjectId || `temp-${employeeId}-${Date.now()}`, // backend should ideally return the new worker._id
-              workerAssigned: employeeId,
-              startTime: null,
-              endTime: null,
-              actualDuration: null
-            });
-
-            item.workers = currWorkers;
-            item.itemStatus = 'stopped';
-
-            newItems[itemIndex] = item;
-            return {
-              ...job,
-              items: newItems,
-              status: 'Assigned'
-            };
-          }
-          return job;
-        })
+      // call backend to push a new worker into the jobItem.workers array
+      const response = await axios.put(
+        `/jobs/assign-worker/${employeeId}/${jobId}/${itemId}`
       );
 
-      alert(`Worker ${employee?.name || employeeId} assigned successfully!`);
-      window.console.log("Worker assigned successfully");
+      if (response.data.success) {
+        const employee = employees.find(e => e._id === employeeId);
+
+        // Update local UI by pushing the new worker object into item.workers
+        setJobs(prevJobs =>
+          prevJobs.map(job => {
+            if (job.id === jobId) {
+              const newItems = [...job.items];
+              const item = { ...newItems[itemIndex] };
+
+              // Ensure workers array exists
+              const currWorkers = Array.isArray(item.workers) ? [...item.workers] : [];
+
+              // Push a minimal placeholder — backend will return the full object on next fetch.
+              currWorkers.push({
+                _id: response.data.workerObjectId || `temp-${employeeId}-${Date.now()}`, // backend should ideally return the new worker._id
+                workerAssigned: employeeId,
+                startTime: null,
+                endTime: null,
+                actualDuration: null
+              });
+
+              item.workers = currWorkers;
+              item.itemStatus = 'stopped';
+
+              newItems[itemIndex] = item;
+              return {
+                ...job,
+                items: newItems,
+                status: 'Assigned'
+              };
+            }
+            return job;
+          })
+        );
+
+        alert(`Worker ${employee?.name || employeeId} assigned successfully!`);
+        window.console.log("Worker assigned successfully");
+      }
+    } catch (error) {
+      console.error('Error assigning worker:', error);
+      alert('Failed to assign worker. Please try again.');
     }
-  } catch (error) {
-    console.error('Error assigning worker:', error);
-    alert('Failed to assign worker. Please try again.');
-  }
-};
+  };
 
 
 
-const addMachineToItem=(itemIndex)=>{
-  setFormData(prev=>{
-    const newJobs=[...prev.jobItems];
-    const item={...newJobs[itemIndex]};
+  const addMachineToItem = (itemIndex) => {
+    setFormData(prev => {
+      const newJobs = [...prev.jobItems];
+      const item = { ...newJobs[itemIndex] };
 
-    item.machine=[
-      ...item.machine,
-      {
-        machineRequired: null,
-        machineHours: 0,
-        machineHourlyRate: 0,
-        machineEstimatedCost: 0,
-        startTime: null,
-        endTime: null,
-        actualDuration: null
-      }
-    ];
-    newJobs[itemIndex] = item;
-    return { ...prev, jobItems: newJobs };
-  });
-};
-
-
-const removeMachineFromItem = (itemIndex, machineIndex) => {
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    const item = { ...newJobItems[itemIndex] };
-    
-    item.machine = item.machine.filter((_, i) => i !== machineIndex);
-    
-    newJobItems[itemIndex] = item;
-    return { ...prev, jobItems: newJobItems };
-  });
-};
-
-// Update a specific machine in a job item
-const updateMachineInItem = (itemIndex, machineIndex, field, value) => {
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    const item = { ...newJobItems[itemIndex] };
-    
-    item.machine = item.machine.map((m, i) => {
-      if (i === machineIndex) {
-        return { ...m, [field]: value };
-      }
-      return m;
+      item.machine = [
+        ...item.machine,
+        {
+          machineRequired: null,
+          machineHours: 0,
+          machineHourlyRate: 0,
+          machineEstimatedCost: 0,
+          startTime: null,
+          endTime: null,
+          actualDuration: null
+        }
+      ];
+      newJobs[itemIndex] = item;
+      return { ...prev, jobItems: newJobs };
     });
-    
-    newJobItems[itemIndex] = item;
-    return { ...prev, jobItems: newJobItems };
-  });
-};
+  };
+
+
+  const removeMachineFromItem = (itemIndex, machineIndex) => {
+    setFormData(prev => {
+      const newJobItems = [...prev.jobItems];
+      const item = { ...newJobItems[itemIndex] };
+
+      item.machine = item.machine.filter((_, i) => i !== machineIndex);
+
+      newJobItems[itemIndex] = item;
+      return { ...prev, jobItems: newJobItems };
+    });
+  };
+
+  // Update a specific machine in a job item
+  const updateMachineInItem = (itemIndex, machineIndex, field, value) => {
+    setFormData(prev => {
+      const newJobItems = [...prev.jobItems];
+      const item = { ...newJobItems[itemIndex] };
+
+      item.machine = item.machine.map((m, i) => {
+        if (i === machineIndex) {
+          return { ...m, [field]: value };
+        }
+        return m;
+      });
+
+      newJobItems[itemIndex] = item;
+      return { ...prev, jobItems: newJobItems };
+    });
+  };
 
 
 
@@ -430,151 +430,151 @@ const updateMachineInItem = (itemIndex, machineIndex, field, value) => {
 
 
 
- const handleStartItemTimer = async (jobId, itemIndex, workerObjectId) => {
-  console.log(`API CALL: Start timer for job ${jobId}, workerObjectId ${workerObjectId}`);
-  console.log(jobId,itemIndex,workerObjectId)
+  const handleStartItemTimer = async (jobId, itemIndex, workerObjectId) => {
+    console.log(`API CALL: Start timer for job ${jobId}, workerObjectId ${workerObjectId}`);
+    console.log(jobId, itemIndex, workerObjectId)
 
-  try {
-    // Pass jobItemId and workerObjectId to backend
-    const job = jobs.find(j => j.id === jobId);
-    if(!job) return;
-    const jobItemId = job.items[itemIndex].itemId;
+    try {
+      // Pass jobItemId and workerObjectId to backend
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const jobItemId = job.items[itemIndex].itemId;
 
-    const response = await axios.post(`/jobs/start-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
-    
-    if (!response.data.success) {
-      console.log('Error occurred');
+      const response = await axios.post(`/jobs/start-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
+
+      if (!response.data.success) {
+        console.log('Error occurred');
+        alert('Failed to start timer');
+        return;
+      }
+      else {
+        alert('Timer Started Successfully');
+        getAllJobs();
+      }
+
+      console.log('Started successfully');
+
+      // Update UI — set that worker's itemStatus to running
+      setJobs(prevJobs => prevJobs.map(job => {
+        if (job.id === jobId) {
+          const newItems = [...job.items];
+          const item = { ...newItems[itemIndex] };
+
+          // mark worker startTime locally (if backend returned timestamp use that)
+          item.workers = item.workers.map(w => w._id === workerObjectId ? { ...w, startTime: new Date().toISOString() } : w);
+
+          // Compute itemStatus: running if any worker running
+          item.itemStatus = response.data.updatedItemStatus;
+
+
+          newItems[itemIndex] = item;
+
+          const hasRunningTask = newItems.some(i => i.itemStatus === 'running');
+
+          return {
+            ...job,
+            items: newItems,
+            status: hasRunningTask ? 'In Progress' : job.status
+          };
+        }
+        return job;
+      }));
+
+      setIsPaused(false);
+
+    } catch (error) {
+      console.log('Error starting timer:', error);
       alert('Failed to start timer');
-      return;
     }
-    else{
-       alert('Timer Started Successfully');
-       getAllJobs();
-    }
-    
-    console.log('Started successfully');
-
-    // Update UI — set that worker's itemStatus to running
-    setJobs(prevJobs => prevJobs.map(job => {
-      if (job.id === jobId) {
-        const newItems = [...job.items];
-        const item = { ...newItems[itemIndex] };
-
-        // mark worker startTime locally (if backend returned timestamp use that)
-        item.workers = item.workers.map(w => w._id === workerObjectId ? { ...w, startTime: new Date().toISOString() } : w);
-
-        // Compute itemStatus: running if any worker running
-        item.itemStatus = response.data.updatedItemStatus;
+  };
 
 
-        newItems[itemIndex] = item;
+  const handleEndItemTimer = async (jobId, itemIndex, workerObjectId) => {
+    console.log(`API CALL: End timer for job ${jobId}, workerObjectId ${workerObjectId}`);
 
-        const hasRunningTask = newItems.some(i => i.itemStatus === 'running');
+    try {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const jobItemId = job.items[itemIndex].itemId;
 
-        return { 
-          ...job, 
-          items: newItems, 
-          status: hasRunningTask ? 'In Progress' : job.status 
-        };
+      const response = await axios.post(`/jobs/end-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
+
+      if (!response.data.success) {
+        console.log('Error occurred');
+        alert('Failed to end timer');
+        return;
       }
-      return job;
-    }));
 
-    setIsPaused(false);
+      console.log('Ended successfully');
 
-  } catch (error) {
-    console.log('Error starting timer:', error);
-    alert('Failed to start timer');
-  }
-};
+      // Update UI — set that worker's endTime & actualDuration locally
+      setJobs(prevJobs => prevJobs.map(job => {
+        if (job.id === jobId) {
+          const newItems = [...job.items];
+          const item = { ...newItems[itemIndex] };
 
+          // assume backend returned { worker: { _id, endTime, actualDuration } } optionally
+          const backendWorker = response.data.worker || null;
 
- const handleEndItemTimer = async (jobId, itemIndex, workerObjectId) => {
-  console.log(`API CALL: End timer for job ${jobId}, workerObjectId ${workerObjectId}`);
+          item.workers = item.workers.map(w => {
+            if (w._id === workerObjectId) {
+              const endTime = backendWorker?.endTime || new Date().toISOString();
+              const startTime = w.startTime || backendWorker?.startTime || null;
+              const actualDuration = backendWorker?.actualDuration != null
+                ? backendWorker.actualDuration
+                : startTime ? Math.floor((new Date(endTime) - new Date(startTime)) / (1000 * 60)) : 0;
+              return { ...w, endTime, actualDuration };
+            }
+            return w;
+          });
 
-  try {
-    const job = jobs.find(j => j.id === jobId);
-    if(!job) return;
-    const jobItemId = job.items[itemIndex].itemId;
+          // recompute itemStatus: completed only if all workers have endTime
+          const allCompleted = item.workers.length > 0 && item.workers.every(w => w.endTime);
+          const hasRunning = item.workers.some(w => w.startTime && !w.endTime);
+          item.itemStatus = allCompleted ? 'completed' : (hasRunning ? 'running' : 'in_progress');
 
-    const response = await axios.post(`/jobs/end-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
-    
-    if (!response.data.success) {
-      console.log('Error occurred');
+          newItems[itemIndex] = item;
+
+          const jobAllCompleted = newItems.every(i => i.itemStatus === 'completed');
+          const jobHasRunning = newItems.some(i => i.itemStatus === 'running');
+
+          return {
+            ...job,
+            items: newItems,
+            status: jobAllCompleted ? 'completed' : (jobHasRunning ? 'In Progress' : 'assigned')
+          };
+        }
+        return job;
+      }));
+
+      getAllJobs();
+
+    } catch (error) {
+      console.log('Error ending timer:', error);
       alert('Failed to end timer');
-      return;
     }
+  };
 
-    console.log('Ended successfully');
 
-    // Update UI — set that worker's endTime & actualDuration locally
-    setJobs(prevJobs => prevJobs.map(job => {
-      if (job.id === jobId) {
-        const newItems = [...job.items];
-        const item = { ...newItems[itemIndex] };
+  const handlePauseTimer = async (jobId, itemIndex, workerObjectId) => {
+    console.log(`API CALL: End timer for job ${jobId}, workerObjectId ${workerObjectId}`);
 
-        // assume backend returned { worker: { _id, endTime, actualDuration } } optionally
-        const backendWorker = response.data.worker || null;
+    try {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const jobItemId = job.items[itemIndex].itemId;
 
-        item.workers = item.workers.map(w => {
-          if (w._id === workerObjectId) {
-            const endTime = backendWorker?.endTime || new Date().toISOString();
-            const startTime = w.startTime || backendWorker?.startTime || null;
-            const actualDuration = backendWorker?.actualDuration != null
-              ? backendWorker.actualDuration
-              : startTime ? Math.floor((new Date(endTime) - new Date(startTime)) / (1000 * 60)) : 0;
-            return { ...w, endTime, actualDuration };
-          }
-          return w;
-        });
+      const response = await axios.post(`/jobs/pause-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
 
-        // recompute itemStatus: completed only if all workers have endTime
-        const allCompleted = item.workers.length > 0 && item.workers.every(w => w.endTime);
-        const hasRunning = item.workers.some(w => w.startTime && !w.endTime);
-        item.itemStatus = allCompleted ? 'completed' : (hasRunning ? 'running' : 'in_progress');
-
-        newItems[itemIndex] = item;
-
-        const jobAllCompleted = newItems.every(i => i.itemStatus === 'completed');
-        const jobHasRunning = newItems.some(i => i.itemStatus === 'running');
-
-        return { 
-          ...job, 
-          items: newItems, 
-          status: jobAllCompleted ? 'completed' : (jobHasRunning ? 'In Progress' : 'assigned') 
-        };
+      if (!response.data.success) {
+        console.log('Error occurred');
+        alert('Failed to end timer');
+        return;
       }
-      return job;
-    }));
-
-    getAllJobs();
-
-  } catch (error) {
-    console.log('Error ending timer:', error);
-    alert('Failed to end timer');
-  }
-};
-
-
-const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
-  console.log(`API CALL: End timer for job ${jobId}, workerObjectId ${workerObjectId}`);
-
-  try {
-    const job = jobs.find(j => j.id === jobId);
-    if(!job) return;
-    const jobItemId = job.items[itemIndex].itemId;
-
-    const response = await axios.post(`/jobs/pause-worker-timer/${jobId}/${jobItemId}/${workerObjectId}`);
-    
-    if (!response.data.success) {
-      console.log('Error occurred');
-      alert('Failed to end timer');
-      return;
-    }
-    setIsPaused(true);
-    alert('Timer Paused Successfully');
-  } catch (error) {}
-};
+      setIsPaused(true);
+      alert('Timer Paused Successfully');
+    } catch (error) { }
+  };
 
 
   const filteredJobs = jobs.filter(job => {
@@ -657,7 +657,7 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
           estimatedManHours: manHours,
           estimatedPrice: manHours * hourlyRate
         };
-      } 
+      }
       else if (field === 'job_type' || field === 'description' || field === 'priority') {
         updatedItem = {
           ...currentItem,
@@ -666,7 +666,7 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
             [field]: value
           }
         };
-      } 
+      }
       else {
         updatedItem = { ...currentItem, [field]: value };
       }
@@ -677,20 +677,20 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
   };
 
 
-  const updateActualCostController=async(jobId, actualCost)=>{
+  const updateActualCostController = async (jobId, actualCost) => {
     try {
-      if(!jobId){
+      if (!jobId) {
         console.log("No jobId found");
         return;
       }
-      const res= await axios.put(`/jobs/actual-cost/${jobId}`,{actualTotalAmount:actualCost});
+      const res = await axios.put(`/jobs/actual-cost/${jobId}`, { actualTotalAmount: actualCost });
 
-      if(!res.data.success){
+      if (!res.data.success) {
         console.log("Error in updating actual cost");
         return;
       }
       console.log("Actual cost updated successfully");
-      
+
     } catch (error) {
       console.log("Error updating actual cost:", error.message);
     }
@@ -709,9 +709,9 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
             priority: '',
           },
           estimatedPrice: 0,
-          category:'',
-          estimatedManHours:0,
-          numberOfWorkers:1,
+          category: '',
+          estimatedManHours: 0,
+          numberOfWorkers: 1,
           machineHours: 0,
           machineHourlyRate: 0,
           machineEstimatedCost: 0,
@@ -735,145 +735,145 @@ const handlePauseTimer= async (jobId, itemIndex, workerObjectId) => {
     }
   };
 
- const calculateFormTotal = () => {
-  const itemsTotal = formData.jobItems.reduce(
-    (sum, item) => sum + (item.estimatedPrice || 0),
-    0
-  );
+  const calculateFormTotal = () => {
+    const itemsTotal = formData.jobItems.reduce(
+      (sum, item) => sum + (item.estimatedPrice || 0),
+      0
+    );
 
-  // ✅ Sum all machine costs from all machines in all items
-  const machinesTotal = formData.jobItems.reduce((sum, item) => {
-    const itemMachineTotal = Array.isArray(item.machine)
-      ? item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0)
-      : 0;
-    return sum + itemMachineTotal;
-  }, 0);
+    // ✅ Sum all machine costs from all machines in all items
+    const machinesTotal = formData.jobItems.reduce((sum, item) => {
+      const itemMachineTotal = Array.isArray(item.machine)
+        ? item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0)
+        : 0;
+      return sum + itemMachineTotal;
+    }, 0);
 
-  const consumablesTotal = formData.jobItems.reduce((sum, item, itemIndex) => {
-    const itemConsumableTotal = Array.isArray(item.consumable)
-      ? item.consumable.reduce((s, c, ci) => {
+    const consumablesTotal = formData.jobItems.reduce((sum, item, itemIndex) => {
+      const itemConsumableTotal = Array.isArray(item.consumable)
+        ? item.consumable.reduce((s, c, ci) => {
           const qty = consumableQty[`${itemIndex}-${ci}`] || 0;
           return s + (c.price || 0) * qty;
         }, 0)
-      : 0;
-    return sum + itemConsumableTotal;
-  }, 0);
+        : 0;
+      return sum + itemConsumableTotal;
+    }, 0);
 
-  return itemsTotal + machinesTotal + consumablesTotal;
-};
+    return itemsTotal + machinesTotal + consumablesTotal;
+  };
 
 
- const calculateJobTotal = (job) => {
-  if (!job || !job.items) return 0;
+  const calculateJobTotal = (job) => {
+    if (!job || !job.items) return 0;
 
-  const itemsTotal = job.items.reduce(
-    (sum, item) => sum + (item.estimatedPrice || 0),
-    0
-  );
+    const itemsTotal = job.items.reduce(
+      (sum, item) => sum + (item.estimatedPrice || 0),
+      0
+    );
 
-  const consumablesTotal = job.items.reduce((sum, item, itemIndex) => {
-    const itemConsumableTotal = Array.isArray(item.consumable)
-      ? item.consumable.reduce((s, c, ci) => {
+    const consumablesTotal = job.items.reduce((sum, item, itemIndex) => {
+      const itemConsumableTotal = Array.isArray(item.consumable)
+        ? item.consumable.reduce((s, c, ci) => {
           const qty = consumableQty[`${itemIndex}-${ci}`] || 0;
           return s + (c.price || 0) * qty;
         }, 0)
-      : 0;
-    return sum + itemConsumableTotal;
-  }, 0);
+        : 0;
+      return sum + itemConsumableTotal;
+    }, 0);
 
-  return itemsTotal + consumablesTotal;
-};
-
-
+    return itemsTotal + consumablesTotal;
+  };
 
 
-const calculateActualCost = (job) => {
-  if (!job || !job.items) return 0;
 
-  return job.items.reduce((total, item) => {
-    const category = categories.find(c => c.name === item.category);
-    const hourlyRate = category?.hourlyRate || 0;
 
-    // Worker actual duration in minutes from backend (already in item.worker.actualDuration)
- const totalActualMinutes = Array.isArray(item.workers)
-  ? item.workers.reduce((s, w) => s + (w.actualDuration || 0), 0)
-  : (item.worker?.actualDuration || 0);
+  const calculateActualCost = (job) => {
+    if (!job || !job.items) return 0;
 
-const actualHours = totalActualMinutes / 60;
-const laborCost = actualHours * hourlyRate;
+    return job.items.reduce((total, item) => {
+      const category = categories.find(c => c.name === item.category);
+      const hourlyRate = category?.hourlyRate || 0;
 
-    // Optional: if you want to include machine cost dynamically (if machine actualDuration is tracked)
-    const machineHours = (item.machine?.actualDuration || 0) / 60;
-    const machineRate = item.machineHourlyRate || 0;
-    const machineCost = machineHours * machineRate;
+      // Worker actual duration in minutes from backend (already in item.worker.actualDuration)
+      const totalActualMinutes = Array.isArray(item.workers)
+        ? item.workers.reduce((s, w) => s + (w.actualDuration || 0), 0)
+        : (item.worker?.actualDuration || 0);
 
-    // Include consumables (already priced)
-    const consumableCost = Array.isArray(item.consumable)
-      ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
-      : 0;
+      const actualHours = totalActualMinutes / 60;
+      const laborCost = actualHours * hourlyRate;
 
-    const totalItemCost = laborCost + machineCost + consumableCost;
-    const acutalCost= total + totalItemCost;
-    try {
-      updateActualCostController(job.id,acutalCost);
-    } catch (error) {
-      console.log(error);
-    }
-    return acutalCost;
-  }, 0);
-};
+      // Optional: if you want to include machine cost dynamically (if machine actualDuration is tracked)
+      const machineHours = (item.machine?.actualDuration || 0) / 60;
+      const machineRate = item.machineHourlyRate || 0;
+      const machineCost = machineHours * machineRate;
 
-  
-
-  const handleSaveJob = async () => {
-  const { formData: customerData, jobItems } = formData;
-
-  if (!customerData.customer_name || !customerData.vehicle_number || !customerData.contact_number) {
-    alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
-    return;
-  }
-
-  const hasInvalidItems = jobItems.some(item => 
-    !item.itemData.description || item.estimatedPrice <= 0
-  );
-  if (hasInvalidItems) {
-    alert('Please fill in all job item descriptions and a valid estimated price');
-    return;
-  }
-
-  // ✅ Calculate total machine cost for estimated price
-  const backendPayload = {
-    templateId: formData.templateId,
-    isVerifiedByUser: formData.isVerifiedByUser,
-    shopId: userInfo?.shopId,
-    customerIDNumber: formData.customerIDNumber,
-    formData: {
-      customer_name: customerData.customer_name,
-      vehicle_number: customerData.vehicle_number,
-      engine_number: customerData.engine_number || '',
-      vehicle_model: customerData.vehicle_model || '',
-      contact_number: customerData.contact_number
-    },
-    jobItems: jobItems.map(item => {
-      // Calculate total machine cost for this item
-      const totalMachineCost = Array.isArray(item.machine)
-        ? item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
+      // Include consumables (already priced)
+      const consumableCost = Array.isArray(item.consumable)
+        ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
         : 0;
 
-      return {
-        itemData: {
-          job_type: item.itemData.job_type || '',
-          description: item.itemData.description,
-          priority: item.itemData.priority || 'Medium'
-        },
-        estimatedPrice: item.estimatedPrice + totalMachineCost,
-        numberOfWorkers: item.numberOfWorkers || 1,
-        category: item.category,
-        estimatedManHours: item.estimatedManHours,
-        
-        // ✅ Send machines as array
-        machine: Array.isArray(item.machine)
-          ? item.machine
+      const totalItemCost = laborCost + machineCost + consumableCost;
+      const acutalCost = total + totalItemCost;
+      try {
+        updateActualCostController(job.id, acutalCost);
+      } catch (error) {
+        console.log(error);
+      }
+      return acutalCost;
+    }, 0);
+  };
+
+
+
+  const handleSaveJob = async () => {
+    const { formData: customerData, jobItems } = formData;
+
+    if (!customerData.customer_name || !customerData.vehicle_number || !customerData.contact_number) {
+      alert('Please fill in required fields: Customer Name, Vehicle Number, and Contact Number');
+      return;
+    }
+
+    const hasInvalidItems = jobItems.some(item =>
+      !item.itemData.description || item.estimatedPrice <= 0
+    );
+    if (hasInvalidItems) {
+      alert('Please fill in all job item descriptions and a valid estimated price');
+      return;
+    }
+
+    // ✅ Calculate total machine cost for estimated price
+    const backendPayload = {
+      templateId: formData.templateId,
+      isVerifiedByUser: formData.isVerifiedByUser,
+      shopId: userInfo?.shopId,
+      customerIDNumber: formData.customerIDNumber,
+      formData: {
+        customer_name: customerData.customer_name,
+        vehicle_number: customerData.vehicle_number,
+        engine_number: customerData.engine_number || '',
+        vehicle_model: customerData.vehicle_model || '',
+        contact_number: customerData.contact_number
+      },
+      jobItems: jobItems.map(item => {
+        // Calculate total machine cost for this item
+        const totalMachineCost = Array.isArray(item.machine)
+          ? item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
+          : 0;
+
+        return {
+          itemData: {
+            job_type: item.itemData.job_type || '',
+            description: item.itemData.description,
+            priority: item.itemData.priority || 'Medium'
+          },
+          estimatedPrice: item.estimatedPrice + totalMachineCost,
+          numberOfWorkers: item.numberOfWorkers || 1,
+          category: item.category,
+          estimatedManHours: item.estimatedManHours,
+
+          // ✅ Send machines as array
+          machine: Array.isArray(item.machine)
+            ? item.machine
               .filter(m => m.machineRequired && m.machineRequired.trim() !== "")
               .map(m => ({
                 machineRequired: m.machineRequired,
@@ -881,19 +881,19 @@ const laborCost = actualHours * hourlyRate;
                 endTime: m.endTime || null,
                 actualDuration: m.actualDuration || null
               }))
-          : [],
-      
-        workers: Array.isArray(item.workers)
-          ? item.workers.map(w => ({
+            : [],
+
+          workers: Array.isArray(item.workers)
+            ? item.workers.map(w => ({
               workerAssigned: w.workerAssigned,
               startTime: w.startTime || null,
               endTime: w.endTime || null,
               actualDuration: w.actualDuration || null
             }))
-          : [],
+            : [],
 
-        consumable: Array.isArray(item.consumable)
-          ? item.consumable
+          consumable: Array.isArray(item.consumable)
+            ? item.consumable
               .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
               .map(c => ({
                 name: c.name.trim(),
@@ -901,62 +901,62 @@ const laborCost = actualHours * hourlyRate;
                 available: c.available,
                 quantity: c.quantity || 1
               }))
-          : []
-      };
-    })
-  };
+            : []
+        };
+      })
+    };
 
-  console.log('Backend Payload:', JSON.stringify(backendPayload, null, 2));
+    console.log('Backend Payload:', JSON.stringify(backendPayload, null, 2));
 
-  try {
-    const response = await axios.post('/jobs/new-job', backendPayload);
-    
-    if (response.data) {
-      await getAllJobs();
+    try {
+      const response = await axios.post('/jobs/new-job', backendPayload);
 
-      // Reset form
-      setFormData({
-        templateId: '68f50077a6d75c0ab83cd019',
-        isVerifiedByUser: true,
-        shopId: userInfo?.shopId || '',
-        formData: {
-          customer_name: '',
-          vehicle_number: '',
-          engine_number: '',
-          vehicle_model: '',
-          contact_number: '',
-        },
-        jobItems: [
-          {
-            itemData: {
-              job_type: '',
-              description: '',
-              priority: '',
-            },
-            estimatedPrice: 0,
-            category: '',
-            estimatedManHours: 0,
-            numberOfWorkers: 1,
-            machine: [], // ✅ Reset as empty array
-            worker: {
-              workerAssigned: null,
-              startTime: null,
-              endTime: null,
-              actualDuration: null,
-            },
-            consumable: []
+      if (response.data) {
+        await getAllJobs();
+
+        // Reset form
+        setFormData({
+          templateId: '68f50077a6d75c0ab83cd019',
+          isVerifiedByUser: true,
+          shopId: userInfo?.shopId || '',
+          formData: {
+            customer_name: '',
+            vehicle_number: '',
+            engine_number: '',
+            vehicle_model: '',
+            contact_number: '',
           },
-        ]
-      });
+          jobItems: [
+            {
+              itemData: {
+                job_type: '',
+                description: '',
+                priority: '',
+              },
+              estimatedPrice: 0,
+              category: '',
+              estimatedManHours: 0,
+              numberOfWorkers: 1,
+              machine: [], // ✅ Reset as empty array
+              worker: {
+                workerAssigned: null,
+                startTime: null,
+                endTime: null,
+                actualDuration: null,
+              },
+              consumable: []
+            },
+          ]
+        });
 
-      setShowCreateJob(false);
-      alert('Job card created successfully!');
+        setShowCreateJob(false);
+        alert('Job card created successfully!');
+      }
+    } catch (error) {
+      console.error('Error creating job:', error);
+      alert('Failed to create job card. Please try again.');
     }
-  } catch (error) {
-    console.error('Error creating job:', error);
-    alert('Failed to create job card. Please try again.');
-  }
-};
+  };
 
   const handleJobTypeSelect = (index, serviceId) => {
     const selectedService = services.find(service => service._id === serviceId);
@@ -984,7 +984,7 @@ const laborCost = actualHours * hourlyRate;
       const updatedJobItems = [...prev.jobItems];
       const currentItem = updatedJobItems[index];
       const hourlyRate = selectedCategory?.hourlyRate || 0;
-      
+
       updatedJobItems[index] = {
         ...currentItem,
         category: categoryName,
@@ -996,7 +996,7 @@ const laborCost = actualHours * hourlyRate;
     });
   };
 
-// ✅ Utility function to fetch rate
+  // ✅ Utility function to fetch rate
   const fetchHourlyRate = async (type) => {
     try {
       console.log("Fetching rate for type:", type);
@@ -1009,85 +1009,85 @@ const laborCost = actualHours * hourlyRate;
     }
   };
 
-// ✅ When a machine is selected
+  // ✅ When a machine is selected
   const handleMachineRequiredChange = async (itemIndex, machineIndex, machineId) => {
-  const selectedMachine = machines.find(m => m._id === machineId);
-  if (!selectedMachine) return;
+    const selectedMachine = machines.find(m => m._id === machineId);
+    if (!selectedMachine) return;
 
-  const type = selectedMachine.type;
-  const hourlyRate = await fetchHourlyRate(type);
-  const machineHours = formData.jobItems[itemIndex]?.machine[machineIndex]?.machineHours || 0;
-  const machineEstimatedCost = hourlyRate * machineHours;
+    const type = selectedMachine.type;
+    const hourlyRate = await fetchHourlyRate(type);
+    const machineHours = formData.jobItems[itemIndex]?.machine[machineIndex]?.machineHours || 0;
+    const machineEstimatedCost = hourlyRate * machineHours;
 
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    const item = { ...newJobItems[itemIndex] };
-    
-    item.machine = item.machine.map((m, i) => {
-      if (i === machineIndex) {
-        return {
-          ...m,
-          machineRequired: machineId,
-          machineHourlyRate: hourlyRate,
-          machineEstimatedCost
-        };
-      }
-      return m;
+    setFormData(prev => {
+      const newJobItems = [...prev.jobItems];
+      const item = { ...newJobItems[itemIndex] };
+
+      item.machine = item.machine.map((m, i) => {
+        if (i === machineIndex) {
+          return {
+            ...m,
+            machineRequired: machineId,
+            machineHourlyRate: hourlyRate,
+            machineEstimatedCost
+          };
+        }
+        return m;
+      });
+
+      newJobItems[itemIndex] = item;
+      return { ...prev, jobItems: newJobItems };
     });
-    
-    newJobItems[itemIndex] = item;
-    return { ...prev, jobItems: newJobItems };
-  });
 
-  console.log("✅ Machine Selected:", {
-    machine: selectedMachine.name,
-    type,
-    hourlyRate,
-    machineHours,
-    machineEstimatedCost
-  });
-};
+    console.log("✅ Machine Selected:", {
+      machine: selectedMachine.name,
+      type,
+      hourlyRate,
+      machineHours,
+      machineEstimatedCost
+    });
+  };
 
-// ✅ When machine hours are updated
+  // ✅ When machine hours are updated
   const handleMachineHoursChange = async (itemIndex, machineIndex, hours) => {
-  const newHours = parseFloat(hours) || 0;
-  const currentItem = formData.jobItems[itemIndex];
-  const machineId = currentItem.machine[machineIndex]?.machineRequired;
+    const newHours = parseFloat(hours) || 0;
+    const currentItem = formData.jobItems[itemIndex];
+    const machineId = currentItem.machine[machineIndex]?.machineRequired;
 
-  if (!machineId) return;
+    if (!machineId) return;
 
-  const selectedMachine = machines.find(m => m._id === machineId);
-  const type = selectedMachine?.type;
-  const hourlyRate = await fetchHourlyRate(type);
-  const machineEstimatedCost = newHours * hourlyRate;
+    const selectedMachine = machines.find(m => m._id === machineId);
+    const type = selectedMachine?.type;
+    const hourlyRate = await fetchHourlyRate(type);
+    const machineEstimatedCost = newHours * hourlyRate;
 
-  setFormData(prev => {
-    const newJobItems = [...prev.jobItems];
-    const item = { ...newJobItems[itemIndex] };
-    
-    item.machine = item.machine.map((m, i) => {
-      if (i === machineIndex) {
-        return {
-          ...m,
-          machineHours: newHours,
-          machineHourlyRate: hourlyRate,
-          machineEstimatedCost
-        };
-      }
-      return m;
+    setFormData(prev => {
+      const newJobItems = [...prev.jobItems];
+      const item = { ...newJobItems[itemIndex] };
+
+      item.machine = item.machine.map((m, i) => {
+        if (i === machineIndex) {
+          return {
+            ...m,
+            machineHours: newHours,
+            machineHourlyRate: hourlyRate,
+            machineEstimatedCost
+          };
+        }
+        return m;
+      });
+
+      newJobItems[itemIndex] = item;
+      return { ...prev, jobItems: newJobItems };
     });
-    
-    newJobItems[itemIndex] = item;
-    return { ...prev, jobItems: newJobItems };
-  });
 
-  console.log("✅ Machine Cost Calculated:", {
-    machineName: selectedMachine?.name,
-    hourlyRate,
-    hoursNum: newHours,
-    machineEstimatedCost
-  });
-};
+    console.log("✅ Machine Cost Calculated:", {
+      machineName: selectedMachine?.name,
+      hourlyRate,
+      hoursNum: newHours,
+      machineEstimatedCost
+    });
+  };
 
   const handleVerifyJob = async (jobId) => {
     if (!window.confirm("Are you sure you want to approve this job?")) return;
@@ -1174,7 +1174,7 @@ const laborCost = actualHours * hourlyRate;
     try {
       const name = userInfo?.name?.trim() || "Unknown User";
 
-      console.log(jobId,reason,name);
+      console.log(jobId, reason, name);
       const res = await axios.post(`/reject/rejectJob`, { jobId, shopId: userInfo?.shopId, reason, rejectedBy: name });
       if (res.data?.success) {
         alert("❌ Job rejected and deleted successfully!");
@@ -1196,33 +1196,7 @@ const laborCost = actualHours * hourlyRate;
 
 
   const handleCreateCustomer = async () => {
-  const {
-    name,
-    phone,
-    email,
-    trnNumber,
-    address,
-    productId,
-    productModel,
-    productIdentification
-  } = newCustomer;
-
-  if (
-    !name ||
-    !phone ||
-    !email ||
-    !trnNumber ||
-    !address ||
-    !productId ||
-    !productModel ||
-    !productIdentification
-  ) {
-    alert("All fields are required");
-    return;
-  }
-
-  try {
-    const res = await axios.post('/customer/create', {
+    const {
       name,
       phone,
       email,
@@ -1230,52 +1204,78 @@ const laborCost = actualHours * hourlyRate;
       address,
       productId,
       productModel,
-      productIdentification,
-      shopId: userInfo?.shopId
-    });
+      productIdentification
+    } = newCustomer;
 
-    if (res.data?.success) {
-      alert("✅ Customer Added");
-
-      const created = res.data.customer;
-
-      setCustomers(prev => [...prev, created]);
-
-      // ✅ Auto-fill job form with new customer + product
-      setFormData(prev => ({
-        ...prev,
-        customerIDNumber: created.customerIDNumber,
-        formData: {
-          ...prev.formData,
-          customer_name: created.name,
-          contact_number: created.phone,
-          vehicle_number: created.productId,
-          vehicle_model: created.productModel,
-          engine_number: created.productIdentification
-        }
-      }));
-
-      setShowCustomerPopup(false);
-      setNewCustomer({
-        name: '',
-        phone: '',
-        email: '',
-        address: '',
-        productId: '',
-        productModel: '',
-        productIdentification: ''
-      });
+    if (
+      !name ||
+      !phone ||
+      !email ||
+      !trnNumber ||
+      !address ||
+      !productId ||
+      !productModel ||
+      !productIdentification
+    ) {
+      alert("All fields are required");
+      return;
     }
-  } catch (error) {
-    console.error("Customer create error:", error);
-    alert("Failed to add customer");
-  }
-};
+
+    try {
+      const res = await axios.post('/customer/create', {
+        name,
+        phone,
+        email,
+        trnNumber,
+        address,
+        productId,
+        productModel,
+        productIdentification,
+        shopId: userInfo?.shopId
+      });
+
+      if (res.data?.success) {
+        alert("✅ Customer Added");
+
+        const created = res.data.customer;
+
+        setCustomers(prev => [...prev, created]);
+
+        // ✅ Auto-fill job form with new customer + product
+        setFormData(prev => ({
+          ...prev,
+          customerIDNumber: created.customerIDNumber,
+          formData: {
+            ...prev.formData,
+            customer_name: created.name,
+            contact_number: created.phone,
+            vehicle_number: created.productId,
+            vehicle_model: created.productModel,
+            engine_number: created.productIdentification
+          }
+        }));
+
+        setShowCustomerPopup(false);
+        setNewCustomer({
+          name: '',
+          phone: '',
+          email: '',
+          address: '',
+          productId: '',
+          productModel: '',
+          productIdentification: ''
+        });
+      }
+    } catch (error) {
+      console.error("Customer create error:", error);
+      alert("Failed to add customer");
+    }
+  };
 
 
   return (
     <div className="estimator-dashboard">
-      <Header 
+      <Header
         userRole={isAuthenticated ? userInfo?.role : 'Estimator'}
         onLogin={onLoginClick}
         onLogout={logout}
@@ -1304,33 +1304,33 @@ const laborCost = actualHours * hourlyRate;
             <div className="section-header job-header-with-filters">
               <h3><img src={clipboardIcon} alt="Jobs" className="inline-icon" /> Job Cards</h3>
               <div className="filter-buttons">
-                <button 
-                  className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`} 
+                <button
+                  className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('all')}
                 >
                   All
                 </button>
-                <button 
-                  className={`filter-btn ${statusFilter === 'waiting' ? 'active' : ''}`} 
+                <button
+                  className={`filter-btn ${statusFilter === 'waiting' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('waiting')}
                 >
                   Job created
                 </button>
-                <button 
-                  className={`filter-btn ${statusFilter === 'unassigned' ? 'active' : ''}`} 
+                <button
+                  className={`filter-btn ${statusFilter === 'unassigned' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('unassigned')}
                 >
                   Unassigned
                 </button>
-                <button 
-                  className={`filter-btn ${statusFilter === 'assigned' ? 'active' : ''}`} 
+                <button
+                  className={`filter-btn ${statusFilter === 'assigned' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('assigned')}
                 >
                   Assigned
                 </button>
-                
-                <button 
-                  className={`filter-btn ${statusFilter === 'completed' ? 'active' : ''}`} 
+
+                <button
+                  className={`filter-btn ${statusFilter === 'completed' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('completed')}
                 >
                   Completed
@@ -1351,8 +1351,8 @@ const laborCost = actualHours * hourlyRate;
               </div>
             ) : (
               filteredJobs.map((job) => (
-                <div 
-                  key={job.id} 
+                <div
+                  key={job.id}
                   className="job-card"
                   onClick={() => {
                     setSelectedJob(job);
@@ -1364,14 +1364,13 @@ const laborCost = actualHours * hourlyRate;
                     <span className="job-number">
                       {`Job-${job.jobCardNumber?.split("-").pop()}`}
                     </span>
-                    <span className={`status-badge ${
-                      job.status === 'In Progress' ? 'status-progress' : 
+                    <span className={`status-badge ${job.status === 'In Progress' ? 'status-progress' :
                       job.status === 'completed' ? 'status-completed' :
-                      job.status === 'approved' ? 'status-approved' :
-                      job.status === 'rejected' ? 'status-rejected' :
-                      job.status === 'Assigned' ? 'status-assigned-active' :
-                      'status-assigned'
-                    }`}>
+                        job.status === 'approved' ? 'status-approved' :
+                          job.status === 'rejected' ? 'status-rejected' :
+                            job.status === 'Assigned' ? 'status-assigned-active' :
+                              'status-assigned'
+                      }`}>
                       {job.status}
                     </span>
                   </div>
@@ -1423,22 +1422,21 @@ const laborCost = actualHours * hourlyRate;
                     <div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
                     <div>
                       <strong>Status:</strong>
-                      <span className={`status-badge ${
-                        selectedJob.status === 'in_progress' ? 'status-progress' : 
+                      <span className={`status-badge ${selectedJob.status === 'in_progress' ? 'status-progress' :
                         selectedJob.status === 'completed' ? 'status-completed' :
-                        selectedJob.status === 'Assigned' ? 'status-assigned-active' :
-                        'status-assigned'
-                      }`}>
+                          selectedJob.status === 'Assigned' ? 'status-assigned-active' :
+                            'status-assigned'
+                        }`}>
                         {selectedJob.status}
                       </span>
                     </div>
-                    
+
                   </div>
                   <div className="job-items-container">
                     <strong className="job-items-title">Job Tasks:</strong>
-                   {selectedJob.items.map((item, index) => (
-                      
-                      <div key={index}> 
+                    {selectedJob.items.map((item, index) => (
+
+                      <div key={index}>
                         <div className="job-detail-item">
                           <div className="item-header-row">
                             <div className="item-info">
@@ -1449,14 +1447,14 @@ const laborCost = actualHours * hourlyRate;
                               <div className="item-description-container">
                                 <div className="item-description">{item.description}</div>
                                 <div className="item-description">Priority: {item.priority}</div>
-                              
+
                                 <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
                                 <p className="item-status-badge">
-                              Status: <strong>{item.itemStatus}</strong>
-                            </p>
+                                  Status: <strong>{item.itemStatus}</strong>
+                                </p>
 
                               </div>
-                              
+
                               {/*Notes to be displayed here if Notes is not NULL*/}
                               {item.notes && item.notes.trim() !== '' && (
                                 <div className="job-items-container">
@@ -1468,22 +1466,22 @@ const laborCost = actualHours * hourlyRate;
                               )}
 
                               {Array.isArray(item.machine) && item.machine.length > 0 && (
-                                  <div className="job-items-container">
-                                    <strong className="job-items-title">Machines Used:</strong>
-                                    <div className="full-width">
-                                      {item.machine.map((m, mi) => (
-                                        <p key={mi} className='machine-name'>
-                                          <strong>Machine {mi + 1}:</strong> {m.machineRequired || 'N/A'}
-                                          {m.actualDuration && (
-                                            <span style={{ marginLeft: '10px', color: '#666' }}>
-                                              (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
-                                            </span>
-                                          )}
-                                        </p>
-                                      ))}
-                                    </div>
+                                <div className="job-items-container">
+                                  <strong className="job-items-title">Machines Used:</strong>
+                                  <div className="full-width">
+                                    {item.machine.map((m, mi) => (
+                                      <p key={mi} className='machine-name'>
+                                        <strong>Machine {mi + 1}:</strong> {m.machineRequired || 'N/A'}
+                                        {m.actualDuration && (
+                                          <span style={{ marginLeft: '10px', color: '#666' }}>
+                                            (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
+                                          </span>
+                                        )}
+                                      </p>
+                                    ))}
                                   </div>
-                                )}
+                                </div>
+                              )}
 
                               {item.consumable && item.consumable.length > 0 && (
                                 <div className="job-items-container">
@@ -1506,20 +1504,20 @@ const laborCost = actualHours * hourlyRate;
                             </div>
                             <br></br>
                             <br></br>
-                          {/* Workers list & per-worker timer controls */}
-                           
+                            {/* Workers list & per-worker timer controls */}
+
                           </div>
                           <div className="full-width">
                             <p className="employee-select-label"><strong>Assign   Employee for this task:</strong></p>
 
 
-                                   {Array.isArray(item.workers) && item.workers.length > 0 ? (
+                            {Array.isArray(item.workers) && item.workers.length > 0 ? (
                               item.workers.map((w, wi) => (
                                 <div key={w._id || wi} className="item-timer-section">
                                   <div className="worker-row">
                                     <div className="worker-info">
-                                      <strong>Worker:</strong> { /* show name if you can resolve, else id */ }
-                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned} {employees.find(e => e._id === w.workerAssigned)?.employeeNumber || ''  }
+                                      <strong>Worker:</strong> { /* show name if you can resolve, else id */}
+                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned} {employees.find(e => e._id === w.workerAssigned)?.employeeNumber || ''}
                                     </div>
 
                                     <div className="item-timer-controls">
@@ -1581,24 +1579,24 @@ const laborCost = actualHours * hourlyRate;
 
 
                                     {/* show actual duration if available */}
-                                   {w?.actualDuration != null && w.actualDuration > 0 && (
-                                            <div className="job-items-container">
-                                              <strong className="job-items-title">Actual Time Used:</strong>
-                                              <div className="full-width">
-                                                <p className='time'>
-                                                  ⏱ {(() => {
-                                                    const hours = Math.floor(w.actualDuration / 60);
-                                                    const minutes = Math.floor(w.actualDuration % 60);
-                                                    const seconds = Math.floor((w.actualDuration * 60) % 60);
-                                                    if(minutes==0 && hours==0 || w. actualDuration <1  ){
-                                                      return `Less Than A minute`;  
-                                                    }
-                                                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                                                  })()}
-                                                </p>
-                                              </div>
-                                            </div>
-                                          )}
+                                    {w?.actualDuration != null && w.actualDuration > 0 && (
+                                      <div className="job-items-container">
+                                        <strong className="job-items-title">Actual Time Used:</strong>
+                                        <div className="full-width">
+                                          <p className='time'>
+                                            ⏱ {(() => {
+                                              const hours = Math.floor(w.actualDuration / 60);
+                                              const minutes = Math.floor(w.actualDuration % 60);
+                                              const seconds = Math.floor((w.actualDuration * 60) % 60);
+                                              if (minutes == 0 && hours == 0 || w.actualDuration < 1) {
+                                                return `Less Than A minute`;
+                                              }
+                                              return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                                            })()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               ))
@@ -1607,11 +1605,11 @@ const laborCost = actualHours * hourlyRate;
                             )}
 
 
-                              {selectedJob.status === 'rejected' && (
-                                <p style={{ color: '#d9534f', fontSize: '0.85rem' }}>
-                                  ⚠ Rejected job: You can assign up to {item.numberOfWorkers * 2} workers (including previous assignments)
-                                </p>
-                              )}
+                            {selectedJob.status === 'rejected' && (
+                              <p style={{ color: '#d9534f', fontSize: '0.85rem' }}>
+                                ⚠ Rejected job: You can assign up to {item.numberOfWorkers * 2} workers (including previous assignments)
+                              </p>
+                            )}
 
                             <select
                               className="employee-select"
@@ -1622,81 +1620,81 @@ const laborCost = actualHours * hourlyRate;
                                   handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
                                 }
                               }}
-                                disabled={
-                                  item.itemStatus === 'completed' ||
-                                  item.itemStatus === 'approved' ||
-                                  selectedJob.status === 'approved' ||
-                                  selectedJob.status === 'waiting' ||
-                                  selectedJob.status === 'completed' ||
-                                  (
-                                    selectedJob.status !== 'rejected' &&
-                                    Array.isArray(item.workers) &&
-                                    item.workers.length >= (item.numberOfWorkers || 1)
-                                  )
-                                }
+                              disabled={
+                                item.itemStatus === 'completed' ||
+                                item.itemStatus === 'approved' ||
+                                selectedJob.status === 'approved' ||
+                                selectedJob.status === 'waiting' ||
+                                selectedJob.status === 'completed' ||
+                                (
+                                  selectedJob.status !== 'rejected' &&
+                                  Array.isArray(item.workers) &&
+                                  item.workers.length >= (item.numberOfWorkers || 1)
+                                )
+                              }
 
                             >
-                            <option value="">Select Employee</option>
+                              <option value="">Select Employee</option>
 
-                            {employees
-                              .filter(emp => emp.specialization === item.category)
+                              {employees
+                                .filter(emp => emp.specialization === item.category)
 
-                              .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
-                              .map(emp => (
-                                <option key={emp._id} value={emp._id}>
-                                  {emp.name} {emp.employeeNumber} — {emp.specialization}
-                                </option>
-                              ))
-                            }
+                                .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
+                                .map(emp => (
+                                  <option key={emp._id} value={emp._id}>
+                                    {emp.name} {emp.employeeNumber} — {emp.specialization}
+                                  </option>
+                                ))
+                              }
 
-                                    </select>
+                            </select>
                           </div>
                         </div>
-                      </div> 
-                      
+                      </div>
+
                     ))}
                   </div>
 
-                  
+
                   <div className="job-detail-total">
                     <strong className="total-label">Total Estimated Amount:</strong>
                     <strong className="total-amount">
                       ${calculateJobTotal(selectedJob).toFixed(2)}
                     </strong>
 
-                    {selectedJob.status.toLowerCase()=="approved" &&(
+                    {selectedJob.status.toLowerCase() == "approved" && (
                       <>
-                      <strong className="total-label">Actual cost:</strong>
-                    <strong className="total-amount">
-                      ${calculateActualCost(selectedJob).toFixed(2)}
-                    </strong>
+                        <strong className="total-label">Actual cost:</strong>
+                        <strong className="total-amount">
+                          ${calculateActualCost(selectedJob).toFixed(2)}
+                        </strong>
                       </>
                     )}
                   </div>
                 </div>
 
                 {selectedJob.status.toLowerCase() === 'waiting' && (
-                    <div className="approve-reject-section">
-                      <button 
-                        className="btn-approve"
-                        onClick={() => handleVerifyJob(selectedJob.id)}
-                      >
-                       <img src={tickIcon} alt="Completed" className="btn-icon"/> Approve
-                      </button>
-                      <button 
-                        className="btn-reject"
-                        onClick={() => handleRejectJob(selectedJob.id)}
-                      >
-                        <img src={crossIcon} alt="Completed" className="btn-icon"/> Reject
-                      </button>
-                    </div>
-                  )}
+                  <div className="approve-reject-section">
+                    <button
+                      className="btn-approve"
+                      onClick={() => handleVerifyJob(selectedJob.id)}
+                    >
+                      <img src={tickIcon} alt="Completed" className="btn-icon" /> Approve
+                    </button>
+                    <button
+                      className="btn-reject"
+                      onClick={() => handleRejectJob(selectedJob.id)}
+                    >
+                      <img src={crossIcon} alt="Completed" className="btn-icon" /> Reject
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {showCreateJob && (
               <div className="create-job-form">
                 <div className="form-header">
-                  <h3 className="add-job-heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="new-job-card">Create New Job Card</span> </h3>
+                  <h3 className="add-job-heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="new-job-card">Create New Job Card</span> </h3>
                   <button className="close-btn" onClick={() => setShowCreateJob(false)}>✕</button>
                 </div>
                 <p className="form-subtitle">Fill in the details to create a new job order</p>
@@ -1720,7 +1718,7 @@ const laborCost = actualHours * hourlyRate;
                         if (selectedCustomer) {
                           setFormData(prev => ({
                             ...prev,
-                            customerIDNumber: selectedCustomer.customerIDNumber, 
+                            customerIDNumber: selectedCustomer.customerIDNumber,
                             formData: {
                               ...prev.formData,
                               customer_name: selectedCustomer.name,
@@ -1773,16 +1771,16 @@ const laborCost = actualHours * hourlyRate;
                 <div className="job-items-section">
                   <div className="section-title">
                     <h4>Job Tasks</h4>
-                   
+
                   </div>
                   {formData.jobItems.map((item, index) => (
                     <div key={index} className="job-item-card">
                       <hr className="item-divider" />
                       <div className="job-item-header">
                         <h5>Task #{index + 1}</h5>
-                        <button 
-                          className="btn-remove" 
-                          onClick={() => removeJobItem(index)} 
+                        <button
+                          className="btn-remove"
+                          onClick={() => removeJobItem(index)}
                           disabled={formData.jobItems.length === 1}
                           type="button"
                         >
@@ -1790,24 +1788,24 @@ const laborCost = actualHours * hourlyRate;
                         </button>
                       </div>
                       <div className="form-row">
-                      <div className="form-group">
-                        <label>Job Type *</label>
-                          <select 
-                            value={item.itemData.job_type_id || ''} 
+                        <div className="form-group">
+                          <label>Job Type *</label>
+                          <select
+                            value={item.itemData.job_type_id || ''}
                             onChange={(e) => handleJobTypeSelect(index, e.target.value)}
                           >
                             <option value="">--Select job--</option>
                             {services.map((service) => (
                               <option key={service._id} value={service._id}>
-                                {service.name} 
+                                {service.name}
                               </option>
                             ))}
                           </select>
                         </div>
                         <div className="form-group">
-                            <label>Employee Category</label>
-                        <select 
-                            value={item.category || ''} 
+                          <label>Employee Category</label>
+                          <select
+                            value={item.category || ''}
                             onChange={(e) => handleJobCategorySelect(index, e.target.value)}
                           >
                             <option value="">-- Select Category --</option>
@@ -1817,23 +1815,23 @@ const laborCost = actualHours * hourlyRate;
                               </option>
                             ))}
                           </select>
-                          </div>
+                        </div>
 
                         <div className="form-group">
                           <label>Estimated Man-Hours </label>
-                          <input 
-                            type="number" 
-                            placeholder="0" 
-                            value={item.estimatedManHours || ''} 
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={item.estimatedManHours || ''}
                             onChange={(e) => handleJobItemChange(index, 'estimatedManHours', e.target.value)}
                           />
                         </div>
-                         <div className="form-group">
+                        <div className="form-group">
                           <label>Number of Workers </label>
-                          <input 
-                            type="number" 
-                            placeholder="0" 
-                            value={item.numberOfWorkers || ''} 
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={item.numberOfWorkers || ''}
                             onChange={(e) => handleJobItemChange(index, 'numberOfWorkers', e.target.value)}
                           />
                         </div>
@@ -1842,18 +1840,18 @@ const laborCost = actualHours * hourlyRate;
                       <div className="form-row1">
                         <div className="form-group">
                           <label>Description *</label>
-                          <input 
-                            type="text" 
-                            placeholder="Describe this job" 
-                            value={item.itemData.description} 
-                            onChange={(e) => handleJobItemChange(index, 'description', e.target.value)} 
+                          <input
+                            type="text"
+                            placeholder="Describe this job"
+                            value={item.itemData.description}
+                            onChange={(e) => handleJobItemChange(index, 'description', e.target.value)}
                           />
                         </div>
 
                         <div className="form-group">
                           <label>Priority</label>
-                          <select 
-                            value={item.itemData.priority || ''} 
+                          <select
+                            value={item.itemData.priority || ''}
                             onChange={(e) => handleJobItemChange(index, 'priority', e.target.value)}
                           >
                             <option value="">Select Priority</option>
@@ -1892,13 +1890,10 @@ const laborCost = actualHours * hourlyRate;
                                     }
                                   >
                                     <option value="">--Select Machine--</option>
-
                                     {machines.map((m) =>
-                                      m.isAvailable ? (
-                                        <option key={m._id} value={m._id}>
-                                          {m.name} - {m.type}
-                                        </option>
-                                      ) : null
+                                      <option key={m._id} value={m._id}>
+                                        {m.name} - {m.type}
+                                      </option>
                                     )}
                                   </select>
 
@@ -1926,7 +1921,7 @@ const laborCost = actualHours * hourlyRate;
                                     </button>
                                   )}
                                 </div>
-                                
+
                                 <div className="machine-right">
                                   {/* Machine Cost Display */}
                                   {machine.machineHourlyRate > 0 && (
@@ -1995,44 +1990,44 @@ const laborCost = actualHours * hourlyRate;
                                 }
                               }}
                             >
-                             <option value="">--Select Consumable--</option>
+                              <option value="">--Select Consumable--</option>
                               {consumables.map((cOpt) => (
                                 <option key={cOpt._id} value={cOpt._id} >
-                                  {cOpt.name} - ${cOpt.price}{ (cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock' }
+                                  {cOpt.name} - ${cOpt.price}{(cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock'}
                                 </option>
                               ))}
                               <option value="manual">+ Add Manual Consumable</option>
                             </select>
-                          {!c.isManual && (
-                            <input
-                              type="number"
-                              placeholder="Quantity"
-                              className='consumable-quantity-select'
-                              value={consumableQty[`${index}-${ci}`] || ""}
-                              onChange={(e) => {
-                                const qty = Number(e.target.value);
-                                setConsumableQty(prev => ({
-                                  ...prev,
-                                  [`${index}-${ci}`]: qty
-                                }));
-                              }}
-                            />
-                          )}
+                            {!c.isManual && (
+                              <input
+                                type="number"
+                                placeholder="Quantity"
+                                className='consumable-quantity-select'
+                                value={consumableQty[`${index}-${ci}`] || ""}
+                                onChange={(e) => {
+                                  const qty = Number(e.target.value);
+                                  setConsumableQty(prev => ({
+                                    ...prev,
+                                    [`${index}-${ci}`]: qty
+                                  }));
+                                }}
+                              />
+                            )}
                             {/* Manual input fields */}
                             {c.isManual && (
                               <div className="manual-consumable-fields">
-                                 <input
-                                    type="number"
-                                    placeholder="Quantity"
-                                    value={consumableQty[`${index}-${ci}`] || ""}
-                                    onChange={(e) => {
-                                      const qty = Number(e.target.value);
-                                      setConsumableQty(prev => ({
-                                        ...prev,
-                                        [`${index}-${ci}`]: qty
-                                      }));
-                                    }}
-                                  />
+                                <input
+                                  type="number"
+                                  placeholder="Quantity"
+                                  value={consumableQty[`${index}-${ci}`] || ""}
+                                  onChange={(e) => {
+                                    const qty = Number(e.target.value);
+                                    setConsumableQty(prev => ({
+                                      ...prev,
+                                      [`${index}-${ci}`]: qty
+                                    }));
+                                  }}
+                                />
                                 <input
                                   type="text"
                                   placeholder="Consumable Name"
@@ -2092,10 +2087,10 @@ const laborCost = actualHours * hourlyRate;
                               updateJobItemField(index, "consumable", [{ name: "", price: 0, available: true }])
                             }
                           >
-                            <span className="add-con-wrapper"><img src="/plus.png" alt="Plus Icon" className="plus-icon-con"/> Add Consumable</span>
+                            <span className="add-con-wrapper"><img src="/plus.png" alt="Plus Icon" className="plus-icon-con" /> Add Consumable</span>
                           </button>
                         )}
-                        
+
                       </div>
                     </div>
                   ))}
@@ -2117,74 +2112,74 @@ const laborCost = actualHours * hourlyRate;
       </div>
 
 
-       {/* ✅ CUSTOMER ADD POPUP — ADD IT HERE */}
-    {showCustomerPopup && (
-      <div className="customer-popup-overlay">
-        <div className="customer-popup">
-        <div className="form-group">
-          <h3>Add New Customer</h3>
+      {/* ✅ CUSTOMER ADD POPUP — ADD IT HERE */}
+      {showCustomerPopup && (
+        <div className="customer-popup-overlay">
+          <div className="customer-popup">
+            <div className="form-group">
+              <h3>Add New Customer</h3>
 
-          <input
-            placeholder="Customer Name"
-            value={newCustomer.name}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))}
-          />
+              <input
+                placeholder="Customer Name"
+                value={newCustomer.name}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))}
+              />
 
-          <input
-            placeholder="Phone Number"
-            value={newCustomer.phone}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
-          />
+              <input
+                placeholder="Phone Number"
+                value={newCustomer.phone}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+              />
 
-          <input
-            placeholder="Email"
-            value={newCustomer.email}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
-          />
-           <input
-            placeholder="TRN Number"
-            value={newCustomer.trnNumber}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, trnNumber: e.target.value }))}
-          />
+              <input
+                placeholder="Email"
+                value={newCustomer.email}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+              />
+              <input
+                placeholder="TRN Number"
+                value={newCustomer.trnNumber}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, trnNumber: e.target.value }))}
+              />
 
-          <input
-            placeholder="Address"
-            value={newCustomer.address}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
-          />
+              <input
+                placeholder="Address"
+                value={newCustomer.address}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
+              />
 
-          <input
-            placeholder="Product ID"
-            value={newCustomer.productId}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, productId: e.target.value }))}
-          />
+              <input
+                placeholder="Product ID"
+                value={newCustomer.productId}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, productId: e.target.value }))}
+              />
 
-          <input
-            placeholder="Product Model"
-            value={newCustomer.productModel}
-            onChange={(e) => setNewCustomer(prev => ({ ...prev, productModel: e.target.value }))}
-          />
+              <input
+                placeholder="Product Model"
+                value={newCustomer.productModel}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, productModel: e.target.value }))}
+              />
 
-          <input
-            placeholder="Product Identification"
-            value={newCustomer.productIdentification}
-            onChange={(e) =>
-              setNewCustomer(prev => ({ ...prev, productIdentification: e.target.value }))
-            }
-          />
+              <input
+                placeholder="Product Identification"
+                value={newCustomer.productIdentification}
+                onChange={(e) =>
+                  setNewCustomer(prev => ({ ...prev, productIdentification: e.target.value }))
+                }
+              />
 
-          <div className="popup-actions">
-            <button onClick={() => setShowCustomerPopup(false)}>Cancel</button>
-            <button onClick={handleCreateCustomer}>Save</button>
+              <div className="popup-actions">
+                <button onClick={() => setShowCustomerPopup(false)}>Cancel</button>
+                <button onClick={handleCreateCustomer}>Save</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      </div>
-    )}
-  </div>
-  
+      )}
+    </div>
 
-  
+
+
   );
 }
 
