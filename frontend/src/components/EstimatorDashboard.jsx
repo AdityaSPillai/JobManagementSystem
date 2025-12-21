@@ -2,10 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import Header from './Header';
-import playIcon from '../assets/play.svg';
 import useAuth from '../context/context.jsx';
 import tickIcon from '../assets/tick.svg';
-import pause from '../assets/pause.svg';
 import crossIcon from '../assets/cross.svg';
 import axios from '../utils/axios.js';
 import clipboardIcon from '../assets/clipboard.svg';
@@ -13,6 +11,8 @@ import workerIcon from '../assets/worker.svg';
 import userIcon from '../assets/user.svg';
 import calendarIcon from '../assets/calendar.svg';
 import '../styles/EstimatorDashboard.css';
+import WorkerTimer from './TimerComponent/WorkerTimer.jsx';
+import MachineTimer from './TimerComponent/MachineTimer.jsx';
 
 function EstimatorDashboard({ onLoginClick }) {
   const [showJobDetails, setShowJobDetails] = useState(false);
@@ -128,9 +128,6 @@ function EstimatorDashboard({ onLoginClick }) {
       console.error("Error fetching customers:", error);
     }
   };
-
-
-
 
   useEffect(() => {
     if (!userInfo) return;
@@ -426,7 +423,145 @@ function EstimatorDashboard({ onLoginClick }) {
   };
 
 
+  const handleStartMachineTimer = async (jobId, jobItemId, machineId) => {
+    console.log("Starting machine timer:", jobId, jobItemId, machineId);
 
+    try {
+      const res = await axios.post(
+        `/jobs/start-machine-timer/${jobId}/${jobItemId}/${machineId}`
+      );
+
+      if (!res.data.success) {
+        alert("Failed to start machine timer");
+        return;
+      }
+
+      // Update UI locally
+      setJobs(prevJobs =>
+        prevJobs.map(job => {
+          if (job.id !== jobId) return job;
+
+          const newItems = job.items.map(item => {
+            if (item.itemId !== jobItemId) return item;
+
+            return {
+              ...item,
+              machine: item.machine.map(m =>
+                m.machineId === machineId
+                  ? { ...m, startTime: new Date().toISOString(), endTime: null }
+                  : m
+              ),
+              itemStatus: 'running'
+            };
+          });
+
+          return { ...job, items: newItems, status: 'In Progress' };
+        })
+      );
+
+      setIsPaused(false);
+      alert("Machine timer started");
+    } catch (error) {
+      console.error("Start machine timer error:", error);
+      alert("Error starting machine timer");
+    }
+  };
+
+
+  const handlePauseMachineTimer = async (jobId, jobItemId, machineId) => {
+    console.log("Pausing machine timer:", jobId, jobItemId, machineId);
+
+    try {
+      const res = await axios.post(
+        `/jobs/pause-machine-timer/${jobId}/${jobItemId}/${machineId}`
+      );
+
+      if (!res.data.success) {
+        alert("Failed to pause machine timer");
+        return;
+      }
+
+      // Update UI locally (clear startTime, keep actualDuration from backend later)
+      setJobs(prevJobs =>
+        prevJobs.map(job => {
+          if (job.id !== jobId) return job;
+
+          const newItems = job.items.map(item => {
+            if (item.itemId !== jobItemId) return item;
+
+            return {
+              ...item,
+              machine: item.machine.map(m =>
+                m.machineId === machineId
+                  ? { ...m, startTime: null }
+                  : m
+              )
+            };
+          });
+
+          return { ...job, items: newItems };
+        })
+      );
+
+      setIsPaused(true);
+      alert("Machine timer paused");
+    } catch (error) {
+      console.error("Pause machine timer error:", error);
+      alert("Error pausing machine timer");
+    }
+  };
+
+
+  const handleEndMachineTimer = async (jobId, jobItemId, machineId) => {
+    console.log("Ending machine timer:", jobId, jobItemId, machineId);
+
+    try {
+      const res = await axios.post(
+        `/jobs/end-machine-timer/${jobId}/${jobItemId}/${machineId}`
+      );
+
+      if (!res.data.success) {
+        alert("Failed to end machine timer");
+        return;
+      }
+
+      const backendMachine = res.data.machine || null;
+
+      // Update UI locally
+      setJobs(prevJobs =>
+        prevJobs.map(job => {
+          if (job.id !== jobId) return job;
+
+          const newItems = job.items.map(item => {
+            if (item.itemId !== jobItemId) return item;
+
+            return {
+              ...item,
+              machine: item.machine.map(m =>
+                m.machineId === machineId
+                  ? {
+                    ...m,
+                    endTime: backendMachine?.endTime || new Date().toISOString(),
+                    startTime: null,
+                    actualDuration:
+                      backendMachine?.actualDuration ?? m.actualDuration
+                  }
+                  : m
+              ),
+              itemStatus: 'completed'
+            };
+          });
+
+          return { ...job, items: newItems };
+        })
+      );
+
+      alert("Machine timer stopped");
+    } catch (error) {
+      console.error("End machine timer error:", error);
+      alert("Error stopping machine timer");
+    }
+  };
 
 
 
@@ -1291,6 +1426,25 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
+  const completeJobItem = async (jobId, jobItemId) => {
+    if (!window.confirm("Are you sure you want to mark this item as complete?")) return;
+
+    try {
+      const res = await axios.post(`/jobs/complete-jobitem/${jobId}/${jobItemId}`);
+      if (res.data?.success) {
+        alert("✅ Job item completed successfully!");
+        await getAllJobs();
+
+        if (selectedJob && selectedJob.id === jobId) {
+        }
+      } else {
+        alert("Failed to complete job item: " + res.data?.message);
+      }
+    } catch (error) {
+      console.error("Error completing job item:", error);
+      alert(error.response?.data?.message || "Error while completing job item.");
+    }
+  };
 
   return (
     <div className="estimator-dashboard">
@@ -1465,9 +1619,21 @@ function EstimatorDashboard({ onLoginClick }) {
                         <div className="job-detail-item">
                           <div className="item-header-row">
                             <div className="item-info">
-                              <div className="item-title">
-                                <strong>Job #{index + 1}</strong>
-                                {item.jobType && <span className="item-type">({item.jobType})</span>}
+                              <div className="item-info-header">
+                                <div className="item-title">
+                                  <strong>Job #{index + 1}</strong>
+                                  {item.jobType && <span className="item-type">({item.jobType})</span>}
+                                </div>
+                                <button
+                                  className="complete-btn-enabled"
+                                  disabled={item.workers.some(w => !w.endTime) || item.itemStatus === 'completed'}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    completeJobItem(selectedJob.id, item.itemId);
+                                  }}
+                                >
+                                  {item.itemStatus === 'completed' ? 'Completed' : 'Complete Item'}
+                                </button>
                               </div>
                               <div className="item-description-container">
                                 <div className="item-description">{item.description}</div>
@@ -1500,42 +1666,41 @@ function EstimatorDashboard({ onLoginClick }) {
                                     <table className="machine-table">
                                       <thead>
                                         <tr>
-                                          <th>Sl No.</th>
                                           <th>Name</th>
+                                          <th>Machine ID</th>
                                           <th>Action</th>
                                         </tr>
                                       </thead>
 
                                       <tbody>
                                         {item.machine.map((m, mi) => (
-                                          <tr key={mi}>
-                                            <td>{mi + 1}</td>
-
-                                            <td>
-                                              {m.machineRequired || 'N/A'}
-                                              {m.actualDuration && (
-                                                <div className="machine-duration">
-                                                  {(m.actualDuration / 60).toFixed(2)} hrs
-                                                </div>
-                                              )}
-                                            </td>
-
-                                            <td>
-                                              <div className="machine-actions">
-                                                {selectedJob.status === 'waiting' ? (
-                                                  <span className="machine-waiting">
-                                                    Waiting for Manager Approval
-                                                  </span>
-                                                ) : (
-                                                  <>
-                                                    <button className="machine-btn start">Start</button>
-                                                    <button className="machine-btn pause">Pause</button>
-                                                    <button className="machine-btn stop">Stop</button>
-                                                  </>
-                                                )}
-                                              </div>
-                                            </td>
-                                          </tr>
+                                          <MachineTimer
+                                            key={m.machineId || mi}
+                                            machine={m}
+                                            selectedJobStatus={selectedJob.status}
+                                            isPaused={ispaused}
+                                            onStart={() =>
+                                              handleStartMachineTimer(
+                                                selectedJob.id,
+                                                item.itemId,
+                                                m.machineId
+                                              )
+                                            }
+                                            onPause={() =>
+                                              handlePauseMachineTimer(
+                                                selectedJob.id,
+                                                item.itemId,
+                                                m.machineId
+                                              )
+                                            }
+                                            onStop={() =>
+                                              handleEndMachineTimer(
+                                                selectedJob.id,
+                                                item.itemId,
+                                                m.machineId
+                                              )
+                                            }
+                                          />
                                         ))}
                                       </tbody>
                                     </table>
@@ -1581,6 +1746,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                                   <>
                                                     <button
                                                       className="consumable-btn"
+                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved'}
                                                       onClick={() =>
                                                         handleUseConsumable(
                                                           selectedJob.id,
@@ -1595,6 +1761,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
                                                     <button
                                                       className="consumable-btn"
+                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved'}
                                                       onClick={() =>
                                                         handleUseConsumable(
                                                           selectedJob.id,
@@ -1609,6 +1776,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
                                                     <button
                                                       className="consumable-btn"
+                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved'}
                                                       onClick={() =>
                                                         handleUseConsumable(
                                                           selectedJob.id,
@@ -1646,7 +1814,6 @@ function EstimatorDashboard({ onLoginClick }) {
                                 <table className="worker-table">
                                   <thead>
                                     <tr>
-                                      <th>Sl No.</th>
                                       <th>Name</th>
                                       <th>Worker ID</th>
                                       <th>Action</th>
@@ -1659,74 +1826,37 @@ function EstimatorDashboard({ onLoginClick }) {
                                         e => e._id === w.workerAssigned
                                       );
 
-                                      const isStopped = !!w.endTime;
-                                      const isStarted = !!w.startTime && !w.endTime;
-                                      const isRunning = isStarted && !ispaused;
-                                      const isPaused = isStarted && ispaused;
-
                                       return (
-                                        <tr key={w._id || wi}>
-                                          <td>{wi + 1}</td>
-
-                                          <td>{employee?.name || 'Unknown'}</td>
-
-                                          <td>{employee?.employeeNumber || w.workerAssigned}</td>
-
-                                          <td>
-                                            <div className="worker-actions">
-                                              {isStopped && selectedJob.status !== 'rejected' ? (
-                                                <span className="worker-stopped">Stopped</span>
-                                              ) : (
-                                                <>
-                                                  {/* START */}
-                                                  <button
-                                                    className="worker-btn start"
-                                                    disabled={isRunning}
-                                                    onClick={() =>
-                                                      handleStartItemTimer(
-                                                        selectedJob.id,
-                                                        index,
-                                                        w.workerAssigned
-                                                      )
-                                                    }
-                                                  >
-                                                    Start
-                                                  </button>
-
-                                                  {/* PAUSE */}
-                                                  <button
-                                                    className="worker-btn pause"
-                                                    disabled={!isRunning}
-                                                    onClick={() =>
-                                                      handlePauseTimer(
-                                                        selectedJob.id,
-                                                        index,
-                                                        w.workerAssigned
-                                                      )
-                                                    }
-                                                  >
-                                                    Pause
-                                                  </button>
-
-                                                  {/* STOP */}
-                                                  <button
-                                                    className="worker-btn stop"
-                                                    disabled={!isStarted}
-                                                    onClick={() =>
-                                                      handleEndItemTimer(
-                                                        selectedJob.id,
-                                                        index,
-                                                        w.workerAssigned
-                                                      )
-                                                    }
-                                                  >
-                                                    Stop
-                                                  </button>
-                                                </>
-                                              )}
-                                            </div>
-                                          </td>
-                                        </tr>
+                                        <WorkerTimer
+                                          key={w._id || wi}
+                                          worker={w}
+                                          employee={employee}
+                                          jobId={selectedJob.id}
+                                          itemIndex={index}
+                                          selectedJobStatus={selectedJob.status}
+                                          isPaused={ispaused}
+                                          onStart={() =>
+                                            handleStartItemTimer(
+                                              selectedJob.id,
+                                              index,
+                                              w.workerAssigned
+                                            )
+                                          }
+                                          onPause={() =>
+                                            handlePauseTimer(
+                                              selectedJob.id,
+                                              index,
+                                              w.workerAssigned
+                                            )
+                                          }
+                                          onStop={() =>
+                                            handleEndItemTimer(
+                                              selectedJob.id,
+                                              index,
+                                              w.workerAssigned
+                                            )
+                                          }
+                                        />
                                       );
                                     })}
                                   </tbody>

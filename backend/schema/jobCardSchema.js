@@ -66,6 +66,10 @@ const JobCardSchema = new mongoose.Schema({
         ref: "User",
         required: false,
       },
+      actualStartTime: {
+        type: Date,
+        default: null
+      },
       startTime: {
         type: Date,
         default: null
@@ -75,8 +79,8 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       },
       actualDuration: {
-        type: Number,  // Duration in minutes
-        default: null
+        type: Number,  // Duration in seconds
+        default: 0
       }
     }],
     machine: [{
@@ -86,6 +90,10 @@ const JobCardSchema = new mongoose.Schema({
         required: false,
         default: null
       },
+      actualStartTime: {
+        type: Date,
+        default: null
+      },
       startTime: {
         type: Date,
         default: null
@@ -95,8 +103,8 @@ const JobCardSchema = new mongoose.Schema({
         default: null
       },
       actualDuration: {
-        type: Number,  // Duration in minutes
-        default: null
+        type: Number,  // Duration in seconds
+        default: 0
       }
     }],
 

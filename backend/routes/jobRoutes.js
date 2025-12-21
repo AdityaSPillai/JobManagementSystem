@@ -18,7 +18,9 @@ import {
     supervisorRejection,
     getAllJobsByCustomerID,
     usedConsumableController,
-    pauseWorkerTImer
+    pauseWorkerTImer,
+    pauseMachineForJobItem,
+    completeJobItemController
 } from "../controllers/jobController.js";
 import { logAction } from "../middleware/logMiddleware.js";
 
@@ -48,10 +50,13 @@ router.put('/assign-worker/:userId/:jobId/:jobItemId', assignWorkerController)
 
 
 // start  machine working timer
-router.put('/start-machine-timer/:jobId/:machineId', startMachineForJobItem,)
+router.post('/start-machine-timer/:jobId/:jobItemId/:machineId', startMachineForJobItem)
+
+//pause machine timer
+router.post('/pause-machine-timer/:jobId/:jobItemId/:machineId', pauseMachineForJobItem)
 
 //end  machine working timer
-router.put('/end-machine-timer/:jobId/:machineId', endMachineForJobItem,)
+router.post('/end-machine-timer/:jobId/:jobItemId/:machineId', endMachineForJobItem)
 
 //start worker timer
 router.post('/start-worker-timer/:jobId/:jobItemId/:workerObjectId', startWorkerTimer)
@@ -59,6 +64,8 @@ router.post('/start-worker-timer/:jobId/:jobItemId/:workerObjectId', startWorker
 router.post('/pause-worker-timer/:jobId/:jobItemId/:workerObjectId', pauseWorkerTImer)
 
 router.post('/end-worker-timer/:jobId/:jobItemId/:workerObjectId', endWorkerTimer)
+
+router.post('/complete-jobitem/:jobId/:jobItemId', completeJobItemController)
 
 //supervisor approval
 router.put('/supervisor-approve/:jobId', logAction("SUPERVISOR_APPROVED", req => ({ body: req.body })), supervisorApproval)
