@@ -69,7 +69,12 @@ const shopSchema = new mongoose.Schema({
      hourlyRate:{
        type:Number,
        required:true,
-     }
+     },
+    role: {
+    type: String,
+    enum: ['worker', 'customer', 'qa_qc', 'desk_employee','supervisor'],
+    required: true
+  },
    }],
 
   machineCategory:[{

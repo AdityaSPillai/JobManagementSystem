@@ -334,7 +334,8 @@ export const updateShopServices= async(req,res)=>{
 
 export const updateCategoryController=async(req,res)=>{
  try {
-    const { name, hourlyRate} = req.body;
+    const { name, hourlyRate,role} = req.body;
+    console.log(name,hourlyRate,role);
     const {shopId,categoryId}=req.params;
 
     if (!shopId|| !categoryId) return res.status(400).json({ success: false, message: "Shop ID  or Category Id is required" });
@@ -348,6 +349,7 @@ export const updateCategoryController=async(req,res)=>{
 
     if (name) categories.name = name;
     if (hourlyRate) categories.hourlyRate = hourlyRate;
+    if(role) categories.role= role;
   
 
     await shop.save();
@@ -524,6 +526,8 @@ export const allServices=async(req,res)=>{
 
 export const allCategories=async(req,res)=>{
  try {
+
+
 
     const {shopId}=req.params;
      if (!shopId) {

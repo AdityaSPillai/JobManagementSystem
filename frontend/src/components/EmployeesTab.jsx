@@ -27,6 +27,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
         const res = await axios.get(`/shop/allCategories/${userInfo?.shopId}`);
         if (res.data?.categories?.length > 0) {
           setCategories(res.data.categories);
+          console.log("Fetched Categories:", res.data.categories);
         } else {
           setCategories([]);
         }
@@ -36,11 +37,24 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     };
 
     if (userInfo?.shopId) fetchCategories();
+
   }, [userInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+      if (name === "specialization") {
+    const selectedCategory = categories.find(cat => cat.name === value);
+
+    setFormData(prev => ({
+      ...prev,
+      specialization: value,
+      role: selectedCategory?.role || prev.role
+    }));
+
+    return;
+  }
+
+  setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
   };
 
@@ -179,22 +193,6 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="role">Role *</label>
-              <select 
-                id="role" 
-                name="role" 
-                value={formData.role} 
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="worker">Worker</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="qa_qc">QA/QC</option>
-                <option value="desk_employee">Desk Employee</option>
-              </select>
-            </div>
-            
-            <div className="form-group">
               <label htmlFor="specialization">Specialization *</label>
               <select
                 id="specialization"
@@ -215,6 +213,23 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 <p style={{ color: "red", fontSize: "0.8rem" }}>⚠️ No job categories available for this shop.</p>
               )}
             </div>
+            <div className="form-group">
+              <label htmlFor="role">Role *</label>
+              <select 
+                id="role" 
+                name="role" 
+                value={formData.role} 
+                onChange={handleChange}
+                disabled
+              >
+                <option value="worker">Worker</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="qa_qc">QA/QC</option>
+                <option value="desk_employee">Desk Employee</option>
+              </select>
+            </div>
+            
+            
             <div className="form-group">
               <label htmlFor="experience">Experience (Years) *</label>
               <input 
@@ -284,6 +299,17 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "specialization") {
+    const selectedCategory = categories.find(cat => cat.name === value);
+
+    setFormData(prev => ({
+      ...prev,
+      specialization: value,
+      role: selectedCategory?.role || prev.role
+    }));
+
+    return;
+  }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 

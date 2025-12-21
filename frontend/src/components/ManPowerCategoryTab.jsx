@@ -6,6 +6,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
     hourlyRate: '',
+    role:'',
   });
 
   const handleChange = (e) => {
@@ -57,6 +58,25 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
                 required
               />
             </div>
+            <div className="form-group">
+        <label htmlFor="role">Role</label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Role</option>
+                <option value="worker">Worker</option>
+                <option value="customer">Customer</option>
+                <option value="qa_qc">QA/QC</option>
+                <option value="desk_employee">Desk Employee</option>
+                <option value="supervisor">Supervisor</option>
+              </select>
+            </div>
+
+
           </div>
 
           <button type="submit" className="btn-submit">Add Category</button>
@@ -70,6 +90,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
   const [formData, setFormData] = useState({
     name: '',
     hourlyRate: '',
+    role:''
   });
 
   // Populate the form when category data changes
@@ -78,20 +99,25 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
       setFormData({
         name: manPowerData.name || '',
         hourlyRate: manPowerData.hourlyRate || '',
+        role: manPowerData.role || ''
       });
     }
   }, [manPowerData]);
+
+  useEffect(() => {
+  console.log('EDIT FORM DATA:', formData);
+}, [formData]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-    onClose();
-  };
+ const handleSubmit = (e) => {
+  e.preventDefault();
+  onSubmit(formData);
+};
 
   if (!isVisible) return null;
 
@@ -113,6 +139,26 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
                 value={formData.name}
                 onChange={handleChange}
               />
+            </div>
+            <div className="form-group">
+              <label htmlFor="edit-role">Role</label>
+              <div className="form-group">
+                  <select 
+                    id="edit-role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select Role</option>
+                    <option value="worker">Worker</option>
+                    <option value="customer">Customer</option>
+                    <option value="qa_qc">QA/QC</option>
+                    <option value="desk_employee">Desk Employee</option>
+                    <option value="supervisor">Supervisor</option>
+                  </select>
+                </div>
+
             </div>
 
             <div className="form-group">
@@ -191,16 +237,22 @@ function manPowerCategoryTab() {
 
   const handleEditmanPowerCategory = async (categoryData) => {
     try {
+        if (!editingCategory?._id) return;
         const payload = {
         name: categoryData.name,
-        hourlyRate: Number(categoryData.hourlyRate)
+        hourlyRate: Number(categoryData.hourlyRate),
+        role: categoryData.role
         };
+
+        console.log(payload);
 
         const res = await axios.put(`/shop/updateCategory/${shopId}/${editingCategory._id}`, payload);
 
         if (res.data.success) {
         console.log('✅ Man Power category updated successfully');
         await fetchmanPowerCategories();
+          setIsEditModalOpen(false);
+          setEditingCategory(null);
         } else {
         alert(res.data.message || 'Failed to update Man Power category.');
         }
@@ -257,6 +309,7 @@ function manPowerCategoryTab() {
               <tr>
                 <th>Category</th>
                 <th>Hourly Rate</th>
+                <th>Role</th>
                 <th className="th-actions">Actions</th>
               </tr>
             </thead>
@@ -268,6 +321,9 @@ function manPowerCategoryTab() {
                   </td>
                   <td>
                     <span className="badge-rate">${cat.hourlyRate}/hr</span>
+                  </td>
+                  <td>
+                    <span className="table-primary-text">{cat.role}</span>
                   </td>
                   <td>
                     <div className="table-actions">

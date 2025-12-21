@@ -5,7 +5,7 @@ import MachineModel from "../schema/machieneModel.js";
 
 let endingtime= new Date();
     function timeDifference(start, end) {
-    endingtime= Math.round((end - start) / (1000 * 60)); 
+      return Math.round((end - start) / (1000 * 60));
     } ;
 
 
@@ -97,31 +97,6 @@ const jobCardNumber = `JOB-${formattedDate}-${String(count + 1).padStart(6, '0')
       }
     });
 
-
-    const MachineUpdatePromise= [];
-    jobItems.forEach((item,itemIndex)=>{
-          console.log(item.machine)
-
-      if(Array.isArray(item.machine)){
-        item.machine.forEach((machine, machineIndex) => {
-        if(machine.machineRequired && machine.machineRequired !== null){
-          machineUpdatePromises.push(
-            MachineModel.findByIdAndUpdate(machine.machineRequired,{  isAvailable: false,  jobId: jobCard._id },{new:true})
-            .catch(error => {
-                console.error(
-                  `Error updating machine ${machine.machineRequired} for job item ${itemIndex}, machine ${machineIndex}:`, 
-                  error
-                );
-                return null; 
-              })
-          );
-        }
-      })
-      }
-    
-    });
-
-    await Promise.all(MachineUpdatePromise );
 
     res.status(201).json({
       success: true,
@@ -252,48 +227,9 @@ export const updateJobSettings = async (req, res) => {
 
       updateData.totalEstimatedAmount = totalEstimatedAmount;
 
-      // ✅ RELEASE OLD MACHINES
-      const oldMachineIds = [];
-      existingJob.jobItems.forEach(item => {
-        if (Array.isArray(item.machine)) {
-          item.machine.forEach(m => {
-            if (m.machineRequired) {
-              oldMachineIds.push(m.machineRequired);
-            }
-          });
-        }
-      });
+  
+      
 
-      if (oldMachineIds.length > 0) {
-        await MachineModel.updateMany(
-          { _id: { $in: oldMachineIds } },
-          { isAvailable: true, jobId: null }
-        );
-      }
-
-      // ✅ ASSIGN NEW MACHINES
-      const machineUpdatePromises = [];
-      jobItems.forEach((item, itemIndex) => {
-        if (Array.isArray(item.machine)) {
-          item.machine.forEach((machine, machineIndex) => {
-            if (machine.machineRequired) {
-              machineUpdatePromises.push(
-                MachineModel.findByIdAndUpdate(
-                  machine.machineRequired,
-                  { isAvailable: false, jobId },
-                  { new: true }
-                ).catch(error => {
-                  console.error(
-                    `Error updating machine ${machine.machineRequired} for item ${itemIndex}, machine ${machineIndex}:`,
-                    error
-                  );
-                  return null;
-                })
-              );
-            }
-          });
-        }
-      });
 
       await Promise.all(machineUpdatePromises);
     }
@@ -433,6 +369,69 @@ export const startMachineForJobItem = async (req, res) => {
   }
 };
 
+//pause machine timer
+export const pauseMachineForJobItem = async (req, res) => {
+  try {
+    const { jobId, machineId } = req.params;
+
+    if (!jobId || !machineId) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId and machineId are required",
+      });
+    }
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    let machineFound = false;
+
+    for (const item of job.jobItems) {
+      for (const m of item.machine || []) {
+        if (m.machineRequired?.toString() === machineId) {
+
+          if (!m.startTime) {
+            return res.status(400).json({
+              success: false,
+              message: "Machine is not running",
+            });
+          }
+
+          const endTime = new Date();
+          const duration = Math.round((endTime - new Date(m.startTime)) / (1000 * 60));
+
+          m.actualDuration = (m.actualDuration || 0) + duration;
+          m.startTime = null;
+
+          machineFound = true;
+          break;
+        }
+      }
+    }
+
+    if (!machineFound) {
+      return res.status(404).json({
+        success: false,
+        message: "Machine not found in job items",
+      });
+    }
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Machine paused successfully",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 
 
@@ -462,7 +461,8 @@ export const endMachineForJobItem = async (req, res) => {
     let machineFound = false;
 
     for (const item of jobItem.jobItems) {
-      if (item.machine?.machineRequired?.toString() === machineId) {
+     for (const m of item.machine) {
+  if (m.machineRequired?.toString() === machineId) {
         item.machine.endTime = new Date();
         timeDifference(item.machine.startTime, item.machine.endTime);
         item.machine.actualDuration = endingtime
@@ -485,6 +485,8 @@ export const endMachineForJobItem = async (req, res) => {
         break;
       }
     }
+  }
+
 
     if (!machineFound) {
       return res.status(404).json({
@@ -839,6 +841,7 @@ export const endWorkerTimer = async (req, res) => {
     });
   }
 };
+
 
 
 export const supervisorApproval = async (req, res) => { {
