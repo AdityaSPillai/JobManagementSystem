@@ -54,7 +54,7 @@ export default function WorkerTimer({
                 <div className="worker-actions">
                     {isStopped && selectedJobStatus !== 'rejected' ? (
                         <span className="worker-stopped">
-                            {formatSecondsToHMS(displayDuration)} Stopped
+                            {formatSecondsToHMS(displayDuration)} Ended
                         </span>
                     ) : (
                         <>

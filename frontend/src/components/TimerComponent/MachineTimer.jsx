@@ -54,7 +54,11 @@ export default function MachineTimer({
                 <div className="worker-actions">
                     {isStopped && selectedJobStatus !== 'rejected' ? (
                         <span className="worker-stopped">
-                            {formatSecondsToHMS(displayDuration)} Stopped
+                            {formatSecondsToHMS(displayDuration)} Ended
+                        </span>
+                    ) : selectedJobStatus === 'waiting' ? (
+                        <span className="consumable-waiting">
+                            Waiting for Manager Approval
                         </span>
                     ) : (
                         <>

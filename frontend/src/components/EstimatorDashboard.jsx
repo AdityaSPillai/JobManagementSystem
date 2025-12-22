@@ -1626,7 +1626,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                 </div>
                                 <button
                                   className="complete-btn-enabled"
-                                  disabled={item.workers.some(w => !w.endTime) || item.itemStatus === 'completed'}
+                                  disabled={item.workers.some(w => !w.endTime) || item.itemStatus === 'completed' || selectedJob.status === 'waiting'}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     completeJobItem(selectedJob.id, item.itemId);
