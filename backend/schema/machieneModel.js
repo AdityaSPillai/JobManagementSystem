@@ -5,10 +5,10 @@ const machineSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        lowercase:true
-        
+        lowercase: true
+
     },
-    machineId:{
+    machineId: {
         type: String,
         unique: true,
         trim: true,
@@ -18,13 +18,9 @@ const machineSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    hourlyRate: {
-        type: Number,
-        required: false
-    },
     status: {
         type: Boolean,
-        default: true 
+        default: true
     },
     purchaseDate: {
         type: Date,
@@ -45,28 +41,28 @@ const machineSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-  
+
     jobId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "JobCard",
-      required: function () {
-        return this.isAvailable === false;
-              }
-    },  
-        startTime: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "JobCard",
+        required: function () {
+            return this.isAvailable === false;
+        }
+    },
+    startTime: {
         type: Date,
         default: null
-        },
-        endTime: {
+    },
+    endTime: {
         type: Date,
         default: null
-        },
-        actualDuration: {
-        type: Number,  
+    },
+    actualDuration: {
+        type: Number,
         default: null
 
-        },
-    
+    },
+
 }, {
     timestamps: true
 });

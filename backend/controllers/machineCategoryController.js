@@ -108,28 +108,27 @@ export const deleteMachineCategoryController = async (req, res) => {
 
 
 
-export const getHourlyRateController= async(req,res)=>{
+export const getMachineHourlyRateController = async (req, res) => {
   try {
-    const{type,shopId}=req.params;
-    if(!type|| !shopId)
-    {
+    const { type, shopId } = req.params;
+    if (!type || !shopId) {
       console.log("Category and  shopId type is required");
     }
-    const shop= await ShopModel.findById(shopId);
-    if(!shop){
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) {
       console.log("Shop not found");
     }
 
-    const category= shop.machineCategory.find(cat=>cat.name===type);
-    const rate= category?category.hourlyRate:null;
+    const category = shop.machineCategory.find(cat => cat.name === type);
+    const rate = category ? category.hourlyRate : null;
 
     res.status(200).send({
-      success:true,
-      message:"Rate revieved succesfully",
+      success: true,
+      message: "Rate revieved succesfully",
       rate,
     })
-    
+
   } catch (error) {
-    
+    res.status(500).json({ success: false, message: "Error fetching machine hourly rate", error: error.message });
   }
-}
+};

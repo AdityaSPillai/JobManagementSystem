@@ -47,19 +47,25 @@ const JobCardSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
-    category: {
-      type: String,
-      required: true
-    },
-    estimatedManHours: {
-      type: Number,
-      required: true
-    },
-    numberOfWorkers: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
+    allowedWorkers: [{
+      category: {
+        type: String,
+        required: true
+      },
+      estimatedManHours: {
+        type: Number,
+        required: true
+      },
+      numberOfWorkers: {
+        type: Number,
+        required: true,
+        default: 1,
+      },
+      hourlyRate: {
+        type: Number,
+        required: true,
+      }
+    }],
     workers: [{
       workerAssigned: {
         type: mongoose.Schema.Types.ObjectId,
@@ -90,6 +96,14 @@ const JobCardSchema = new mongoose.Schema({
         required: false,
         default: null
       },
+      machineRate: {
+        type: Number,
+        default: 0,
+      },
+      estimatedMachineHours: {
+        type: Number,
+        default: 0,
+      },
       actualStartTime: {
         type: Date,
         default: null
@@ -114,6 +128,10 @@ const JobCardSchema = new mongoose.Schema({
         required: false,
       },
       price: {
+        type: Number,
+        default: 0,
+      },
+      estimatedUsage: {
         type: Number,
         default: 0,
       },

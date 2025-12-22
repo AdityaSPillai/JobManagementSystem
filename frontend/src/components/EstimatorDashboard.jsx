@@ -27,6 +27,7 @@ function EstimatorDashboard({ onLoginClick }) {
   const [employees, setEmployees] = useState([]);
   const [categories, setCategories] = useState([]);
   const [ispaused, setIsPaused] = useState(false);
+  const [isMachinePaused, setIsMachinePaused] = useState(false);
   const [consumableQty, setConsumableQty] = useState({});
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -168,25 +169,20 @@ function EstimatorDashboard({ onLoginClick }) {
           priority: '',
         },
         estimatedPrice: 0,
-        category: '',
-        estimatedManHours: 0,
-        numberOfWorkers: 1,
-        machineHours: 0,
-        machineHourlyRate: 0,
-        machineEstimatedCost: 0,
+
+        allowedWorkers: [
+          {
+            category: '',
+            estimatedManHours: null,
+            numberOfWorkers: 1,
+            hourlyRate: 0
+          }
+        ],
+
         machine: [],
-        worker: {
-          workerAssigned: null,
-          startTime: null,
-          endTime: null,
-          actualDuration: null,
-        },
         consumable: [],
-        id: null
-      },
+      }
     ],
-    machines: [],
-    consumables: []
   });
 
   useEffect(() => {
@@ -227,18 +223,19 @@ function EstimatorDashboard({ onLoginClick }) {
 
             // Determine status from backend timestamps
             const computedStatus = item.status || 'pending';
-
+            const aw = item.allowedWorkers?.[0] || {};
             return {
               itemId: item._id,
               jobType: item.itemData?.job_type || '',
               description: item.itemData?.description || '',
               priority: item.itemData?.priority || '',
               estimatedPrice: item.estimatedPrice || 0,
-              numberOfWorkers: item.numberOfWorkers || 1,
+              category: aw.category,
+              estimatedManHours: aw.estimatedManHours,
+              numberOfWorkers: aw.numberOfWorkers,
+              hourlyRate: aw.hourlyRate,
               notes: item.notes || '',
-              category: item.category,
-              estimatedManHours: item.estimatedManHours,
-              itemStatus: computedStatus,   // but computedStatus = item.status now
+              itemStatus: computedStatus,
 
               machine: Array.isArray(item.machine) ?
                 item.machine.map(machine => ({
@@ -283,7 +280,10 @@ function EstimatorDashboard({ onLoginClick }) {
   };
 
   const getMaxAllowedWorkers = (item, jobStatus) => {
-    const base = item.numberOfWorkers || 1;
+    const base =
+      item.allowedWorkers?.[0]?.numberOfWorkers ||
+      item.numberOfWorkers || //remove this after database is updated
+      1;
     return jobStatus === 'rejected' ? base * 2 : base;
   };
 
@@ -459,7 +459,7 @@ function EstimatorDashboard({ onLoginClick }) {
         })
       );
 
-      setIsPaused(false);
+      setIsMachinePaused(false);
       alert("Machine timer started");
     } catch (error) {
       console.error("Start machine timer error:", error);
@@ -503,7 +503,7 @@ function EstimatorDashboard({ onLoginClick }) {
         })
       );
 
-      setIsPaused(true);
+      setIsMachinePaused(true);
       alert("Machine timer paused");
     } catch (error) {
       console.error("Pause machine timer error:", error);
@@ -813,6 +813,61 @@ function EstimatorDashboard({ onLoginClick }) {
     });
   };
 
+  const updateAllowedWorker = async (itemIndex, updates) => {
+    setFormData(prev => {
+      const items = [...prev.jobItems];
+      const item = { ...items[itemIndex] };
+
+      const current = item.allowedWorkers?.[0] || {
+        category: '',
+        estimatedManHours: 0,
+        numberOfWorkers: 1,
+        hourlyRate: 0
+      };
+
+      item.allowedWorkers = [
+        { ...current, ...updates }
+      ];
+
+      items[itemIndex] = item;
+      return { ...prev, jobItems: items };
+    });
+
+    if (updates.category) {
+      try {
+        const { data } = await axios.get(
+          `shop/getManPowerHourlyRate/${formData.shopId}/${updates.category}`
+        );
+
+        if (data?.success) {
+          setFormData(prev => {
+            const items = [...prev.jobItems];
+            const item = { ...items[itemIndex] };
+
+            const worker = item.allowedWorkers[0];
+
+            const updatedWorker = {
+              ...worker,
+              hourlyRate: data.rate
+            };
+
+            item.allowedWorkers = [updatedWorker];
+
+            const manHours = Number(updatedWorker.estimatedManHours) || 0;
+            const workers = Number(updatedWorker.numberOfWorkers) || 1;
+            const rate = Number(updatedWorker.hourlyRate) || 0;
+
+            item.estimatedPrice = manHours * workers * rate;
+
+            items[itemIndex] = item;
+            return { ...prev, jobItems: items };
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch man power hourly rate", error);
+      }
+    }
+  };
 
   const updateActualCostController = async (jobId, actualCost) => {
     try {
@@ -846,19 +901,17 @@ function EstimatorDashboard({ onLoginClick }) {
             priority: '',
           },
           estimatedPrice: 0,
-          category: '',
-          estimatedManHours: 0,
-          numberOfWorkers: 1,
-          machineHours: 0,
-          machineHourlyRate: 0,
-          machineEstimatedCost: 0,
+
+          allowedWorkers: [
+            {
+              category: '',
+              estimatedManHours: null,
+              numberOfWorkers: 1,
+              hourlyRate: 0
+            }
+          ],
+
           machine: [],
-          worker: {
-            workerAssigned: null,
-            startTime: null,
-            endTime: null,
-            actualDuration: null,
-          },
           consumable: [],
         },
       ]
@@ -873,30 +926,33 @@ function EstimatorDashboard({ onLoginClick }) {
   };
 
   const calculateFormTotal = () => {
-    const itemsTotal = formData.jobItems.reduce(
-      (sum, item) => sum + (item.estimatedPrice || 0),
-      0
-    );
-
-    // ✅ Sum all machine costs from all machines in all items
-    const machinesTotal = formData.jobItems.reduce((sum, item) => {
-      const itemMachineTotal = Array.isArray(item.machine)
-        ? item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0)
-        : 0;
-      return sum + itemMachineTotal;
-    }, 0);
-
-    const consumablesTotal = formData.jobItems.reduce((sum, item, itemIndex) => {
-      const itemConsumableTotal = Array.isArray(item.consumable)
-        ? item.consumable.reduce((s, c, ci) => {
-          const qty = consumableQty[`${itemIndex}-${ci}`] || 0;
-          return s + (c.price || 0) * qty;
+    return formData.jobItems.reduce((total, item, itemIndex) => {
+      const laborCost = Array.isArray(item.allowedWorkers)
+        ? item.allowedWorkers.reduce((sum, w) => {
+          const manHours = Number(w.estimatedManHours) || 0;
+          const rate = Number(w.hourlyRate) || 0;
+          console.log("Labor Hourly Rate:", rate);
+          return sum + manHours * rate;
         }, 0)
         : 0;
-      return sum + itemConsumableTotal;
-    }, 0);
 
-    return itemsTotal + machinesTotal + consumablesTotal;
+      const machineCost = Array.isArray(item.machine)
+        ? item.machine.reduce(
+          (sum, m) => sum + (m.machineEstimatedCost || 0),
+          0
+        )
+        : 0;
+
+      const consumableCost = Array.isArray(item.consumable)
+        ? item.consumable.reduce((sum, c, ci) => {
+          const qty = consumableQty[`${itemIndex}-${ci}`] || 0;
+          return sum + (c.price || 0) * qty;
+        }, 0)
+        : 0;
+
+
+      return total + laborCost + machineCost + consumableCost;
+    }, 0);
   };
 
 
@@ -928,8 +984,8 @@ function EstimatorDashboard({ onLoginClick }) {
     if (!job || !job.items) return 0;
 
     return job.items.reduce((total, item) => {
-      const category = categories.find(c => c.name === item.category);
-      const hourlyRate = category?.hourlyRate || 0;
+      const aw = item.allowedWorkers?.[0];
+      const hourlyRate = aw?.hourlyRate || 0;
 
       // Worker actual duration in minutes from backend (already in item.worker.actualDuration)
       const totalActualMinutes = Array.isArray(item.workers)
@@ -970,15 +1026,29 @@ function EstimatorDashboard({ onLoginClick }) {
       return;
     }
 
-    const hasInvalidItems = jobItems.some(item =>
-      !item.itemData.description || item.estimatedPrice <= 0
-    );
+    const hasInvalidItems = jobItems.some(item => {
+      const aw = item.allowedWorkers?.[0];
+
+      return (
+        !item.itemData.description ||
+        !aw ||
+        !aw.category ||
+        !aw.estimatedManHours ||
+        aw.estimatedManHours <= 0 ||
+        !aw.numberOfWorkers ||
+        aw.numberOfWorkers <= 0 ||
+        !aw.hourlyRate ||
+        aw.hourlyRate <= 0
+      );
+    });
+
     if (hasInvalidItems) {
-      alert('Please fill in all job item descriptions and a valid estimated price');
+      alert(
+        'Please fill description, category, estimated man-hours, number of workers, and ensure hourly rate is valid for all job items.'
+      );
       return;
     }
 
-    // ✅ Calculate total machine cost for estimated price
     const backendPayload = {
       templateId: formData.templateId,
       isVerifiedByUser: formData.isVerifiedByUser,
@@ -991,11 +1061,28 @@ function EstimatorDashboard({ onLoginClick }) {
         vehicle_model: customerData.vehicle_model || '',
         contact_number: customerData.contact_number
       },
-      jobItems: jobItems.map(item => {
-        // Calculate total machine cost for this item
+      jobItems: jobItems.map((item, itemIndex) => {
         const totalMachineCost = Array.isArray(item.machine)
           ? item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
           : 0;
+
+        const totalConsumableCost = Array.isArray(item.consumable)
+          ? item.consumable.reduce((sum, c, ci) => {
+            const price = Number(c.price) || 0;
+            const quantity = Number(consumableQty[`${itemIndex}-${ci}`]) || 0;
+
+            console.log("Consumable Price:", price);
+            console.log("Consumable Quantity:", quantity);
+
+            return sum + price * quantity;
+          }, 0)
+          : 0;
+
+        console.log("Total Consumable Cost:", totalConsumableCost);
+
+        const totalEmployeeCost = item.allowedWorkers[0].estimatedManHours * item.allowedWorkers[0].hourlyRate;
+
+        const totalCost = totalMachineCost + totalConsumableCost + totalEmployeeCost;
 
         return {
           itemData: {
@@ -1003,40 +1090,37 @@ function EstimatorDashboard({ onLoginClick }) {
             description: item.itemData.description,
             priority: item.itemData.priority || 'Medium'
           },
-          estimatedPrice: item.estimatedPrice + totalMachineCost,
-          numberOfWorkers: item.numberOfWorkers || 1,
-          category: item.category,
-          estimatedManHours: item.estimatedManHours,
+          estimatedPrice: totalCost,
+          allowedWorkers: item.allowedWorkers.map(w => ({
+            category: w.category,
+            estimatedManHours: w.estimatedManHours,
+            numberOfWorkers: w.numberOfWorkers,
+            hourlyRate: w.hourlyRate
+          })),
 
-          // ✅ Send machines as array
           machine: Array.isArray(item.machine)
             ? item.machine
-              .filter(m => m.machineRequired && m.machineRequired.trim() !== "")
+              .filter(m => m.machineRequired)
               .map(m => ({
                 machineRequired: m.machineRequired,
-                startTime: m.startTime || null,
-                endTime: m.endTime || null,
-                actualDuration: m.actualDuration || null
+                estimatedMachineHours: m.machineHours || 0,
+                startTime: null,
+                endTime: null,
+                actualDuration: null
               }))
             : [],
 
-          workers: Array.isArray(item.workers)
-            ? item.workers.map(w => ({
-              workerAssigned: w.workerAssigned,
-              startTime: w.startTime || null,
-              endTime: w.endTime || null,
-              actualDuration: w.actualDuration || null
-            }))
-            : [],
+          workers: [],
 
           consumable: Array.isArray(item.consumable)
             ? item.consumable
               .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
-              .map(c => ({
+              .map((c, ci) => ({
                 name: c.name.trim(),
                 price: c.price,
+                estimatedUsage: consumableQty[`${itemIndex}-${ci}`] || 0,
                 available: c.available,
-                quantity: c.quantity || 1
+                quantity: consumableQty[`${itemIndex}-${ci}`] || 1
               }))
             : []
         };
@@ -1051,7 +1135,6 @@ function EstimatorDashboard({ onLoginClick }) {
       if (response.data) {
         await getAllJobs();
 
-        // Reset form
         setFormData({
           templateId: '68f50077a6d75c0ab83cd019',
           isVerifiedByUser: true,
@@ -1071,18 +1154,17 @@ function EstimatorDashboard({ onLoginClick }) {
                 priority: '',
               },
               estimatedPrice: 0,
-              category: '',
-              estimatedManHours: 0,
-              numberOfWorkers: 1,
-              machine: [], // ✅ Reset as empty array
-              worker: {
-                workerAssigned: null,
-                startTime: null,
-                endTime: null,
-                actualDuration: null,
-              },
+              allowedWorkers: [
+                {
+                  category: '',
+                  estimatedManHours: 0,
+                  numberOfWorkers: 1,
+                  hourlyRate: 0
+                }
+              ],
+              machine: [],
               consumable: []
-            },
+            }
           ]
         });
 
@@ -1122,22 +1204,31 @@ function EstimatorDashboard({ onLoginClick }) {
       const currentItem = updatedJobItems[index];
       const hourlyRate = selectedCategory?.hourlyRate || 0;
 
-      updatedJobItems[index] = {
-        ...currentItem,
+      updateAllowedWorker(index, {
         category: categoryName,
-        hourlyRate: hourlyRate,
-        // Recalculate price if man-hours already exist
-        estimatedPrice: (currentItem.estimatedManHours || 0) * hourlyRate
-      };
+        hourlyRate
+      });
       return { ...prev, jobItems: updatedJobItems };
     });
   };
 
   // ✅ Utility function to fetch rate
-  const fetchHourlyRate = async (type) => {
+  const fetchMachineHourlyRate = async (type) => {
     try {
       console.log("Fetching rate for type:", type);
-      const res = await axios.get(`/shop/getHourlyRate/${userInfo?.shopId}/${type}`);
+      const res = await axios.get(`/shop/getMachineHourlyRate/${userInfo?.shopId}/${type}`);
+      console.log("Rate Response:", res.data);
+      return res.data?.rate || 0; // ✅ Only return numeric rate
+    } catch (error) {
+      console.error("Error fetching hourly rate:", error);
+      return 0;
+    }
+  };
+
+  const fetchManPowerHourlyRate = async (type) => {
+    try {
+      console.log("Fetching rate for type:", type);
+      const res = await axios.get(`/shop/getManPowerHourlyRate/${userInfo?.shopId}/${type}`);
       console.log("Rate Response:", res.data);
       return res.data?.rate || 0; // ✅ Only return numeric rate
     } catch (error) {
@@ -1152,9 +1243,9 @@ function EstimatorDashboard({ onLoginClick }) {
     if (!selectedMachine) return;
 
     const type = selectedMachine.type;
-    const hourlyRate = await fetchHourlyRate(type);
+    const hourlyMachineRate = await fetchMachineHourlyRate(type);
     const machineHours = formData.jobItems[itemIndex]?.machine[machineIndex]?.machineHours || 0;
-    const machineEstimatedCost = hourlyRate * machineHours;
+    const machineEstimatedCost = hourlyMachineRate * machineHours;
 
     setFormData(prev => {
       const newJobItems = [...prev.jobItems];
@@ -1165,7 +1256,7 @@ function EstimatorDashboard({ onLoginClick }) {
           return {
             ...m,
             machineRequired: machineId,
-            machineHourlyRate: hourlyRate,
+            machineHourlyRate: hourlyMachineRate,
             machineEstimatedCost
           };
         }
@@ -1179,7 +1270,7 @@ function EstimatorDashboard({ onLoginClick }) {
     console.log("✅ Machine Selected:", {
       machine: selectedMachine.name,
       type,
-      hourlyRate,
+      hourlyMachineRate,
       machineHours,
       machineEstimatedCost
     });
@@ -1195,8 +1286,8 @@ function EstimatorDashboard({ onLoginClick }) {
 
     const selectedMachine = machines.find(m => m._id === machineId);
     const type = selectedMachine?.type;
-    const hourlyRate = await fetchHourlyRate(type);
-    const machineEstimatedCost = newHours * hourlyRate;
+    const hourlyMachineRate = await fetchMachineHourlyRate(type);
+    const machineEstimatedCost = newHours * hourlyMachineRate;
 
     setFormData(prev => {
       const newJobItems = [...prev.jobItems];
@@ -1207,7 +1298,7 @@ function EstimatorDashboard({ onLoginClick }) {
           return {
             ...m,
             machineHours: newHours,
-            machineHourlyRate: hourlyRate,
+            machineHourlyRate: hourlyMachineRate,
             machineEstimatedCost
           };
         }
@@ -1220,7 +1311,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
     console.log("✅ Machine Cost Calculated:", {
       machineName: selectedMachine?.name,
-      hourlyRate,
+      hourlyMachineRate,
       hoursNum: newHours,
       machineEstimatedCost
     });
@@ -1639,7 +1730,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                 <div className="item-description">{item.description}</div>
                                 <div className="item-description">Priority: {item.priority}</div>
 
-                                <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
+                                <div className='item-description'>Estimated Man hours : {item.estimatedManHours}</div>
                                 <div className="item-description">
                                   Status: <strong>{item.itemStatus}</strong>
                                 </div>
@@ -1678,7 +1769,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                             key={m.machineId || mi}
                                             machine={m}
                                             selectedJobStatus={selectedJob.status}
-                                            isPaused={ispaused}
+                                            isPaused={isMachinePaused}
                                             onStart={() =>
                                               handleStartMachineTimer(
                                                 selectedJob.id,
@@ -1746,7 +1837,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                                   <>
                                                     <button
                                                       className="consumable-btn"
-                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved'}
+                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved' || selectedJob.status === 'supapproved'}
                                                       onClick={() =>
                                                         handleUseConsumable(
                                                           selectedJob.id,
@@ -1761,7 +1852,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
                                                     <button
                                                       className="consumable-btn"
-                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved'}
+                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved' || selectedJob.status === 'supapproved'}
                                                       onClick={() =>
                                                         handleUseConsumable(
                                                           selectedJob.id,
@@ -1776,7 +1867,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
                                                     <button
                                                       className="consumable-btn"
-                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved'}
+                                                      disabled={selectedJob.status === 'completed' || selectedJob.status === 'approved' || selectedJob.status === 'supapproved'}
                                                       onClick={() =>
                                                         handleUseConsumable(
                                                           selectedJob.id,
@@ -1893,7 +1984,7 @@ function EstimatorDashboard({ onLoginClick }) {
                               <option value="">Select Employee</option>
 
                               {employees
-                                .filter(emp => emp.specialization === item.category)
+                                .filter(emp => emp.specialization === item.allowedWorkers?.[0]?.category)
                                 .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
                                 .map(emp => (
                                   <option key={emp._id} value={emp._id}>
@@ -1911,7 +2002,7 @@ function EstimatorDashboard({ onLoginClick }) {
                   <div className="job-detail-total">
                     <strong className="total-label">Total Estimated Amount:</strong>
                     <strong className="total-amount">
-                      ${calculateJobTotal(selectedJob).toFixed(2)}
+                      ${(selectedJob?.totalEstimatedAmount || 0).toFixed(2)}
                     </strong>
 
                     {selectedJob.status.toLowerCase() == "approved" && (
@@ -2057,8 +2148,8 @@ function EstimatorDashboard({ onLoginClick }) {
                         <div className="form-group">
                           <label>Employee Category</label>
                           <select
-                            value={item.category || ''}
-                            onChange={(e) => handleJobCategorySelect(index, e.target.value)}
+                            value={item.allowedWorkers[0].category || ""}
+                            onChange={(e) => updateAllowedWorker(index, { category: e.target.value })}
                           >
                             <option value="">-- Select Category --</option>
                             {categories.map(category => (
@@ -2074,8 +2165,12 @@ function EstimatorDashboard({ onLoginClick }) {
                           <input
                             type="number"
                             placeholder="0"
-                            value={item.estimatedManHours || ''}
-                            onChange={(e) => handleJobItemChange(index, 'estimatedManHours', e.target.value)}
+                            value={item.allowedWorkers[0].estimatedManHours}
+                            onChange={(e) =>
+                              updateAllowedWorker(index, {
+                                estimatedManHours: Number(e.target.value)
+                              })
+                            }
                           />
                         </div>
                         <div className="form-group">
@@ -2083,8 +2178,12 @@ function EstimatorDashboard({ onLoginClick }) {
                           <input
                             type="number"
                             placeholder="0"
-                            value={item.numberOfWorkers || ''}
-                            onChange={(e) => handleJobItemChange(index, 'numberOfWorkers', e.target.value)}
+                            value={item.allowedWorkers[0].numberOfWorkers}
+                            onChange={(e) =>
+                              updateAllowedWorker(index, {
+                                numberOfWorkers: Number(e.target.value)
+                              })
+                            }
                           />
                         </div>
                       </div>
@@ -2175,7 +2274,6 @@ function EstimatorDashboard({ onLoginClick }) {
                                 </div>
 
                                 <div className="machine-right">
-                                  {/* Machine Cost Display */}
                                   {machine.machineHourlyRate > 0 && (
                                     <p className="machine-cost-info">
                                       Rate: ${machine.machineHourlyRate}/hr | Cost: $
@@ -2186,13 +2284,6 @@ function EstimatorDashboard({ onLoginClick }) {
                               </div>
                             ))
                           ) : (
-                            // <button
-                            //   type="button"
-                            //   className="btn-add-job"
-                            //   onClick={() => addMachineToItem(index)}
-                            // >
-                            //   <img src="/plus.png" alt="Plus Icon" className="plus-icon-con" /> Add Machine
-                            // </button>
                             <span></span>
                           )}
                         </div>
@@ -2269,6 +2360,16 @@ function EstimatorDashboard({ onLoginClick }) {
                             {c.isManual && (
                               <div className="manual-consumable-fields">
                                 <input
+                                  type="text"
+                                  placeholder="Name"
+                                  value={c.name || ""}
+                                  onChange={(e) => {
+                                    const updated = [...item.consumable];
+                                    updated[ci] = { ...updated[ci], name: e.target.value };
+                                    updateJobItemField(index, "consumable", updated);
+                                  }}
+                                />
+                                <input
                                   type="number"
                                   placeholder="Quantity"
                                   value={consumableQty[`${index}-${ci}`] || ""}
@@ -2278,16 +2379,6 @@ function EstimatorDashboard({ onLoginClick }) {
                                       ...prev,
                                       [`${index}-${ci}`]: qty
                                     }));
-                                  }}
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="Consumable Name"
-                                  value={c.name || ""}
-                                  onChange={(e) => {
-                                    const updated = [...item.consumable];
-                                    updated[ci] = { ...updated[ci], name: e.target.value };
-                                    updateJobItemField(index, "consumable", updated);
                                   }}
                                 />
                                 <input

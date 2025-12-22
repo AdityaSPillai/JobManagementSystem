@@ -8,7 +8,6 @@ export const createMachineController = async (req, res) => {
       machineId,
       type,
       status,
-      hourlyRate,
       purchaseDate,
       lastMaintenanceDate,
       nextMaintenanceDate,
@@ -41,7 +40,6 @@ export const createMachineController = async (req, res) => {
       name,
       machineId,
       type,
-      hourlyRate,
       status,
       purchaseDate,
       lastMaintenanceDate,
@@ -64,37 +62,36 @@ export const createMachineController = async (req, res) => {
     console.error("❌ Error creating machine:", error);
     res.status(500).json({
       success: false,
-      message: error.errorResponse.errmsg.slice(0,20) || "Error in creating Machine",
+      message: error.errorResponse.errmsg.slice(0, 20) || "Error in creating Machine",
       error: error.message,
     });
   }
 };
 
 
-export const getSingleMachineController= async(req,res)=>{
-    try {
-        
-        const {id}=req.params;
-        if(!id) return res.status(400).send({succcess:false,message:"Machine ID is required"});
+export const getSingleMachineController = async (req, res) => {
+  try {
 
-        const machine= await MachineModel.findById(id);
-        if(!machine)
-        {
-            console.error("Can not get Machiene ",);
-            return res.status(400).send({
-                succcess:false,
-                message:"Error while fetching the user",
-            })
-        }
+    const { id } = req.params;
+    if (!id) return res.status(400).send({ succcess: false, message: "Machine ID is required" });
 
-            res.status(200).send({
-                succcess:false,
-                message:"Machine found succesfully",
-                machine
-            })
-    } catch (error) {
-        
+    const machine = await MachineModel.findById(id);
+    if (!machine) {
+      console.error("Can not get Machiene ",);
+      return res.status(400).send({
+        succcess: false,
+        message: "Error while fetching the user",
+      })
     }
+
+    res.status(200).send({
+      succcess: false,
+      message: "Machine found succesfully",
+      machine
+    })
+  } catch (error) {
+
+  }
 };
 
 
@@ -111,7 +108,6 @@ export const updateMachineController = async (req, res) => {
       type,
       machineId,
       status,
-      hourlyRate,
       purchaseDate,
       lastMaintenanceDate,
       nextMaintenanceDate,
@@ -127,7 +123,6 @@ export const updateMachineController = async (req, res) => {
     if (name !== undefined) machineData.name = name;
     if (machineId !== undefined) machineData.machineId = machineId;
     if (type !== undefined) machineData.type = type;
-    if (hourlyRate !== undefined) machineData.hourlyRate = hourlyRate;
     if (status !== undefined) machineData.status = status;
     if (purchaseDate) machineData.purchaseDate = purchaseDate;
     if (lastMaintenanceDate) machineData.lastMaintenanceDate = lastMaintenanceDate;

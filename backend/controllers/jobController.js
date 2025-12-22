@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import FormTemplateModel from "../schema/formTemplateSchema.js";
+import ShopModel from "../schema/shopSchema.js";
 import JobCardModel from "../schema/jobCardSchema.js";
 import MachineModel from "../schema/machieneModel.js";
 
-let endingtime = new Date();
 function timeDifference(end, start) {
   return Math.round((end - start) / (1000));
 };
@@ -22,20 +22,33 @@ export const createJobCard = async (req, res) => {
       });
     }
 
-
+    //Needs to be checked
     const totalEstimatedAmount = jobItems.reduce(
-      (sum, item) => {
-        const itemPrice = item.estimatedPrice || 0;
-        const consumablePrice = Array.isArray(item.consumable)
-          ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
-          : 0;
-        const machineCost = Array.isArray(item.machine) ?
-          item.machine.reduce((sum, m) => sum + m.machineEstimatedCost || 0, 0) : 0;
-        return sum + itemPrice + consumablePrice + machineCost
-
-      },
+      (sum, item) => sum + (Number(item.estimatedPrice) || 0),
       0
     );
+
+    for (const jobItem of jobItems) {
+      if (!Array.isArray(jobItem.machine)) continue;
+
+      for (const m of jobItem.machine) {
+        const machine = await MachineModel.findById(m.machineRequired);
+        if (!machine) {
+          throw new Error("Invalid machine selected");
+        }
+
+        const shop = await ShopModel.findById(shopId);
+        const category = shop.machineCategory.find(
+          c => c.name === machine.type
+        );
+
+        if (!category) {
+          throw new Error(`Machine category ${machine.type} not found`);
+        }
+
+        m.machineRate = category.hourlyRate;
+      }
+    }
 
     // Generate job number
     const count = await JobCardModel.countDocuments();
@@ -56,16 +69,26 @@ export const createJobCard = async (req, res) => {
       formData: new Map(Object.entries(formData)),
       jobItems: jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
-        category: item.category,
-        estimatedManHours: item.estimatedManHours,
-        numberOfWorkers: item.numberOfWorkers,
+
         estimatedPrice: item.estimatedPrice || 0,
+
+        allowedWorkers: Array.isArray(item.allowedWorkers)
+          ? item.allowedWorkers.map(w => ({
+            category: w.category,
+            estimatedManHours: w.estimatedManHours,
+            numberOfWorkers: w.numberOfWorkers,
+            hourlyRate: w.hourlyRate
+          }))
+          : [],
+
         machine: Array.isArray(item.machine)
           ? item.machine.map(m => ({
             machineRequired: m.machineRequired || null,
-            startTime: m.startTime || null,
-            endTime: m.endTime || null,
-            actualDuration: m.actualDuration || null
+            machineRate: m.machineRate || 0,
+            estimatedMachineHours: m.estimatedMachineHours || 0,
+            startTime: null,
+            endTime: null,
+            actualDuration: 0
           }))
           : [],
 
@@ -142,14 +165,11 @@ export const getAllJobs = async (req, res) => {
 export const getAllJobsByCustomerID = async (req, res) => {
   try {
     const { customerIDNumber } = req.params;
-    console.log("PARAM:", customerIDNumber);
-
 
     const jobs = await JobCardModel.find({
       customerIDNumber,
     });
 
-    console.log("FOUND JOBS:", jobs.length);
     if (!jobs.length) {
       return res.status(404).json({
         success: false,
@@ -192,33 +212,31 @@ export const updateJobSettings = async (req, res) => {
     }
 
     if (jobItems) {
-      const totalEstimatedAmount = jobItems.reduce((sum, item) => {
-        const itemPrice = item.estimatedPrice || 0;
-
-        const consumablePrice = Array.isArray(item.consumable)
-          ? item.consumable.reduce((s, c) => s + (c.price || 0), 0)
-          : 0;
-
-        const machineCost = Array.isArray(item.machine)
-          ? item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0)
-          : 0;
-
-        return sum + itemPrice + consumablePrice + machineCost;
-      }, 0);
+      const totalEstimatedAmount = jobItems.reduce(
+        (sum, item) => sum + (Number(item.estimatedPrice) || 0),
+        0
+      );
 
       updateData.jobItems = jobItems.map(item => ({
         itemData: new Map(Object.entries(item.itemData || {})),
-        category: item.category,
-        estimatedManHours: item.estimatedManHours,
-        numberOfWorkers: item.numberOfWorkers,
+
         estimatedPrice: item.estimatedPrice || 0,
+
+        allowedWorkers: Array.isArray(item.allowedWorkers)
+          ? item.allowedWorkers.map(w => ({
+            category: w.category,
+            estimatedManHours: w.estimatedManHours,
+            numberOfWorkers: w.numberOfWorkers,
+            hourlyRate: w.hourlyRate
+          }))
+          : [],
 
         machine: Array.isArray(item.machine)
           ? item.machine.map(m => ({
             machineRequired: m.machineRequired || null,
             startTime: m.startTime || null,
             endTime: m.endTime || null,
-            actualDuration: m.actualDuration || null,
+            actualDuration: m.actualDuration || 0,
           }))
           : [],
 
@@ -400,7 +418,6 @@ export const endMachineForJobItem = async (req, res) => {
 
     machine.actualDuration = (machine.actualDuration || 0) + duration;
     machine.endTime = endTime;
-    machine.startTime = null;
 
     await MachineModel.findByIdAndUpdate(machineId, {
       isAvailable: true,
@@ -892,6 +909,18 @@ export const qualityBadController = async (req, res) => {
     jobItem.qualityStatus = 'needs_work';
     jobItem.notes = notes;
     job.workVerified = userId;
+    if (Array.isArray(jobItem.workers)) {
+      jobItem.workers.forEach(worker => {
+        worker.endTime = null;
+        worker.startTime = null;
+      });
+    }
+    if (Array.isArray(jobItem.machine)) {
+      jobItem.machine.forEach(machine => {
+        machine.endTime = null;
+        machine.startTime = null;
+      });
+    }
     await job.save();
     res.status(200).json({
       success: true,

@@ -42,9 +42,9 @@ export default function MachineTimer({
         );
     }
 
-    const isStopped = !!machine.endTime;
     const isRunning = !!machine.startTime && !machine.endTime && !isPaused;
     const isCompleted = selectedJobStatus === 'completed';
+    console.log(machine.startTime, machine.endTime, isPaused);
 
     return (
         <tr>
@@ -52,7 +52,7 @@ export default function MachineTimer({
             <td>{machine.machineId || 'N/A'}</td>
             <td>
                 <div className="worker-actions">
-                    {isStopped && selectedJobStatus !== 'rejected' ? (
+                    {!!machine.startTime && !!machine.endTime ? (
                         <span className="worker-stopped">
                             {formatSecondsToHMS(displayDuration)} Ended
                         </span>
@@ -64,7 +64,7 @@ export default function MachineTimer({
                         <>
                             <button
                                 className="worker-btn start"
-                                disabled={isRunning || isCompleted || selectedJobStatus === 'approved'}
+                                disabled={isRunning || isCompleted}
                                 onClick={onStart}
                             >
                                 {isRunning
@@ -74,7 +74,7 @@ export default function MachineTimer({
 
                             <button
                                 className="worker-btn pause"
-                                disabled={!isRunning}
+                                disabled={!isRunning || isCompleted}
                                 onClick={onPause}
                             >
                                 Pause
@@ -82,7 +82,7 @@ export default function MachineTimer({
 
                             <button
                                 className="worker-btn stop"
-                                disabled={!machine.startTime}
+                                disabled={!isRunning || isCompleted}
                                 onClick={onStop}
                             >
                                 Stop

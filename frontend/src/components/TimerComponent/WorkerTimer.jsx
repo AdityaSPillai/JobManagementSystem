@@ -42,8 +42,7 @@ export default function WorkerTimer({
         );
     }
 
-    const isStopped = !!worker.endTime;
-    const isRunning = !!worker.startTime && !worker.endTime && !isPaused;
+    const isRunning = (!!worker.startTime && !worker.endTime && !isPaused);
 
     return (
         <tr>
@@ -52,7 +51,7 @@ export default function WorkerTimer({
 
             <td>
                 <div className="worker-actions">
-                    {isStopped && selectedJobStatus !== 'rejected' ? (
+                    {!!worker.startTime && !!worker.endTime ? (
                         <span className="worker-stopped">
                             {formatSecondsToHMS(displayDuration)} Ended
                         </span>
@@ -78,7 +77,7 @@ export default function WorkerTimer({
 
                             <button
                                 className="worker-btn stop"
-                                disabled={!worker.startTime}
+                                disabled={!isRunning}
                                 onClick={onStop}
                             >
                                 Stop
