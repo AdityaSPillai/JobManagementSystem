@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../utils/axios.js';
 import useAuth from '../context/context.jsx';
+import "../styles/EmployeesTab.css";
 
 // --- Add Employee Modal ---
 function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
@@ -22,7 +23,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
   const { userInfo } = useAuth();
 
   useEffect(() => {
-  const fetchCategories = async () => {
+    const fetchCategories = async () => {
       try {
         const res = await axios.get(`/shop/allCategories/${userInfo?.shopId}`);
         if (res.data?.categories?.length > 0) {
@@ -42,25 +43,25 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-      if (name === "specialization") {
-    const selectedCategory = categories.find(cat => cat.name === value);
+    if (name === "specialization") {
+      const selectedCategory = categories.find(cat => cat.name === value);
 
-    setFormData(prev => ({
-      ...prev,
-      specialization: value,
-      role: selectedCategory?.role || prev.role
-    }));
+      setFormData(prev => ({
+        ...prev,
+        specialization: value,
+        role: selectedCategory?.role || prev.role
+      }));
 
-    return;
-  }
+      return;
+    }
 
-  setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.name || !formData.email || !formData.phone || !formData.experience || !formData.employeeNumber) {
       setError("Please fill in all required fields.");
@@ -97,18 +98,18 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
       setError('');
 
       const response = await axios.post('/employee/createEmployee', employeeData);
-      
+
       if (!response.data.success) {
         setError(response.data.message || "Error while adding new employee");
         return;
       }
 
       alert("Employee added successfully!");
-      
+
       if (onSubmit) {
         onSubmit(response.data.worker || employeeData);
       }
-      
+
       setFormData({
         name: '',
         email: '',
@@ -121,7 +122,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
         employeeNumber: '',
       });
       onClose();
-      
+
     } catch (error) {
       console.error('Employee Creation Error:', error);
       setError(error.response?.data?.message || "An error occurred while creating the employee.");
@@ -136,58 +137,58 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Employee</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> <span className="add-employee">Add New Employee</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid cols-2">
             <div className="form-group">
               <label htmlFor="name">Full Name *</label>
-              <input 
-                type="text" 
-                id="name" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
                 disabled={loading}
               />
             </div>
             <div className="form-group">
               <label htmlFor="email">Email *</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                value={formData.email} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
                 disabled={loading}
               />
             </div>
             <div className="form-group">
               <label htmlFor="phone">Phone *</label>
-              <input 
-                type="number" 
-                id="phone" 
-                name="phone" 
-                value={formData.phone} 
-                onChange={handleChange} 
-                required 
+              <input
+                type="number"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
                 disabled={loading}
               />
             </div>
             <div className="form-group">
               <label htmlFor="password">Password {formData.role !== 'worker' && '*'}</label>
-              <input 
-                type="password" 
-                id="password" 
-                name="password" 
-                value={formData.password} 
-                onChange={handleChange} 
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 required={formData.role !== 'worker'}
                 disabled={loading}
               />
@@ -215,10 +216,10 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
             </div>
             <div className="form-group">
               <label htmlFor="role">Role *</label>
-              <select 
-                id="role" 
-                name="role" 
-                value={formData.role} 
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
                 onChange={handleChange}
                 disabled
               >
@@ -228,36 +229,36 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 <option value="desk_employee">Desk Employee</option>
               </select>
             </div>
-            
-            
+
+
             <div className="form-group">
               <label htmlFor="experience">Experience (Years) *</label>
-              <input 
-                type="number" 
-                id="experience" 
-                name="experience" 
-                value={formData.experience} 
+              <input
+                type="number"
+                id="experience"
+                name="experience"
+                value={formData.experience}
                 onChange={handleChange}
                 min="0"
                 required
                 disabled={loading}
               />
             </div>
-             <div className="form-group">
+            <div className="form-group">
               <label htmlFor="employeeNumber">Employee Number *</label>
-              <input 
-                type="text" 
-                id="employeeNumber" 
-                name="employeeNumber" 
-                value={formData.employeeNumber} 
+              <input
+                type="text"
+                id="employeeNumber"
+                name="employeeNumber"
+                value={formData.employeeNumber}
                 onChange={handleChange}
                 required
                 disabled={loading}
               />
             </div>
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn-submit"
             disabled={loading}
           >
@@ -270,7 +271,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
 }
 
 function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
-  const {userInfo} = useAuth();
+  const { userInfo } = useAuth();
   const [formData, setFormData] = useState(employee || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -300,16 +301,16 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "specialization") {
-    const selectedCategory = categories.find(cat => cat.name === value);
+      const selectedCategory = categories.find(cat => cat.name === value);
 
-    setFormData(prev => ({
-      ...prev,
-      specialization: value,
-      role: selectedCategory?.role || prev.role
-    }));
+      setFormData(prev => ({
+        ...prev,
+        specialization: value,
+        role: selectedCategory?.role || prev.role
+      }));
 
-    return;
-  }
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -323,10 +324,10 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
     try {
       setLoading(true);
       const response = await axios.put(`/employee/updateEmployee/${employee._id}`, formData);
-      
+
       if (response.data.success) {
         alert('✅ Employee updated successfully');
-        onUpdate(); 
+        onUpdate();
         onClose();
       } else {
         setError(response.data.message || 'Failed to update employee');
@@ -346,7 +347,7 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
       <div className="modal-content modal-large">
         <div className="modal-header">
           <div className="modal-header-left">
-            <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Employee</span> </h3>
+            <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="add-employee">Edit Employee</span> </h3>
           </div>
           <div className="modal-header-right">
             <button className="modal-close-btn" onClick={onClose}>✕</button>
@@ -400,11 +401,11 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
             </div>
             <div className="form-group">
               <label>Role</label>
-              
-              <select 
-                id="role" 
-                name="role" 
-                value={formData.role} 
+
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
                 onChange={handleChange}
                 disabled={loading}
               >
@@ -452,53 +453,56 @@ function EmployeesTab() {
 
       // Get shopId from userInfo
       const shopId = userInfo?.shopId;
-      
+
       if (!shopId) {
         setError("Shop ID not found. Please make sure you're logged in.");
         setLoading(false);
         return;
       }
 
-       const response = await axios.get(`/shop/getAllEmployees/${shopId}`);
-    const users = response.data?.users || [];
+      const response = await axios.get(`/shop/getAllEmployees/${shopId}`);
+      const users = response.data?.users || [];
 
-    if (users.length === 0) {
-      setError("No employee list found");
+      if (users.length === 0) {
+        setError("No employee list found");
+        return;
+      }
+
+      setEmployees(users);
+      setFilteredEmployees(users);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      setError(error.response?.data?.message || "Failed to fetch employees.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const nonOwnerEmployees = employees.filter(
+      (emp) => emp.role !== "owner"
+    );
+
+    if (!search.trim()) {
+      setFilteredEmployees(nonOwnerEmployees);
       return;
     }
 
-    setEmployees(users);
-    setFilteredEmployees(users); 
-  } catch (error) {
-    console.error('Error fetching employees:', error);
-    setError(error.response?.data?.message || "Failed to fetch employees.");
-  } finally {
-    setLoading(false);
-  }
-};
+    const s = search.toLowerCase();
 
-useEffect(() => {
-  if (!search.trim()) {
-    setFilteredEmployees(employees);
-    return;
-  }
+    const filtered = nonOwnerEmployees.filter((emp) =>
+      emp.name.toLowerCase().includes(s) ||
+      emp.email.toLowerCase().includes(s) ||
+      emp.phone.includes(s) ||
+      (emp.employeeNumber || "").toLowerCase().includes(s) ||
+      (emp.specialization || "").toLowerCase().includes(s) ||
+      (emp.role || "").toLowerCase().includes(s)
+    );
 
-  const s = search.toLowerCase();
-
-  const filtered = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(s) ||
-    emp.email.toLowerCase().includes(s) ||
-    emp.phone.includes(s) ||
-    (emp.employeeNumber || "").toLowerCase().includes(s) ||
-    (emp.specialization || "").toLowerCase().includes(s) ||
-    (emp.role || "").toLowerCase().includes(s)
-  );
-
-  setFilteredEmployees(filtered);
-}, [search, employees]);
+    setFilteredEmployees(filtered);
+  }, [search, employees]);
 
   const handleAddEmployee = (employeeData) => {
-    // Refresh the employee list after adding
     fetchEmployees();
     console.log("LOG EVENT:", {
       action: "CREATE_EMPLOYEE",
@@ -508,23 +512,23 @@ useEffect(() => {
   };
 
   const handleDeleteEmployee = async (employeeId) => {
-  if (!window.confirm("Are you sure you want to remove this employee?")) return;
+    if (!window.confirm("Are you sure you want to remove this employee?")) return;
 
-  try {
-    const response = await axios.delete(`/auth/deleteEmployee/${employeeId}`);
+    try {
+      const response = await axios.delete(`/auth/deleteEmployee/${employeeId}`);
 
-    if (response.data.success) {
-      alert("✅ Employee deleted successfully!");
-      window.location.reload();
-      fetchEmployees(); // refresh list
-    } else {
-      alert(response.data.message || "Failed to delete employee.");
+      if (response.data.success) {
+        alert("✅ Employee deleted successfully!");
+        window.location.reload();
+        fetchEmployees(); // refresh list
+      } else {
+        alert(response.data.message || "Failed to delete employee.");
+      }
+    } catch (error) {
+      console.error("❌ Error deleting employee:", error);
+      alert(error.response?.data?.message || "Failed to delete employee.");
     }
-  } catch (error) {
-    console.error("❌ Error deleting employee:", error);
-    alert(error.response?.data?.message || "Failed to delete employee.");
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -565,38 +569,55 @@ useEffect(() => {
           <p>No employees found. Add your first employee to get started!</p>
         </div>
       ) : (
-        <div className="data-grid1">
-          {filteredEmployees.map(emp => (
-            <div key={emp._id} className="data-card">
-              <div className="data-card-header">
-                <h4>{emp.name}</h4>
-                <span className="data-card-role">{emp.role}</span>
-              </div>
-              <div className="data-card-body">
-                <p><strong>Email:</strong> {emp.email}</p>
-                <p><strong>Phone:</strong> {emp.phone}</p>
-                <p><strong>Emp Number:</strong> {emp.employeeNumber}</p>
-                {emp.specialization && (
-                  <p><strong>Specialization:</strong> {emp.specialization}</p>
-                )}
-                {emp.experience && (
-                  <p><strong>Experience:</strong> {emp.experience} years</p>
-                )}
-              </div>
-              <div className="data-card-footer">
-                {emp.role === "owner" ? (<div></div>):(<button 
-                  className="btn-card-action"
-                  onClick={() => {
-                    setSelectedEmployee(emp);
-                    setIsEditModalOpen(true);
-                  }}
-                >
-                  Edit
-                </button>)}
-                <button className="btn-card-action btn-danger" onClick={() => handleDeleteEmployee(emp._id)}>Remove</button>
-              </div>
-            </div>
-          ))}
+        <div className="employee-table-wrapper">
+          <table className="employee-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Emp No</th>
+                <th>Role</th>
+                <th>Specialization</th>
+                <th>Experience</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredEmployees.map((emp) => (
+                <tr key={emp._id}>
+                  <td>{emp.name}</td>
+                  <td>{emp.email}</td>
+                  <td>{emp.phone}</td>
+                  <td>{emp.employeeNumber}</td>
+                  <td className="role-cell">{emp.role}</td>
+                  <td>{emp.specialization || "-"}</td>
+                  <td>{emp.experience ? `${emp.experience} yrs` : "-"}</td>
+                  <td className="action-cell">
+                    {emp.role !== "owner" && (
+                      <button
+                        className="table-btn edit"
+                        onClick={() => {
+                          setSelectedEmployee(emp);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    )}
+
+                    <button
+                      className="table-btn delete"
+                      onClick={() => handleDeleteEmployee(emp._id)}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
