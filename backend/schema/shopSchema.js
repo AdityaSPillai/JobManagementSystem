@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
+import { ref } from "process";
 
 
 const shopSchema = new mongoose.Schema({
@@ -57,9 +58,20 @@ const shopSchema = new mongoose.Schema({
       type:String,
       required:true
     },
+    serviceCategory:{
+    type:String,
+  },
     description:String,
     note:String,
   }],
+
+  serviceCategory:[{
+    name:{
+      type:String,
+      required:true}
+  },
+
+],
   
   categories:[{
      name:{

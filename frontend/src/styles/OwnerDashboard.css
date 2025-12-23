@@ -344,7 +344,7 @@
 .badge-rate {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 12px 20px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
@@ -537,7 +537,7 @@
 }
 
 .modal-content.modal-large {
-  max-width: 800px;
+  max-width: 1200px;
   /* Wider modal for complex forms */
 }
 
@@ -668,8 +668,8 @@
   gap: 15px;
 }
 
-.modal-form .form-grid.cols-2 {
-  grid-template-columns: 1fr 1fr;
+.modal-form .form-grid.cols-3 {
+  grid-template-columns: 1fr 1fr 1fr ;
 }
 
 .modal-form .form-grid.cols-3 {

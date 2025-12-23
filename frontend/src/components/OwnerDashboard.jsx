@@ -15,6 +15,7 @@ import ServiceTypeTab from './ServiceTypeTab.jsx';
 import RejectedJobs from './RejectedJobs.jsx';
 import ConsoleTab from './ConsoleTab.jsx';
 import EditShopTab from './EditShopTab.jsx';
+import ServiceCategoryTab from './ServiceCategoryTab.jsx';
 
 
 // --- Shop Creation Modal Component ---
@@ -485,9 +486,10 @@ function OwnerDashboard({ onLogout }) {
           <button className={`sidebar-tab ${activeTab === 'overview' ? 'active' : ''}`}  onClick={() => setActiveTab('overview')}><img src="/stats.png" alt="Overview Icon" className="sidebar-icon" /> Overview</button>
           <button className={`sidebar-tab ${activeTab === 'stats' ? 'active' : ''}`}  onClick={() => setActiveTab('stats')}><img src="/graph.png" alt="Stats Icon" className="sidebar-icon" /> Stats</button>
           <button className={`sidebar-tab ${activeTab === 'employees' ? 'active' : ''}`} onClick={() => setActiveTab('employees')}><img src="/employee.png" alt="Employee Icon" className="sidebar-icon" /> Employees</button>
-          <button className={`sidebar-tab ${activeTab === 'serviceTypes' ? 'active' : ''}`} onClick={() => setActiveTab('serviceTypes')}><img src="/job.png" alt="Service Type Icon" className="sidebar-icon" /> Service Type</button>
           <button className={`sidebar-tab ${activeTab === 'manPowerCategory' ? 'active' : ''}`} onClick={() => setActiveTab('manPowerCategory')}><img src="/jobcategory.png" alt="Man Power Category Icon" className="sidebar-icon" /> Man Power Category</button>
-          <button className={`sidebar-tab ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}><img src="/machine.png" alt="Machinery Icon" className="sidebar-icon" /> Machinery</button>
+          <button className={`sidebar-tab ${activeTab === 'serviceTypes' ? 'active' : ''}`} onClick={() => setActiveTab('serviceTypes')}><img src="/job.png" alt="Service Type Icon" className="sidebar-icon" /> Service </button>
+          <button className={`sidebar-tab ${activeTab === 'serviceCategory' ? 'active' : ''}`} onClick={() => setActiveTab('serviceCategory')}><img src="/job.png" alt="Service Type Icon" className="sidebar-icon" /> Service Category </button>
+          <button className={`sidebar-tab ${activeTab === 'machines' ? 'active' : ''}`} onClick={() => setActiveTab('machines')}><img src="/machine.png" alt="Machinery Icon" className="sidebar-icon" /> Machine</button>
           <button className={`sidebar-tab ${activeTab === 'machineCategory' ? 'active' : ''}`} onClick={() => setActiveTab('machineCategory')}><img src="/machinecategory.png" alt="Machine Category Icon" className="sidebar-icon" /> Machine Category</button>
           <button className={`sidebar-tab ${activeTab === 'consumables' ? 'active' : ''}`} onClick={() => setActiveTab('consumables')}><img src="/consumables.png" alt="Consumables Icon" className="sidebar-icon" /> Consumables</button>
           <button className={`sidebar-tab ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}><img src="/customer.png" alt="Customers Icon" className="sidebar-icon" /> Customers</button>
@@ -502,6 +504,7 @@ function OwnerDashboard({ onLogout }) {
           {activeTab === 'employees' && <EmployeesTab />}
           {activeTab === 'machines' && <MachinesTab />}
           {activeTab === 'serviceTypes' && <ServiceTypeTab />}
+          {activeTab === 'serviceCategory' && <ServiceCategoryTab />}
           {activeTab === 'manPowerCategory' && <ManPowerCategoryTab  />}
           {activeTab === 'machineCategory' && <MachineCategoryTab />}
           {activeTab === 'customers' && <CustomerTab />}

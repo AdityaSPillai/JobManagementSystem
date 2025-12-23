@@ -4,11 +4,17 @@ import useAuth from '../context/context.jsx';
 
 // --- Add Service Modal ---
 function AddServiceModal({ isVisible, onClose, onSubmit }) {
-  const [formData, setFormData] = useState({
+  
+const { userInfo } = useAuth();
+const [serviceCategories, setServiceCategories] = useState([])
+const [formData, setFormData] = useState({
     name: '',
     description: '',
     note: '',
+    serviceCategory: '',
   });
+
+ const shopId = userInfo?.shopId;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,8 +25,27 @@ function AddServiceModal({ isVisible, onClose, onSubmit }) {
     e.preventDefault();
     onSubmit(formData);
     onClose();
-    setFormData({ name: '', description: '', note: '' });
+    setFormData({ name: '', description: '', note: '', serviceCategory: '' });
   };
+
+
+
+  const fetchServiceCategories = async () => {
+  try {
+    const res = await axios.get(`/shop/serviceCategories/${shopId}`)
+    console.log(res.data.serviceCategory)
+    setServiceCategories(res.data.serviceCategory || [])
+  } catch (err) {
+    console.error("Failed to fetch categories")
+    console.error(err)
+  }
+}
+
+useEffect(() => {
+  if (shopId) {
+    fetchServiceCategories()
+  }
+}, [shopId])
 
   if (!isVisible) return null;
 
@@ -45,6 +70,22 @@ function AddServiceModal({ isVisible, onClose, onSubmit }) {
               <label htmlFor="note">Notes (optional)</label>
               <textarea id="note" name="note" value={formData.note} onChange={handleChange}></textarea>
             </div>
+            <div className="form-group">
+                <label>Service Category</label>
+                <select
+                  name="serviceCategory"
+                  value={formData.serviceCategory}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select category</option>
+                  {serviceCategories.map(cat => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
           </div>
           <button type="submit" className="btn-submit">Add Service Type</button>
         </form>
@@ -55,11 +96,42 @@ function AddServiceModal({ isVisible, onClose, onSubmit }) {
 
 // --- Edit Service Modal ---
 function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
+
+
+  const {userInfo} = useAuth();
+  const shopId = userInfo?.shopId;
+const [serviceCategories, setServiceCategories] = useState([])
+
+
+const fetchServiceCategories = async () => {
+  try {
+    const res = await axios.get(`/shop/serviceCategories/${shopId}`)
+    console.log(res.data.serviceCategory)
+    setServiceCategories(res.data.serviceCategory || [])
+  } catch (err) {
+    console.error("Failed to fetch categories")
+    console.error(err)
+  }
+}
+
+useEffect(() => {
+  if (shopId) {
+    fetchServiceCategories()
+  }
+}, [shopId])
+
+
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     note: '',
+    serviceCategory: '',
   });
+
+
+
+  
 
   // Update form when serviceData changes
   useEffect(() => {
@@ -68,6 +140,7 @@ function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
         name: serviceData.name || '',
         description: serviceData.description || '',
         note: serviceData.note || '',
+        serviceCategory: serviceData.serviceCategory || '',
       });
     }
   }, [serviceData]);
@@ -125,6 +198,22 @@ function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
                 onChange={handleChange}
               ></textarea>
             </div>
+             <div className="form-group">
+                <label>Service Category</label>
+                <select
+                  name="serviceCategory"
+                  value={formData.serviceCategory}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select category</option>
+                  {serviceCategories.map(cat => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
           </div>
           <button type="submit" className="btn-submit">Update Service Type</button>
         </form>
@@ -140,7 +229,7 @@ function ServiceTypeTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
-  const [ServiceTypes, setServiceTypes] = useState([]);
+  const [serviceTypes, setServiceTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -176,6 +265,8 @@ function ServiceTypeTab() {
   const handleAddService = async (serviceData) => {
     try {
       const payload = { services: [serviceData] };
+
+      console.log('Adding Service type with payload:', payload);
       const res = await axios.post(`/shop/addNewService/${shopId}`, payload);
 
       if (res.data.success || res.data.succes) {
@@ -192,10 +283,12 @@ function ServiceTypeTab() {
 
   // Edit Service type
   const handleEditService = async (serviceData) => {
+    console.log('Editing Service type:', editingService._id, serviceData);
     try {
       // Format data according to backend requirements (only description)
       const payload = {
         description: serviceData.description,
+        serviceCategory: serviceData.serviceCategory,
         ...(serviceData.note && { note: serviceData.note }) // Include note if it exists
       };
 
@@ -253,11 +346,11 @@ function ServiceTypeTab() {
         <p>Loading Service types...</p>
       ) : error ? (
         <p className="error-text">{error}</p>
-      ) : ServiceTypes.length === 0 ? (
+      ) : serviceTypes.length === 0 ? (
         <p>No Service types found. Click "Add Service Type" to get started!</p>
       ) : (
         <div className="data-grid">
-          {ServiceTypes.map(Service => (
+          {serviceTypes.map(Service => (
             <div key={Service._id} className="data-card">
               <div className="data-card-header">
                 <h4>{Service.name}</h4>
@@ -265,6 +358,9 @@ function ServiceTypeTab() {
               <div className="data-card-body">
                 <p><strong>Description:</strong> {Service.description || 'N/A'}</p>
                 {Service.note && <p><strong>Note:</strong> {Service.note}</p>}
+              </div>
+              <div className="data-card-body">
+                <p><strong>Service Category:</strong> {Service.serviceCategory || 'N/A'}</p>
               </div>
               <div className="data-card-footer">
                 <button className="btn-card-action" onClick={() => openEditModal(Service)}>Edit</button>
@@ -279,6 +375,7 @@ function ServiceTypeTab() {
         isVisible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddService}
+    
       />
 
       <EditServiceModal

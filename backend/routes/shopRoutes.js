@@ -1,5 +1,5 @@
 import express from "express"
-import { createShop, getShop, getAllEmployees, getAllWorkers, getAllMachineController, getAllShopJobsController, allServices, addNewCategoryController, addNewService, updateShopServices, deleteShopService, updateCategoryController, deleteCategoryController, allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController, addLog, updateShopController, getShopDetails, getManPowerHourlyRateController } from "../controllers/shopController.js";
+import { createShop, getShop, getAllEmployees, getAllWorkers, getAllMachineController, getAllShopJobsController, allServices, addNewCategoryController, addNewService, updateShopServices, deleteShopService, updateCategoryController, deleteCategoryController, allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController, addLog, updateShopController, getShopDetails, getManPowerHourlyRateController, getServiceCategory, createServiceCategory, updateServiceCategories, deleteServiceCategories } from "../controllers/shopController.js";
 import { isOwner, isManager } from "../middleware/middlewares.js";
 import { addMachineCategoryController, deleteMachineCategoryController, getAllMachineCategoryController, getMachineHourlyRateController, updateMachineCategoryController } from "../controllers/machineCategoryController.js";
 import { getLogs, updateLogLimit } from "../controllers/shopController.js";
@@ -91,6 +91,13 @@ router.get("/getAllMachines/:shopId", getAllMachineController)
 //get all jobs in the shop
 router.get("/getAllJobs/:shopId", getAllShopJobsController);
 
+
+
+//get all serviceCategories
+router.get('/serviceCategories/:shopId',isManager,getServiceCategory)
+router.post('/serviceCategories/:shopId',isManager,logAction("CREATE_SERVICE_CATEGORY"),createServiceCategory )
+router.put('/serviceCategories/:shopId/:categoryId', isOwner, logAction("ADD_LOG", req => ({ body: req.body })), updateServiceCategories);
+router.delete('/serviceCategories/:shopId/:categoryId', isOwner, logAction("ADD_LOG", req => ({ body: req.body })), deleteServiceCategories);
 
 
 router.get('/allClients/:shopId', getAllClient);

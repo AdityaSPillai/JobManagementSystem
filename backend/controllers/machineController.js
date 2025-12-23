@@ -15,6 +15,19 @@ export const createMachineController = async (req, res) => {
       startTime,
       endTime,
       actualDuration,
+      supplier,
+      hsCode,
+      brand,
+      countryOfOrigin,
+      modelNumber,
+      modelYear,
+      assetType,
+      assetValue,
+      landedCost,
+      installationCost,
+      capitalizedValue,
+      limeTime,
+      depreciationPeriod,
       userId, // owner id
       shopId // new: directly send shopId from frontend
     } = req.body;
@@ -49,6 +62,19 @@ export const createMachineController = async (req, res) => {
       startTime,
       endTime,
       actualDuration,
+      supplier,
+      hsCode,
+      brand,
+      countryOfOrigin,
+      modelNumber,
+      modelYear,
+      assetType,
+      assetValue,
+      landedCost,
+      installationCost,
+      capitalizedValue,
+      limeTime,
+      depreciationPeriod,
     });
 
     await machine.save();
@@ -111,7 +137,21 @@ export const updateMachineController = async (req, res) => {
       purchaseDate,
       lastMaintenanceDate,
       nextMaintenanceDate,
-      isActive
+      isActive,
+      supplier,
+      hsCode,
+      brand,
+      countryOfOrigin,
+      modelNumber,
+      modelYear,
+      assetType,
+      assetValue,
+      landedCost,
+      installationCost,
+      capitalizedValue,
+      limeTime,
+      depreciationPeriod,
+
     } = req.body;
 
     // Convert string booleans → real booleans
@@ -128,6 +168,19 @@ export const updateMachineController = async (req, res) => {
     if (lastMaintenanceDate) machineData.lastMaintenanceDate = lastMaintenanceDate;
     if (nextMaintenanceDate) machineData.nextMaintenanceDate = nextMaintenanceDate;
     if (isActive !== undefined) machineData.isActive = isActive;
+    if (supplier !== undefined) machineData.supplier = supplier;
+    if (hsCode !== undefined) machineData.hsCode = hsCode;
+    if (brand !== undefined) machineData.brand = brand;
+    if (countryOfOrigin !== undefined) machineData.countryOfOrigin = countryOfOrigin;
+    if (modelNumber !== undefined) machineData.modelNumber = modelNumber;
+    if (modelYear !== undefined) machineData.modelYear = modelYear;
+    if (assetType !== undefined) machineData.assetType = assetType;
+    if (assetValue !== undefined) machineData.assetValue = assetValue;
+    if (landedCost !== undefined) machineData.landedCost = landedCost;
+    if (installationCost !== undefined) machineData.installationCost = installationCost;
+    if (capitalizedValue !== undefined) machineData.capitalizedValue = capitalizedValue;
+    if (limeTime !== undefined) machineData.limeTime = limeTime;
+    if (depreciationPeriod !== undefined) machineData.depreciationPeriod = depreciationPeriod;
 
     // ✅ Perform the update
     const updatedMachine = await MachineModel.findByIdAndUpdate(id, machineData, { new: true, runValidators: true });

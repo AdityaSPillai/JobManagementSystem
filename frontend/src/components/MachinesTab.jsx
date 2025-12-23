@@ -14,6 +14,19 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     lastMaintenanceDate: '',
     nextMaintenanceDate: '',
     isActive: true,
+    supplier: '',
+    hsCode: '',
+    brand: '',
+    countryOfOrigin: '',
+    modelNumber: '',
+    modelYear: '',
+    assetType: '',
+    assetValue: 0,
+    landedCost: 0,
+    installationCost: 0,
+    capitalizedValue: 0,
+    limeTime: 0,
+    depreciationPeriod: 0
   });
 
   const handleChange = (e) => {
@@ -61,14 +74,14 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-grid cols-2">
+          <div className="form-grid cols-3">
             <div className="form-group">
-              <label htmlFor="name">Machine Name</label>
+              <label htmlFor="name">Machine Name *</label>
               <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
 
             <div className="form-group">
-              <label htmlFor="type">Machine Type</label>
+              <label htmlFor="type">Machine Type *</label>
               <select id="type" name="type" value={formData.type} onChange={handleChange} required>
                 <option value="">-- Select Category --</option>
                 {machineCategories.map(cat => (
@@ -80,7 +93,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
             </div>
 
             <div className="form-group">
-              <label>Hourly Rate (auto-filled)</label>
+              <label>Hourly Rate (auto-filled) *</label>
               <input 
                 type="number" 
                 value={formData.hourlyRate || 0} 
@@ -90,51 +103,117 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
             </div>
             
             <div className="form-group">
-              <label htmlFor="machineId">Machine ID</label>
+              <label htmlFor="machineId">Machine ID *</label>
               <input type="text" id="machineId" name="machineId" value={formData.machineId} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="status">Current Status</label>
-              <select id="status" name="status" value={formData.status} onChange={handleChange}>
+              <label htmlFor="status">Current Status *</label>
+              <select id="status" name="status" value={formData.status} onChange={handleChange} required>
                 <option value={true}>Available</option>
                 <option value={false}>Offline</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label htmlFor="purchaseDate">Purchase Date</label>
+              <label htmlFor="purchaseDate">Purchase Date * </label>
               <input type="date" id="purchaseDate" name="purchaseDate" value={formData.purchaseDate} onChange={handleChange} />
             </div>
 
             <div className="form-group">
-              <label htmlFor="lastMaintenanceDate">Last Maintenance</label>
+              <label htmlFor="lastMaintenanceDate">Last Maintenance *</label>
               <input type="date" id="lastMaintenanceDate" name="lastMaintenanceDate" value={formData.lastMaintenanceDate} onChange={handleChange} />
             </div>
 
             <div className="form-group">
-              <label htmlFor="nextMaintenanceDate">Next Maintenance</label>
+              <label htmlFor="nextMaintenanceDate">Next Maintenance *</label>
               <input type="date" id="nextMaintenanceDate" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} />
             </div>
+            <div className='form-group'>
+              <label htmlFor="supplier">Supplier *</label>
+              <input type="text" id="supplier" name="supplier" value={formData.supplier} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="hsCode">HS Code</label>
+              <input type="text" id="hsCode" name="hsCode" value={formData.hsCode} onChange={handleChange} />
           </div>
-          <button type="submit" className="btn-submit">Add Machine</button>
-        </form>
+            <div className='form-group'>
+                <label htmlFor="brand">Brand *</label>
+                <input type="text" id="brand" name="brand" value={formData.brand} onChange={handleChange} required />
+              </div>
+            <div className='form-group'>
+              <label htmlFor="countryOfOrigin">Country of Origin *</label>
+                <input type="date" id="countryOfOrigin" name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} required />
+                </div>
+              <div className='form-group'>
+                <label htmlFor="modelNumber">Model Number *</label>
+                <input type="text" id="modelNumber" name="modelNumber" value={formData.modelNumber} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+                <label htmlFor="modelYear">Model Year *</label>
+                <input type="date" id="modelYear" name="modelYear" value={formData.modelYear} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+                <label htmlFor="assetType">Asset Type *</label>
+                <input type="text" id="assetType" name="assetType" value={formData.assetType} onChange={handleChange} required />
+                </div>
+              <div className='form-group'>
+                  <label htmlFor="assetValue">Asset Value *</label>
+                  <input type="number" id="assetValue" name="assetValue" value={formData.assetValue} onChange={handleChange} required />
+                </div>
+                <div className='form-group'>
+                  <label htmlFor="landedCost">Landed Cost</label>
+                  <input type="number" id="landedCost" name="landedCost" value={formData.landedCost} onChange={handleChange} />
+                  </div>
+                <div className='form-group'>
+                  <label htmlFor="installationCost">Installation Cost</label>
+                  <input type="number" id="installationCost" name="installationCost" value={formData.installationCost} onChange={handleChange} />
+                  </div>
+                <div className='form-group'>
+                    <label htmlFor="capitalizedValue">Capitalized Value</label>
+                    <input type="number" id="capitalizedValue" name="capitalizedValue" value={formData.capitalizedValue} onChange={handleChange} />
+                    </div>
+                  <div className='form-group'>
+                    <label htmlFor="limeTime">Lime Time</label>
+                    <input type="number" id="limeTime" name="limeTime" value={formData.limeTime} onChange={handleChange} />
+                    </div>
+                  <div className='form-group'>
+                    <label htmlFor="depreciationPeriod">Depreciation Period</label>
+                    <input type="number" id="depreciationPeriod" name="depreciationPeriod" value={formData.depreciationPeriod} onChange={handleChange} />
+                    </div>
+                  </div>
+                            <button type="submit" className="btn-submit">Add Machine</button>
+
+                  </form>
+          </div>
       </div>
-    </div>
   );
 }
 
 function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCategories }) {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     name: '',
-    type: '',
     machineId: '',
-    status: true,
+    type: '',
+    hourlyRate:0,
+    status: 'true',  // Fixed: matches dropdown options
     purchaseDate: '',
     lastMaintenanceDate: '',
     nextMaintenanceDate: '',
     isActive: true,
+    supplier: '',
+    hsCode: '',
+    brand: '',
+    countryOfOrigin: '',
+    modelNumber: '',
+    modelYear: '',
+    assetType: '',
+    assetValue: 0,
+    landedCost: 0,
+    installationCost: 0,
+    capitalizedValue: 0,
+    limeTime: 0,
+    depreciationPeriod: 0
   });
-
   useEffect(() => {
     if (machine) {
       setFormData({
@@ -146,6 +225,20 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
         lastMaintenanceDate: machine.lastMaintenanceDate ? machine.lastMaintenanceDate.split('T')[0] : '',
         nextMaintenanceDate: machine.nextMaintenanceDate ? machine.nextMaintenanceDate.split('T')[0] : '',
         isActive: machine.isActive ?? true,
+        supplier: machine.supplier || '',
+        hsCode: machine.hsCode || '',
+        brand: machine.brand || '',
+        countryOfOrigin: machine.countryOfOrigin || '',
+        modelNumber: machine.modelNumber || '',
+        modelYear: machine.modelYear ? machine.modelYear.split('T')[0] : '',
+        assetType: machine.assetType || '',
+        assetValue: machine.assetValue || 0,
+        landedCost: machine.landedCost || 0,
+        installationCost: machine.installationCost || 0,
+        capitalizedValue: machine.capitalizedValue || 0,
+        limeTime: machine.limeTime || 0,
+        depreciationPeriod: machine.depreciationPeriod || 0
+
       });
     }
   }, [machine]);
@@ -167,6 +260,19 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
       lastMaintenanceDate: '',
       nextMaintenanceDate: '',
       isActive: true,
+      supplier: '',
+      hsCode: '',
+      brand: '',
+      countryOfOrigin: '',
+      modelNumber: '',
+      modelYear: '',
+      assetType: '',
+      assetValue: 0,
+      landedCost: 0,
+      installationCost: 0,
+      capitalizedValue: 0,
+      limeTime: 0,
+      depreciationPeriod: 0
     })
     onClose();
   };
@@ -181,18 +287,18 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-grid cols-2">
+          <div className="form-grid cols-3">
             <div className="form-group">
-              <label>Machine Name</label>
+              <label>Machine Name *</label>
               <input name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label>Machine Id</label>
+              <label>Machine Id *</label>
               <input name="machineId" value={formData.machineId} onChange={handleChange} required />
             </div>
 
             <div className="form-group">
-              <label>Machine Category</label>
+              <label>Machine Category *</label>
               <select name="type" value={formData.type} onChange={handleChange} required>
                 <option value="">-- Select Category --</option>
                 {machineCategories.map((cat) => (
@@ -204,27 +310,79 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
             </div>
 
             <div className="form-group">
-              <label>Status</label>
-              <select name="status" value={formData.status} onChange={handleChange}>
+              <label>Status *</label>
+              <select name="status" value={formData.status} onChange={handleChange} required>
                 <option value={true}>Available</option>
                 <option value={false}>Offline</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Purchase Date</label>
-              <input type="date" name="purchaseDate" value={formData.purchaseDate} onChange={handleChange} />
+              <label>Purchase Date *</label>
+              <input type="date" name="purchaseDate" value={formData.purchaseDate} onChange={handleChange} required />
             </div>
 
             <div className="form-group">
-              <label>Last Maintenance</label>
-              <input type="date" name="lastMaintenanceDate" value={formData.lastMaintenanceDate} onChange={handleChange} />
+              <label>Last Maintenance *</label>
+              <input type="date" name="lastMaintenanceDate" value={formData.lastMaintenanceDate} onChange={handleChange} required />
             </div>
 
             <div className="form-group">
-              <label>Next Maintenance</label>
-              <input type="date" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} />
+              <label>Next Maintenance *</label>
+              <input type="date" name="nextMaintenanceDate" value={formData.nextMaintenanceDate} onChange={handleChange} required />
             </div>
+            <div className='form-group'>
+              <label htmlFor="supplier">Supplier *</label>
+              <input type="text" id="supplier" name="supplier" value={formData.supplier} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="hsCode">HS Code </label>
+              <input type="text" id="hsCode" name="hsCode" value={formData.hsCode} onChange={handleChange} />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="brand">Brand *</label>
+              <input type="text" id="brand" name="brand" value={formData.brand} onChange={handleChange} />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="countryOfOrigin">Country of Origin* </label>
+              <input type="text" id="countryOfOrigin" name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="modelNumber">Model Number *</label>
+              <input type="text" id="modelNumber" name="modelNumber" value={formData.modelNumber} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="modelYear">Model Year *</label>
+              <input type="text" id="modelYear" name="modelYear" value={formData.modelYear} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="assetType">Asset Type *</label>
+              <input type="text" id="assetType" name="assetType" value={formData.assetType} onChange={handleChange} required/>
+              </div>
+              <div className='form-group'>
+              <label htmlFor="assetValue">Asset Value *</label>
+              <input type="number" id="assetValue" name="assetValue" value={formData.assetValue} onChange={handleChange} required />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="landedCost">Landed Cost</label>
+              <input type="number" id="landedCost" name="landedCost" value={formData.landedCost} onChange={handleChange} />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="installationCost">Installation Cost</label>
+              <input type="number" id="installationCost" name="installationCost" value={formData.installationCost} onChange={handleChange} />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="capitalizedValue">Capitalized Value</label>
+              <input type="number" id="capitalizedValue" name="capitalizedValue" value={formData.capitalizedValue} onChange={handleChange} />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="limeTime">Lime Time</label>
+              <input type="number" id="limeTime" name="limeTime" value={formData.limeTime} onChange={handleChange} />
+              </div>
+              <div className='form-group'>
+              <label htmlFor="depreciationPeriod">Depreciation Period</label>
+              <input type="number" id="depreciationPeriod" name="depreciationPeriod" value={formData.depreciationPeriod} onChange={handleChange} />
+              </div>
           </div>
           <button type="submit" className="btn-submit">Save Changes</button>
         </form>
@@ -254,6 +412,8 @@ function MachinesTab() {
   };
 
   const handleEditMachine = async (updatedData) => {
+
+    console.log("Editing machine with data:", updatedData);
     try {
       const res = await axios.put(`/machine/updateMachine/${selectedMachine._id}`, updatedData);
       if (res.data.success) {
@@ -364,6 +524,8 @@ function MachinesTab() {
  
     if (shopId) {
       fetchMachines();
+
+      console.log("Fetching machines for shopId:", machines);
     }
   }, [shopId]); // Fixed: use shopId instead of userInfo.shopId
 
@@ -390,27 +552,141 @@ function MachinesTab() {
       ) : machines.length === 0 ? (
         <p>No machines found. Click "Add New Machine" to get started!</p>
       ) : (
-        <div className="data-grid">
-          {machines.map(machine => (
-            <div key={machine._id} className="data-card">
-              <div className="data-card-header">
-                <h4>{machine.name}</h4>
+        <div
+  style={{
+    maxHeight: "60vh",
+    overflowY: "auto",
+    borderRadius: "12px"
+  }}
+>
+  <div style={{ overflowX: "auto" }}>
+    <table className="modern-table">
+      <thead>
+        <tr>
+          <th>Machine Name</th>
+          <th>Machine ID</th>
+          <th>Category</th>
+          <th>Hourly Rate</th>
+          <th>Supplier</th>
+          <th>Brand</th>
+          <th>Status</th>
+          <th>Purchase Date</th>
+          <th>Last Maintenance</th>
+          <th>Next Maintenance</th>
+          <th>COF</th>
+          <th>Model No.</th>
+          <th>Model Year</th>
+          <th>Asset Type</th>
+          <th>Asset Value</th>
+          <th>Landed Cost</th>
+          <th>Installation Cost</th>
+          <th>Capitalized Value</th>
+          <th>Lime Time</th>
+          <th>Depreciation Period</th>
+          <th className="th-actions">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {machines.map((machine) => (
+          <tr key={machine._id}>
+            <td>
+              <span className="table-primary-text">{machine.name}</span>
+            </td>
+
+            <td>{machine.machineId || "N/A"}</td>
+
+            <td>
+              <span className="badge-rate">
+                {machine.type}
+              </span>
+            </td>
+
+            <td>
+              <span className="badge-rate">
+                ₹{machine.hourlyRate || 0}/hr
+              </span>
+            </td>
+
+            <td>{machine.supplier || "—"}</td>
+
+            <td>{machine.brand || "—"}</td>
+
+            <td>
+              {machine.status ? (
+                <span
+                  className="badge-rate"
+                  style={{ background: "#c6f6d5", color: "#22543d" }}
+                >
+                  Available
+                </span>
+              ) : (
+                <span
+                  className="badge-rate"
+                  style={{ background: "#fed7d7", color: "#c53030" }}
+                >
+                  Offline
+                </span>
+              )}
+            </td>
+
+            <td>
+              {machine.purchaseDate
+                ? machine.purchaseDate.split("T")[0]
+                : "N/A"}
+            </td>
+
+            <td>
+              {machine.lastMaintenanceDate
+                ? machine.lastMaintenanceDate.split("T")[0]
+                : "N/A"}
+            </td>
+
+            <td>
+              {machine.nextMaintenanceDate
+                ? machine.nextMaintenanceDate.split("T")[0]
+                : "N/A"}
+            </td>
+            <td>{machine.countryOfOrigin || "—"}</td>
+            <td>{machine.modelNumber || "—"}</td>
+            <td>
+              {machine.modelYear
+                ? machine.modelYear.split("T")[0]
+                : "N/A"}
+            </td>
+            <td>{machine.assetType || "—"}</td>
+            <td>₹{machine.assetValue || 0}</td>
+            <td>₹{machine.landedCost || 0}</td>
+            <td>₹{machine.installationCost || 0}</td>
+            <td>₹{machine.capitalizedValue || 0}</td>
+            <td>{machine.limeTime || 0}</td>
+            <td>{machine.depreciationPeriod || 0}</td>
+            
+
+            <td>
+              <div className="table-actions">
+                <button
+                  className="table-cta"
+                  onClick={() => handleEditClick(machine)}
+                >
+                  Edit
+                </button>
+
+                <button
+                  className="table-cta table-cta-danger"
+                  onClick={() => handleDeleteMachine(machine._id)}
+                >
+                  Remove
+                </button>
               </div>
-              <div className="data-card-body">
-                <p><strong>Type:</strong> {machine.type}</p>
-                <p><strong>Purchased:</strong> {machine.purchaseDate?.split('T')[0] || 'N/A'}</p>
-                 <p><strong>Machine Id:</strong> {machine.machineId || 'N/A'}</p>  
-                <p><strong>Status:</strong> <span className={getStatusClass(machine.isAvailable ?'Available' : 'Offline' )}>{machine.isAvailable ? 'Offline' :'In-use'  }</span></p>
-                <p><strong>Last Maintenance:</strong> {machine.lastMaintenanceDate?.split('T')[0] || 'N/A'}</p>
-                <p><strong>Next Maintenance:</strong> {machine.nextMaintenanceDate?.split('T')[0] || 'N/A'}</p>
-              </div>
-              <div className="data-card-footer">
-                <button className="btn-card-action" onClick={() => handleEditClick(machine)}>Edit</button>
-                <button className="btn-card-action btn-danger" onClick={() => handleDeleteMachine(machine._id)}>Remove</button>
-              </div>
-            </div>
-          ))}
-        </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
       )}
 
       <AddMachineModal

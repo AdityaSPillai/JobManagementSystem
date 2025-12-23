@@ -62,6 +62,66 @@ const machineSchema = new mongoose.Schema({
         default: null
 
     },
+    supplier: {
+        type: String,
+        default:null ,
+        required: true
+    },
+    hsCode:{
+        type: String,
+        default: null
+        
+    },
+    brand:{
+        type: String,
+        default: null,
+        required: true
+    },
+    countryOfOrigin:{
+        type: String,
+        default: null,
+        required: true
+    },
+    modelNumber:{
+        type: String,
+        default: null,
+        required: true
+    },
+    modelYear:{
+        type: Date,
+        default: null,
+        required: true
+    },
+    assetType:{
+        type: String,
+        default: null,
+        required: true
+    },
+    assetValue:{
+        type: Number,
+        default: null,
+        required: true
+    },
+    landedCost:{
+        type: Number,
+        default: null
+    },
+    intsallationCost:{
+        type: Number,
+        default: null
+    },
+    capitalizedValue:{
+        type: Number,
+        default: null
+    },
+    limeTime:{
+        type: Number,
+        default: null
+    },
+    depreciationPeriod:{
+        type: Number,
+        default: null
+    },
 
 }, {
     timestamps: true
