@@ -84,9 +84,13 @@ function Header({ userRole = 'Estimator', onLogin, onLogout, showLogin = true, o
   const ROLE_LABEL_MAP = {
     worker: "Worker",
     qa_qc: "QA/QC",
+    "QA/QC": "QA/QC",
+    Supervisor: "Supervisor",
     supervisor: "Supervisor",
     desk_employee: "Desk Employee",
+    "Desk Employee": "Desk Employee",
     owner: "Owner",
+    Owner: "Owner",
   };
 
   return (
