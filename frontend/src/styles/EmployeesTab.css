@@ -1,0 +1,75 @@
+.employee-table-wrapper {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    overflow-x: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.employee-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.employee-table thead {
+    background-color: #f8fafc;
+}
+
+.employee-table th {
+    text-align: left;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.employee-table td {
+    padding: 12px;
+    font-size: 14px;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.employee-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.role-cell {
+    text-transform: capitalize;
+    font-weight: 500;
+}
+
+.action-cell {
+    display: flex;
+    gap: 8px;
+}
+
+.table-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.table-btn.edit {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.table-btn.edit:hover {
+    background-color: #bae6fd;
+}
+
+.table-btn.delete {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.table-btn.delete:hover {
+    background-color: #fecaca;
+}
