@@ -344,7 +344,7 @@
 .badge-rate {
   display: inline-flex;
   align-items: center;
-  padding: 12px 20px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
@@ -669,7 +669,7 @@
 }
 
 .modal-form .form-grid.cols-3 {
-  grid-template-columns: 1fr 1fr 1fr ;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .modal-form .form-grid.cols-3 {
