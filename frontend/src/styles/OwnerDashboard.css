@@ -776,6 +776,8 @@ s .btn-submit:hover {
   position: sticky;
   top: 20px;
   height: fit-content;
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .sidebar-tab {
@@ -899,20 +901,24 @@ s .btn-submit:hover {
   }
 }
 
-.main-content-area::-webkit-scrollbar {
+.main-content-area::-webkit-scrollbar,
+.sidebar-tabs::-webkit-scrollbar {
   width: 8px;
 }
 
-.main-content-area::-webkit-scrollbar-track {
+.main-content-area::-webkit-scrollbar-track,
+.sidebar-tabs::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
 }
 
-.main-content-area::-webkit-scrollbar-thumb {
+.main-content-area::-webkit-scrollbar-thumb,
+.sidebar-tabs::-webkit-scrollbar-thumb {
   background: #cbd5e0;
   border-radius: 10px;
 }
 
-.main-content-area::-webkit-scrollbar-thumb:hover {
+.main-content-area::-webkit-scrollbar-thumb:hover,
+.sidebar-tabs::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
 }
