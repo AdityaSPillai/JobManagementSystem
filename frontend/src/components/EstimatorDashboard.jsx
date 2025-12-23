@@ -1546,29 +1546,27 @@ function EstimatorDashboard({ onLoginClick }) {
         showLogin={!isAuthenticated}
       />
       <div className="e-dashboard-content">
-        <div className="e-dashboard-title-section">
-          <div className="e-dashboard-wrapper">
-            <div className="e-dashboard-title">
-              <h2>Estimator Dashboard</h2>
-              <p>Create job cards and track order history</p>
-            </div>
-            <div className="action-buttons">
-              {userInfo?.role !== 'worker' &&
-                <button className="btn-action-primary" onClick={() => {
-                  setShowCreateJob(!showCreateJob);
-                  setShowJobDetails(false);
-                }}>
-                  + Add Job Card
-                </button>
-              }
-            </div>
-          </div>
-        </div>
 
-        <div className="dashboard-grid">
-          <div className="job-list-section">
+        <div className="dedashboard-grid">
+          <div className="dejob-list-section">
+            <div className="e-dashboard-title-section">
+              <div className="e-dashboard-wrapper">
+                <div className="e-dashboard-title">
+                  <h2>Estimator Dashboard</h2>
+                </div>
+                <div className="action-buttons">
+                  {userInfo?.role !== 'worker' &&
+                    <button className="btn-action-primary" onClick={() => {
+                      setShowCreateJob(!showCreateJob);
+                      setShowJobDetails(false);
+                    }}>
+                      + Add Job Card
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
             <div className="section-header job-header-with-filters">
-              <h3><img src={clipboardIcon} alt="Jobs" className="inline-icon" /> Job Cards</h3>
               <div className="filter-buttons">
                 <button
                   className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
@@ -1654,7 +1652,7 @@ function EstimatorDashboard({ onLoginClick }) {
             )}
           </div>
 
-          <div className="details-section">
+          <div className="dedetails-section">
             {!showJobDetails && !showCreateJob && (
               <div className="no-selection">
                 <div className="no-selection-icon">
