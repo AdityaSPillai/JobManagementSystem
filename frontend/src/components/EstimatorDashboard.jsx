@@ -345,13 +345,12 @@ function EstimatorDashboard({ onLoginClick }) {
               });
 
               item.workers = currWorkers;
-              item.itemStatus = 'stopped';
+              item.itemStatus = 'pending';
 
               newItems[itemIndex] = item;
               return {
                 ...job,
                 items: newItems,
-                status: 'Assigned'
               };
             }
             return job;
@@ -724,7 +723,7 @@ function EstimatorDashboard({ onLoginClick }) {
       statusFilter === 'all' ||
       (statusFilter === 'waiting' && job.status === 'waiting') ||
       (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'approved')) ||
-      (statusFilter === 'assigned' && (job.status === 'in_progress' || job.status === 'In Progress' || job.status === 'Assigned')) ||
+      (statusFilter === 'assigned' && job.status === 'in_progress') ||
       (statusFilter === 'unassigned' && (job.status === 'pending' || job.status === 'rejected'));
 
     return matchesSearch && matchesFilter;
@@ -1537,6 +1536,16 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
+  const StatusLabelMap = {
+    waiting: "Waiting",
+    pending: "Pending",
+    "in_progress": "In Progress",
+    completed: "Completed",
+    approved: "Approved",
+    rejected: "Rejected",
+    supapproved: "Supervisor Approved",
+  };
+
   return (
     <div className="estimator-dashboard">
       <Header
@@ -1628,14 +1637,8 @@ function EstimatorDashboard({ onLoginClick }) {
                     <span className="job-number">
                       {`Job-${job.jobCardNumber?.split("-").pop()}`}
                     </span>
-                    <span className={`status-badge ${job.status === 'In Progress' ? 'status-progress' :
-                      job.status === 'completed' ? 'status-completed' :
-                        job.status === 'approved' ? 'status-approved' :
-                          job.status === 'rejected' ? 'status-rejected' :
-                            job.status === 'Assigned' ? 'status-assigned-active' :
-                              'status-assigned'
-                      }`}>
-                      {job.status}
+                    <span className={`status-badge status-${job.status}`}>
+                      {StatusLabelMap[job.status]}
                     </span>
                   </div>
                   <p className="job-owner">{job.customer_name}</p>
@@ -1689,12 +1692,8 @@ function EstimatorDashboard({ onLoginClick }) {
                     <div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
                     <div>
                       <strong>Status:</strong>
-                      <span className={`status-badge ${selectedJob.status === 'in_progress' ? 'status-progress' :
-                        selectedJob.status === 'completed' ? 'status-completed' :
-                          selectedJob.status === 'Assigned' ? 'status-assigned-active' :
-                            'status-assigned'
-                        }`}>
-                        {selectedJob.status}
+                      <span className={`status-badge status-${selectedJob.status}`}>
+                        {StatusLabelMap[selectedJob.status]}
                       </span>
                     </div>
 
@@ -1715,13 +1714,13 @@ function EstimatorDashboard({ onLoginClick }) {
                                 </div>
                                 <button
                                   className="complete-btn-enabled"
-                                  disabled={item.workers.some(w => !w.endTime) || item.itemStatus === 'completed' || selectedJob.status === 'waiting'}
+                                  disabled={item.workers.some(w => !w.endTime) || item.itemStatus === 'completed' || selectedJob.status === 'waiting' || item.itemStatus === 'approved'}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     completeJobItem(selectedJob.id, item.itemId);
                                   }}
                                 >
-                                  {item.itemStatus === 'completed' ? 'Completed' : 'Complete Item'}
+                                  {item.itemStatus === 'completed' ? 'Completed' : item.itemStatus === 'approved' ? 'Approved' : 'Complete Item'}
                                 </button>
                               </div>
                               <div className="item-description-container">
@@ -1730,7 +1729,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
                                 <div className='item-description'>Estimated Man hours : {item.estimatedManHours}</div>
                                 <div className="item-description">
-                                  Status: <strong>{item.itemStatus}</strong>
+                                  Status: <span className={`status-badge status-${item.itemStatus}`}>{StatusLabelMap[item.itemStatus]}</span>
                                 </div>
 
                               </div>

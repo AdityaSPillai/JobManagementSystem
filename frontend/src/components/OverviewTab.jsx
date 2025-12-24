@@ -1,12 +1,12 @@
 import React from 'react';
 import axios from "../utils/axios.js"
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import useAuth from '../context/context';
 
 
 
- export function ShopCreationModal({ isVisible, onClose, onSubmit }) {
-  const {userInfo}=useAuth();
+export function ShopCreationModal({ isVisible, onClose, onSubmit }) {
+  const { userInfo } = useAuth();
   const [formData, setFormData] = useState({
     shopName: '',
     phone: '',
@@ -102,15 +102,15 @@ import useAuth from '../context/context';
     setFormData(prev => ({ ...prev, services: updatedServices }));
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.shopName || !formData.phone || !formData.email || !formData.street || !formData.city || !formData.state || !formData.pincode) {
-        alert("Please fill in all fields.");
-        return;
+      alert("Please fill in all fields.");
+      return;
     }
-    
+
     // Validate services
-    const hasEmptyService = formData.services.some(service => 
+    const hasEmptyService = formData.services.some(service =>
       !service.name || !service.description
     );
     if (hasEmptyService) {
@@ -163,48 +163,48 @@ import useAuth from '../context/context';
       }
     };
 
-  
-  try {
 
-    // ✅ FIXED: Pass shopData as a single object
-    const response = await axios.post('/shop/create', shopData);
-    
-    if (!response.data.success) {
-     console.log("Error while adding new shop");
-      return;
-    }
+    try {
+
+      // ✅ FIXED: Pass shopData as a single object
+      const response = await axios.post('/shop/create', shopData);
+
+      if (!response.data.success) {
+        console.log("Error while adding new shop");
+        return;
+      }
       const existingUserInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  const shopId = response.data.shop?._id || response.data.shopId;
-  const updatedUserInfo = { ...existingUserInfo, shopId };
-  localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
-  
-    alert("Shop added successfully!");
-    window.location.reload();
-    if (onSubmit) {
-      onSubmit(response.data.shop || formData);
-    }
-    
+      const shopId = response.data.shop?._id || response.data.shopId;
+      const updatedUserInfo = { ...existingUserInfo, shopId };
+      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
 
-    // Reset form
-    setFormData({
-      shopName: '',
-      phone: '',
-      email: '',
-      street: '',
-      city: '',
-      state: '',
-      pincode: '',
-      services: [{ name: '', description: '' }],
-      categories: [{ name: '', hourlyRate: '' }],
-      machineCategory: [{ name: '', hourlyRate: '' }]
-    });
-  onClose();
-    
-  } catch (error) {
-    console.error('Shop Creation Error:', error);
-  } 
-};
+      alert("Shop added successfully!");
+      window.location.reload();
+      if (onSubmit) {
+        onSubmit(response.data.shop || formData);
+      }
+
+
+      // Reset form
+      setFormData({
+        shopName: '',
+        phone: '',
+        email: '',
+        street: '',
+        city: '',
+        state: '',
+        pincode: '',
+        services: [{ name: '', description: '' }],
+        categories: [{ name: '', hourlyRate: '' }],
+        machineCategory: [{ name: '', hourlyRate: '' }]
+      });
+      onClose();
+
+    } catch (error) {
+      console.error('Shop Creation Error:', error);
+    }
+  };
 
 
   if (!isVisible) return null;
@@ -213,11 +213,11 @@ import useAuth from '../context/context';
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3 className="create-shop-heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> Create Shop</h3>
+          <h3 className="create-shop-heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> Create Shop</h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
-          
+
           <div className="form-group">
             <label htmlFor="shopName">Shop Name</label>
             <input type="text" id="shopName" name="shopName" value={formData.shopName} onChange={handleChange} placeholder="The Auto Garage" required />
@@ -232,7 +232,7 @@ import useAuth from '../context/context';
               <label htmlFor="email">Email</label>
               <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="contact@garage.com" required />
             </div>
-             <div className="form-group">
+            <div className="form-group">
               <label htmlFor="currency">Currency</label>
               <input type="text" id="currency" name="currency" value={formData.currency} onChange={handleChange} placeholder=" USD | AED | INR" required />
             </div>
@@ -242,7 +242,7 @@ import useAuth from '../context/context';
           <div className="form-group">
             <input type="text" id="street" name="street" value={formData.street} onChange={handleChange} placeholder="Street Address" required />
           </div>
-          
+
           <div className="form-grid cols-3">
             <div className="form-group">
               <label htmlFor="city">City</label>
@@ -264,38 +264,38 @@ import useAuth from '../context/context';
               <div className="form-grid cols-3">
                 <div className="form-group">
                   <label htmlFor={`service-name-${index}`}>Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id={`service-name-${index}`}
-                    value={service.name} 
+                    value={service.name}
                     onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
-                    placeholder="e.g., Oil Change" 
-                    required 
+                    placeholder="e.g., Oil Change"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label htmlFor={`service-desc-${index}`}>Description</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id={`service-desc-${index}`}
-                    value={service.description} 
+                    value={service.description}
                     onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
-                    placeholder="Job description" 
-                    required 
+                    placeholder="Job description"
+                    required
                   />
                 </div>
                 {formData.services.length > 1 && (
                   <div>
                     <label className="remove-btn-label">Remove</label>
-                    <button 
-                      type="button" 
-                      className="btn-remove-service" 
+                    <button
+                      type="button"
+                      className="btn-remove-service"
                       onClick={() => removeService(index)}
                     >
                       ✕ Remove Service
                     </button>
                   </div>
-              )}
+                )}
               </div>
             </div>
           ))}
@@ -304,101 +304,101 @@ import useAuth from '../context/context';
           </button>
 
           <label className="form-label-group">Man Power Categories</label>
-            {formData.categories.map((category, index) => (
-              <div key={index} className="service-item">
-                <div className="form-grid cols-3">
-                  <div className="form-group">
-                    <label htmlFor={`category-name-${index}`}>Category Name</label>
-                    <input
-                      type="text"
-                      id={`category-name-${index}`}
-                      value={category.name}
-                      onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
-                      placeholder="e.g., Electrician, Labour, Cleaner"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    {/* <label htmlFor={`category-rate-${index}`}>Hourly Rate ($)</label> */}
-                    <label htmlFor={`category-rate-${index}`}>Hourly Rate</label>
-                    <input
-                      type="number"
-                      id={`category-rate-${index}`}
-                      value={category.hourlyRate}
-                      onChange={(e) => handleCategoryChange(index, 'hourlyRate', e.target.value)}
-                      placeholder="Enter rate"
-                      min="0"
-                      required
-                    />
-                  </div>
-                  {formData.categories.length > 1 && (
-                    <div>
-                      <label className="remove-btn-label">Remove</label>
-                      <button
-                        type="button"
-                        className="btn-remove-service"
-                        onClick={() => removeCategory(index)}
-                      >
-                        ✕ Remove Category
-                      </button>
-                    </div>
-                  )}
+          {formData.categories.map((category, index) => (
+            <div key={index} className="service-item">
+              <div className="form-grid cols-3">
+                <div className="form-group">
+                  <label htmlFor={`category-name-${index}`}>Category Name</label>
+                  <input
+                    type="text"
+                    id={`category-name-${index}`}
+                    value={category.name}
+                    onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
+                    placeholder="e.g., Electrician, Labour, Cleaner"
+                    required
+                  />
                 </div>
+
+                <div className="form-group">
+                  {/* <label htmlFor={`category-rate-${index}`}>Hourly Rate ($)</label> */}
+                  <label htmlFor={`category-rate-${index}`}>Hourly Rate</label>
+                  <input
+                    type="number"
+                    id={`category-rate-${index}`}
+                    value={category.hourlyRate}
+                    onChange={(e) => handleCategoryChange(index, 'hourlyRate', e.target.value)}
+                    placeholder="Enter rate"
+                    min="0"
+                    required
+                  />
+                </div>
+                {formData.categories.length > 1 && (
+                  <div>
+                    <label className="remove-btn-label">Remove</label>
+                    <button
+                      type="button"
+                      className="btn-remove-service"
+                      onClick={() => removeCategory(index)}
+                    >
+                      ✕ Remove Category
+                    </button>
+                  </div>
+                )}
               </div>
-            ))}
-            <button type="button" className="btn-add-service" onClick={addCategory}>
-              + Add Another Category
-            </button>
+            </div>
+          ))}
+          <button type="button" className="btn-add-service" onClick={addCategory}>
+            + Add Another Category
+          </button>
 
-            <label className="form-label-group">Machine Categories</label>
-              {formData.machineCategory.map((mc, index) => (
-                <div key={index} className="service-item">
-                  <div className="form-grid cols-3">
-                    <div className="form-group">
-                      <label htmlFor={`mc-name-${index}`}>Machine Category Name</label>
-                      <input
-                        type="text"
-                        id={`mc-name-${index}`}
-                        value={mc.name}
-                        onChange={(e) => handleMachineCategoryChange(index, 'name', e.target.value)}
-                        placeholder="e.g., Heavy, Diagnostic, Painting"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      {/* <label htmlFor={`mc-rate-${index}`}>Hourly Rate ($)</label> */}
-                      <label htmlFor={`mc-rate-${index}`}>Hourly Rate</label>
-                      <input
-                        type="number"
-                        id={`mc-rate-${index}`}
-                        value={mc.hourlyRate}
-                        onChange={(e) => handleMachineCategoryChange(index, 'hourlyRate', e.target.value)}
-                        placeholder="Enter rate"
-                        min="0"
-                        required
-                      />
-                    </div>
-                    {formData.machineCategory.length > 1 && (
-                    <div>
-                      <label className="remove-btn-label">Remove</label>
-                      <button
-                        type="button"
-                        className="btn-remove-service"
-                        onClick={() => removeMachineCategory(index)}
-                      >
-                        ✕ Remove Machine
-                      </button>
-                    </div>
-                  )}
-                  </div>
-                  
+          <label className="form-label-group">Machine Categories</label>
+          {formData.machineCategory.map((mc, index) => (
+            <div key={index} className="service-item">
+              <div className="form-grid cols-3">
+                <div className="form-group">
+                  <label htmlFor={`mc-name-${index}`}>Machine Category Name</label>
+                  <input
+                    type="text"
+                    id={`mc-name-${index}`}
+                    value={mc.name}
+                    onChange={(e) => handleMachineCategoryChange(index, 'name', e.target.value)}
+                    placeholder="e.g., Heavy, Diagnostic, Painting"
+                    required
+                  />
                 </div>
-              ))}
-              <button type="button" className="btn-add-service" onClick={addMachineCategory}>
-                + Add Another Machine Category
-              </button>
-          
+                <div className="form-group">
+                  {/* <label htmlFor={`mc-rate-${index}`}>Hourly Rate ($)</label> */}
+                  <label htmlFor={`mc-rate-${index}`}>Hourly Rate</label>
+                  <input
+                    type="number"
+                    id={`mc-rate-${index}`}
+                    value={mc.hourlyRate}
+                    onChange={(e) => handleMachineCategoryChange(index, 'hourlyRate', e.target.value)}
+                    placeholder="Enter rate"
+                    min="0"
+                    required
+                  />
+                </div>
+                {formData.machineCategory.length > 1 && (
+                  <div>
+                    <label className="remove-btn-label">Remove</label>
+                    <button
+                      type="button"
+                      className="btn-remove-service"
+                      onClick={() => removeMachineCategory(index)}
+                    >
+                      ✕ Remove Machine
+                    </button>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          ))}
+          <button type="button" className="btn-add-service" onClick={addMachineCategory}>
+            + Add Another Machine Category
+          </button>
+
           <button type="submit" className="btn-submit">Submit</button>
         </form>
       </div>
@@ -408,10 +408,10 @@ import useAuth from '../context/context';
 // 
 
 function OverviewTab() {
-  const [empCount,setEmpCount]=useState(0)
-  const[machineCount,setMchineCount]=useState(0)
-  const[jobCount,setJobCount]=useState(0)
-  const{userInfo}=useAuth()
+  const [empCount, setEmpCount] = useState(0)
+  const [machineCount, setMchineCount] = useState(0)
+  const [jobCount, setJobCount] = useState(0)
+  const { userInfo } = useAuth()
   const [completedJobs, setCompletedJobs] = useState(0);
   const [pendingJobs, setPendingJobs] = useState(0);
   const [inProgressJobs, setInProgressJobs] = useState(0);
@@ -422,24 +422,24 @@ function OverviewTab() {
 
 
 
-  const getEmployeeeCount=async()=>{
+  const getEmployeeeCount = async () => {
     try {
-      const allEmp= await axios.get(`/shop/getAllEmployees/${userInfo.shopId}`)
+      const allEmp = await axios.get(`/shop/getAllEmployees/${userInfo.shopId}`)
       console.log(allEmp.data.users.length)
       setEmpCount(allEmp.data.users.length)
-      
+
     } catch (error) {
       console.log(error)
     }
   }
 
 
-  const getMachinesCount=async()=>{
+  const getMachinesCount = async () => {
     try {
-      const allMachines= await axios.get(`/shop/getAllMachines/${userInfo.shopId}`)
+      const allMachines = await axios.get(`/shop/getAllMachines/${userInfo.shopId}`)
       console.log(allMachines.data.machines.length)
       setMchineCount(allMachines.data.machines.length)
-      
+
     } catch (error) {
       console.log(error)
     }
@@ -456,7 +456,7 @@ function OverviewTab() {
       // Count by job status
       const completed = jobs.filter(job => job.status === "completed").length;
       const pending = jobs.filter(job => job.status != "completed").length;
-      const inProgress = jobs.filter(job => job.status === "in-progress").length;
+      const inProgress = jobs.filter(job => job.status === "in_progress").length;
       const rejectedJobs = jobs1.length;
 
       setCompletedJobs(completed);
@@ -468,15 +468,15 @@ function OverviewTab() {
       console.log(error);
     }
   };
-  
-  
-  useEffect(()=>{
+
+
+  useEffect(() => {
     if (userInfo?.shopId) {
-    getEmployeeeCount();
-    getMachinesCount();
-    getJobCount();
-  }
-  },[userInfo?.shopId])
+      getEmployeeeCount();
+      getMachinesCount();
+      getJobCount();
+    }
+  }, [userInfo?.shopId])
 
 
 
@@ -488,16 +488,16 @@ function OverviewTab() {
             <h2>Owner Dashboard</h2>
             <p>Manage jobs, assign employees, and track progress</p>
           </div>
-          {!userInfo?.shopId &&<button className="btn-create-shop" onClick={() => setIsShopModalOpen(true)}>
+          {!userInfo?.shopId && <button className="btn-create-shop" onClick={() => setIsShopModalOpen(true)}>
             + Create New Shop
-          </button> }
+          </button>}
         </div>
-        
+
         <div className="stats-cards">
           <div className="stat-card">
             <span className="stat-label">All Employees</span>
             <span className="stat-value">{empCount}</span>
-            <span className="stat-icon"><img src="/employee.png" alt="Employee Icon" className="stat-icon"/></span>
+            <span className="stat-icon"><img src="/employee.png" alt="Employee Icon" className="stat-icon" /></span>
           </div>
           <div className="stat-card">
             <span className="stat-label">Available Machines</span>
@@ -514,7 +514,7 @@ function OverviewTab() {
       <h3 className="section-title">System Overview</h3>
       <div className="overview-grid">
         <div className="overview-card blue-card">
-          <h4 className="stat-header-h4"><img src="/graph.png" alt="Graph Icon" className="sidebar-icon"/> Job Statistics</h4>
+          <h4 className="stat-header-h4"><img src="/graph.png" alt="Graph Icon" className="sidebar-icon" /> Job Statistics</h4>
           <div className="stat-row">
             <span>Total Jobs</span>
             <span className="stat-number">{jobCount}</span>
@@ -534,7 +534,7 @@ function OverviewTab() {
         </div>
 
         <div className="overview-card green-card">
-          <h4 className="stat-header-h4"><img src="/employee.png" alt="Employee Icon" className="sidebar-icon"/> Workforce</h4>
+          <h4 className="stat-header-h4"><img src="/employee.png" alt="Employee Icon" className="sidebar-icon" /> Workforce</h4>
           <div className="stat-row">
             <span>Total Employees:</span>
             <span className="stat-number">{empCount}</span>
@@ -550,7 +550,7 @@ function OverviewTab() {
         </div>
 
         <div className="overview-card purple-card">
-          <h4 className="stat-header-h4"><img src="/machine.png" alt="Machine Icon" className="sidebar-icon"/> Equipment Status</h4>
+          <h4 className="stat-header-h4"><img src="/machine.png" alt="Machine Icon" className="sidebar-icon" /> Equipment Status</h4>
           <div className="stat-row">
             <span>Total Machines:</span>
             <span className="stat-number">{machineCount}</span>
@@ -570,7 +570,7 @@ function OverviewTab() {
         </div>
 
         <div className="overview-card peach-card">
-          <h4 className="stat-header-h4"><img src="/job.png" alt="Job Icon" className="sidebar-icon"/> Job Types</h4>
+          <h4 className="stat-header-h4"><img src="/job.png" alt="Job Icon" className="sidebar-icon" /> Job Types</h4>
           <div className="stat-row">
             <span>Total Job Types Created:</span>
             <span className="stat-number green-text">{jobCount}</span>
@@ -589,12 +589,12 @@ function OverviewTab() {
           </div>
         </div>
       </div>
-       <ShopCreationModal 
-        isVisible={isShopModalOpen} 
-        onClose={() => setIsShopModalOpen(false)} 
+      <ShopCreationModal
+        isVisible={isShopModalOpen}
+        onClose={() => setIsShopModalOpen(false)}
       />
     </>
-    
+
   );
 }
 

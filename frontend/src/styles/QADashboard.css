@@ -215,34 +215,11 @@
   font-weight: 600;
 }
 
-.status-progress {
-  background: #bee3f8;
-  color: #2c5282;
-}
-
-.status-assigned {
-  background: #e2e8f0;
-  color: #4a5568;
-}
-
-.status-assigned-active {
-  background: #c6f6d5;
-  color: #276749;
-}
-
-.status-completed {
-  background: #9ae6b4;
-  color: #22543d;
-}
-
 .status-review {
   background: #d6bcfa;
   color: #553c9a;
 }
 
-/* QA Ready Status */
-
-/* --- Details Section (Copied from Supervisor) --- */
 .details-section {
   background: white;
   border-radius: 12px;

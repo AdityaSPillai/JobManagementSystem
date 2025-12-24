@@ -471,6 +471,7 @@ export const startWorkerTimer = async (req, res) => {
       worker.actualStartTime = new Date();
     }
     jobItem.status = "in_progress";
+    job.status = "in_progress";
 
     await job.save();
 

@@ -271,36 +271,6 @@
   font-weight: 600;
 }
 
-.status-progress {
-  background: #bee3f8;
-  color: #2c5282;
-}
-
-.status-assigned {
-  background: #e2e8f0;
-  color: #4a5568;
-}
-
-.status-assigned-active {
-  background: #c6f6d5;
-  color: #276749;
-}
-
-.status-completed {
-  background: #9ae6b4;
-  color: #22543d;
-}
-
-.status-approved {
-  background: #D6BCFA;
-  color: #6620c9;
-}
-
-.status-rejected {
-  background: #dea8a1;
-  color: #ff0000;
-}
-
 .job-owner {
   margin: 0 0 8px 0;
   color: #4a5568;
