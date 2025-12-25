@@ -1481,6 +1481,7 @@
 }
 
 .machine-table-wrapper {
+  color: black;
   width: 100%;
   overflow-x: auto;
   margin-top: 8px;

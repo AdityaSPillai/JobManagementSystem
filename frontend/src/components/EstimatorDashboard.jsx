@@ -1981,11 +1981,19 @@ function EstimatorDashboard({ onLoginClick }) {
                               <option value="">Select Employee</option>
 
                               {employees
-                                .filter(emp => emp.specialization === item.allowedWorkers?.[0]?.category)
-                                .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
+                                .filter(emp => emp.role === 'worker' || emp.role === 'supervisor')
+                                .filter(emp =>
+                                  emp.specialization?.trim().toLowerCase() ===
+                                  item.category?.trim().toLowerCase()
+                                )
+                                .filter(emp =>
+                                  !item.workers.some(
+                                    w => String(w.workerAssigned) === String(emp._id)
+                                  )
+                                )
                                 .map(emp => (
                                   <option key={emp._id} value={emp._id}>
-                                    {emp.name} {emp.employeeNumber} — {emp.specialization}
+                                    {emp.name} ({emp.employeeNumber}) — {emp.specialization}
                                   </option>
                                 ))}
                             </select>
@@ -2143,7 +2151,7 @@ function EstimatorDashboard({ onLoginClick }) {
                           </select>
                         </div>
                         <div className="form-group">
-                          <label>Employee Category</label>
+                          <label>Man Power Category</label>
                           <select
                             value={item.allowedWorkers[0].category || ""}
                             onChange={(e) => updateAllowedWorker(index, { category: e.target.value })}

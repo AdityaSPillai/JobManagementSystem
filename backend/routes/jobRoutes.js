@@ -20,7 +20,13 @@ import {
     usedConsumableController,
     pauseWorkerTImer,
     pauseMachineForJobItem,
-    completeJobItemController
+    completeJobItemController,
+    removeWorkerFromJobItem,
+    assignMachineController,
+    removeMachineFromJobItem,
+    assignConsumableController,
+    updateConsumableQuantityController,
+    removeConsumableController
 } from "../controllers/jobController.js";
 import { logAction } from "../middleware/logMiddleware.js";
 
@@ -47,6 +53,18 @@ router.delete('/delete-job/:jobId', deleteJobController)
 //assign worker to job
 
 router.put('/assign-worker/:userId/:jobId/:jobItemId', assignWorkerController)
+
+router.delete('/remove-worker/:jobId/:jobItemId/:workerObjectId', removeWorkerFromJobItem);
+
+router.put('/assign-machine/:machineId/:jobId/:jobItemId', assignMachineController);
+
+router.delete('/remove-machine/:jobId/:jobItemId/:machineId', removeMachineFromJobItem);
+
+router.put('/assign-consumable/:jobId/:jobItemId', assignConsumableController);
+
+router.put('/update-consumable-qty/:jobId/:jobItemId/:consumableId', updateConsumableQuantityController);
+
+router.delete('/remove-consumable/:jobId/:jobItemId/:consumableId', removeConsumableController);
 
 
 // start  machine working timer

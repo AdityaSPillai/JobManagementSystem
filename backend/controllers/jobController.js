@@ -217,40 +217,35 @@ export const updateJobSettings = async (req, res) => {
         0
       );
 
-      updateData.jobItems = jobItems.map(item => ({
-        itemData: new Map(Object.entries(item.itemData || {})),
+      updateData.jobItems = existingJob.jobItems.map(existingItem => {
+        const incoming = jobItems.find(
+          i => String(i._id) === String(existingItem._id)
+        );
 
-        estimatedPrice: item.estimatedPrice || 0,
+        if (!incoming) return existingItem;
 
-        allowedWorkers: Array.isArray(item.allowedWorkers)
-          ? item.allowedWorkers.map(w => ({
-            category: w.category,
-            estimatedManHours: w.estimatedManHours,
-            numberOfWorkers: w.numberOfWorkers,
-            hourlyRate: w.hourlyRate
-          }))
-          : [],
+        return {
+          ...existingItem.toObject(),
 
-        machine: Array.isArray(item.machine)
-          ? item.machine.map(m => ({
-            machineRequired: m.machineRequired || null,
-            startTime: m.startTime || null,
-            endTime: m.endTime || null,
-            actualDuration: m.actualDuration || 0,
-          }))
-          : [],
+          itemData: new Map(Object.entries(incoming.itemData || {})),
+          estimatedPrice: incoming.estimatedPrice || existingItem.estimatedPrice,
 
-        workers: Array.isArray(item.workers) ? item.workers : [],
-        consumable: Array.isArray(item.consumable) ? item.consumable : [],
-      }));
+          allowedWorkers: Array.isArray(incoming.allowedWorkers)
+            ? incoming.allowedWorkers.map(w => ({
+              category: w.category,
+              estimatedManHours: w.estimatedManHours,
+              numberOfWorkers: w.numberOfWorkers,
+              hourlyRate: w.hourlyRate
+            }))
+            : existingItem.allowedWorkers,
+
+          status: incoming.status || existingItem.status
+
+          //workers, machine, consumable are intentionally untouched
+        };
+      });
 
       updateData.totalEstimatedAmount = totalEstimatedAmount;
-
-
-
-
-
-      await Promise.all(machineUpdatePromises);
     }
 
     if (status) {
@@ -791,6 +786,370 @@ export const assignWorkerController = async (req, res) => {
   }
 };
 
+export const removeWorkerFromJobItem = async (req, res) => {
+  try {
+    const { jobId, jobItemId, workerObjectId } = req.params;
+
+    if (!jobId || !jobItemId || !workerObjectId) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId, jobItemId and workerObjectId are required"
+      });
+    }
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found"
+      });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Job item not found"
+      });
+    }
+
+    const initialLength = jobItem.workers.length;
+
+    jobItem.workers = jobItem.workers.filter(
+      w => w.workerAssigned.toString() !== workerObjectId
+    );
+
+    if (jobItem.workers.length === initialLength) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found in job item"
+      });
+    }
+
+    // reset item status if needed
+    if (jobItem.workers.length === 0) {
+      jobItem.status = 'pending';
+    }
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Worker removed successfully",
+      jobItemId,
+      workerObjectId
+    });
+
+  } catch (error) {
+    console.error("Error removing worker:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+export const assignMachineController = async (req, res) => {
+  try {
+    const { machineId, jobId, jobItemId } = req.params;
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({ success: false, message: "Job item not found" });
+    }
+
+    const alreadyExists = jobItem.machine.some(
+      m => m.machineRequired?.toString() === machineId
+    );
+
+    if (alreadyExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Machine already assigned"
+      });
+    }
+
+    const machine = await MachineModel.findById(machineId);
+    if (!machine) {
+      return res.status(404).json({
+        success: false,
+        message: "Machine not found"
+      });
+    }
+
+    const shop = await ShopModel.findById(machine.shopId);
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        message: "Shop not found"
+      });
+    }
+
+    const machineType = shop.machineCategory.find(m => m.name === machine.type);
+
+    const machineRate = machineType.hourlyRate;
+
+    jobItem.machine.push({
+      machineRequired: machineId,
+      startTime: null,
+      endTime: null,
+      actualDuration: 0,
+      machineRate: machineRate,
+    });
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Machine assigned successfully",
+      machineId
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Error assigning machine"
+    });
+  }
+};
+
+export const removeMachineFromJobItem = async (req, res) => {
+  try {
+    const { jobId, jobItemId, machineId } = req.params;
+
+    if (!jobId || !jobItemId || !machineId) {
+      return res.status(400).json({
+        success: false,
+        message: "jobId, jobItemId and machineId are required"
+      });
+    }
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found"
+      });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Job item not found"
+      });
+    }
+
+    const initialLength = jobItem.machine.length;
+
+    jobItem.machine = jobItem.machine.filter(
+      m => m.machineRequired.toString() !== machineId
+    );
+
+    if (jobItem.machine.length === initialLength) {
+      return res.status(404).json({
+        success: false,
+        message: "Machine not found in job item"
+      });
+    }
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Machine removed successfully",
+      jobItemId,
+      machineId
+    });
+
+  } catch (error) {
+    console.error("Error removing machine:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error removing machine"
+    });
+  }
+};
+
+
+export const assignConsumableController = async (req, res) => {
+  try {
+    const { jobId, jobItemId } = req.params;
+    const { consumableId } = req.body;
+
+    if (!consumableId) {
+      return res.status(400).json({
+        success: false,
+        message: "Consumable ID is required"
+      });
+    }
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({ success: false, message: "Job item not found" });
+    }
+
+    // Prevent duplicate consumables
+    const alreadyExists = jobItem.consumable.some(
+      c => String(c.consumableRef) === String(consumableId)
+    );
+
+    if (alreadyExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Consumable already added"
+      });
+    }
+
+    // Fetch master consumable
+    const shop = await ShopModel.findById(job.shopId);
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        message: "Shop not found"
+      });
+    }
+
+    // Find consumable inside shop schema
+    const masterConsumable = shop.consumables.find(
+      c => String(c._id) === String(consumableId)
+    );
+
+    if (!masterConsumable) {
+      return res.status(404).json({
+        success: false,
+        message: "Consumable not found in shop"
+      });
+    }
+
+    // Push snapshot + reference
+    jobItem.consumable.push({
+      consumableRef: masterConsumable._id,
+      name: masterConsumable.name,
+      price: masterConsumable.price,
+      numberOfUsed: 0,
+      available: true
+    });
+
+    await job.save();
+
+    const addedConsumable =
+      jobItem.consumable[jobItem.consumable.length - 1];
+
+    res.status(200).json({
+      success: true,
+      message: "Consumable added successfully",
+      consumable: addedConsumable
+    });
+
+  } catch (error) {
+    console.error("assignConsumableController:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const removeConsumableController = async (req, res) => {
+  try {
+    const { jobId, jobItemId, consumableId } = req.params;
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({ success: false, message: "Job item not found" });
+    }
+
+    const initialLength = jobItem.consumable.length;
+
+    jobItem.consumable = jobItem.consumable.filter(
+      c => String(c.consumableRef) !== String(consumableId)
+    );
+
+    if (jobItem.consumable.length === initialLength) {
+      return res.status(404).json({
+        success: false,
+        message: "Consumable not found in job item"
+      });
+    }
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Consumable removed successfully"
+    });
+
+  } catch (error) {
+    console.error("removeConsumableController:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+export const updateConsumableQuantityController = async (req, res) => {
+  try {
+    const { jobId, jobItemId, consumableId } = req.params;
+    const { quantity } = req.body;
+
+    const job = await JobCardModel.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    const jobItem = job.jobItems.id(jobItemId);
+    if (!jobItem) {
+      return res.status(404).json({ success: false, message: "Job item not found" });
+    }
+
+    const consumable = jobItem.consumable.find(
+      c => String(c.consumableRef) === String(consumableId)
+    );
+
+    if (!consumable) {
+      return res.status(404).json({
+        success: false,
+        message: "Consumable not found"
+      });
+    }
+
+    consumable.numberOfUsed = Number(quantity) || 0;
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Consumable quantity updated",
+      consumable
+    });
+
+  } catch (error) {
+    console.error("updateConsumableQuantityController:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 
 export const supervisorApproval = async (req, res) => {
   {
@@ -1035,7 +1394,9 @@ export const usedConsumableController = async (req, res) => {
       return res.status(404).json({ success: false, message: "Job item not found" });
     }
 
-    const consumable = jobItem.consumable.id(consumableId);
+    const consumable = jobItem.consumable.find(
+      c => String(c.consumableRef) === String(consumableId)
+    );
     if (!consumable) {
       return res.status(404).json({ success: false, message: "Consumable not found" });
     }

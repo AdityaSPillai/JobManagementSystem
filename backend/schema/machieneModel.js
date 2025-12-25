@@ -6,7 +6,6 @@ const machineSchema = new mongoose.Schema({
         required: true,
         trim: true,
         lowercase: true
-
     },
     machineId: {
         type: String,
@@ -64,61 +63,61 @@ const machineSchema = new mongoose.Schema({
     },
     supplier: {
         type: String,
-        default:null ,
+        default: null,
         required: true
     },
-    hsCode:{
+    hsCode: {
         type: String,
         default: null
-        
+
     },
-    brand:{
+    brand: {
         type: String,
         default: null,
         required: true
     },
-    countryOfOrigin:{
+    countryOfOrigin: {
         type: String,
         default: null,
         required: true
     },
-    modelNumber:{
+    modelNumber: {
         type: String,
         default: null,
         required: true
     },
-    modelYear:{
+    modelYear: {
         type: Date,
         default: null,
         required: true
     },
-    assetType:{
+    assetType: {
         type: String,
         default: null,
         required: true
     },
-    assetValue:{
+    assetValue: {
         type: Number,
         default: null,
         required: true
     },
-    landedCost:{
+    landedCost: {
         type: Number,
         default: null
     },
-    intsallationCost:{
+    intsallationCost: {
         type: Number,
         default: null
     },
-    capitalizedValue:{
+    capitalizedValue: {
         type: Number,
         default: null
     },
-    limeTime:{
+    limeTime: {
         type: Number,
         default: null
     },
-    depreciationPeriod:{
+    depreciationPeriod: {
         type: Number,
         default: null
     },

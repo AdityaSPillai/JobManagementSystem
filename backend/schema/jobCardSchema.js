@@ -123,6 +123,11 @@ const JobCardSchema = new mongoose.Schema({
     }],
 
     consumable: [{
+      consumableRef: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Consumable",
+        required: true
+      },
       name: {
         type: String,
         required: false,

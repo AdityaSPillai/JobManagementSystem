@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import '../styles/SupervisorDashboard.css';
 import useAuth from '../context/context.jsx';
 import clipboardIcon from '../assets/clipboard.svg';
@@ -10,6 +10,8 @@ import refreshIcon from '../assets/refresh.svg';
 import infoIcon from '../assets/info.svg';
 import tickIcon from '../assets/tick.svg';
 import axios from "../utils/axios.js"
+import WorkerSupTimer from './TimerComponent/WorkerSupTimer.jsx';
+import MachineSupTimer from './TimerComponent/MachineSupTimer.jsx';
 
 function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete }) {
   const [selectedJobIdInternal, setSelectedJobIdInternal] = useState('');
@@ -21,7 +23,25 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   const [categories, setCategories] = useState([])
   const [consumables, setConsumables] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const jobTypeMappedRef = useRef(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+
+  // NEW STATE FOR MODAL SEARCH
+  const [modalSearchQuery, setModalSearchQuery] = useState('');
+  const [modalStatusFilter, setModalStatusFilter] = useState('all');
+
+  const filteredModalJobs = jobs.filter(job => {
+    const matchesSearch =
+      (job.jobCardNumber || '').toLowerCase().includes(modalSearchQuery.toLowerCase()) ||
+      (job.customer_name || '').toLowerCase().includes(modalSearchQuery.toLowerCase()) ||
+      (job.vehicle_number || '').toLowerCase().includes(modalSearchQuery.toLowerCase());
+
+    const matchesFilter =
+      modalStatusFilter === 'all' ||
+      job.status === modalStatusFilter;
+
+    return matchesSearch && matchesFilter;
+  });
 
   const shopId = userInfo?.shopId;
 
@@ -59,7 +79,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   };
 
 
-  const getAllWorlers = async () => {
+  const getAllWorkers = async () => {
     try {
       const res = await axios.get(`/shop/getAllWorkers/${userInfo?.shopId}`);
       if (res.data?.users?.length > 0) {
@@ -121,13 +141,14 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     getAllCustomers();
     getAllServices();
     getAllMachines();
-    getAllWorlers();
+    getAllWorkers();
     getAllConsumables();
     getAllCategory();
   }, [userInfo]);
 
   useEffect(() => {
     if (isOpen && initialJobData) {
+      jobTypeMappedRef.current = false;
       setSelectedJobIdInternal(initialJobData.id);
       console.log(initialJobData)
       if (isOpen && initialJobData) {
@@ -135,7 +156,6 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
           ...initialJobData,
           items: initialJobData.items.map(item => ({
             ...item,
-            estimatedManHours: item.estimatedManHours || 0,
             machine: Array.isArray(item.machine)
               ? item.machine.map(m => ({
                 ...m,
@@ -150,6 +170,15 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                 machineEstimatedCost: m.machineEstimatedCost || 0
               }))
               : [],
+            consumable: Array.isArray(item.consumable)
+              ? item.consumable.map(c => ({
+                consumableRef: c.consumableRef,
+                name: c.name,
+                price: c.price,
+                numberOfUsed: c.numberOfUsed || 0,
+                available: c.available ?? true
+              }))
+              : []
           }))
         });
       }
@@ -160,12 +189,47 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     }
   }, [isOpen, initialJobData]);
 
+  useEffect(() => {
+    if (!editFormData) return;
+    if (!Array.isArray(editFormData.items)) return;
+    if (!services || services.length === 0) return;
+    if (jobTypeMappedRef.current) return; // ✅ prevent loop
+
+    let didUpdate = false;
+
+    const updatedItems = editFormData.items.map(item => {
+      if (item.jobTypeId) return item;
+
+      const matchedService = services.find(
+        s => s.name === item.jobType
+      );
+
+      if (!matchedService) return item;
+
+      didUpdate = true;
+      return {
+        ...item,
+        jobTypeId: matchedService._id
+      };
+    });
+
+    if (!didUpdate) return;
+
+    jobTypeMappedRef.current = true; // ✅ lock
+
+    setEditFormData(prev => ({
+      ...prev,
+      items: updatedItems
+    }));
+  }, [services, editFormData]);
+
   const handleJobSelect = (id) => {
     setSelectedJobIdInternal(id);
     if (id) {
       const jobToEdit = jobs.find(job => job.id === id);
       setEditFormData(JSON.parse(JSON.stringify(jobToEdit)));
     } else {
+      jobTypeMappedRef.current = false;
       setEditFormData(null);
     }
   };
@@ -179,6 +243,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   };
 
   const handleClose = () => {
+    jobTypeMappedRef.current = false;
     setSelectedJobIdInternal('');
     setEditFormData(null);
     onClose();
@@ -192,7 +257,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
       const newItems = [...prev[type]];
 
       if (field === "machine") {
-        return prev; // ❌ DO NOT HANDLE MACHINE HERE ANYMORE
+        return prev;
       }
       else if (field === 'estimatedPrice' || field === 'quantity' || field === 'perPiecePrice') {
         newItems[index][field] = parseFloat(value) || 0;
@@ -210,7 +275,22 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   const addItem = (type) => {
     setEditFormData(prev => {
       let newItem;
-      if (type === 'items') newItem = { jobType: '', description: '', estimatedPrice: 0, itemStatus: 'stopped' };
+      if (type === 'items')
+        newItem = {
+          itemId: crypto.randomUUID(),
+          jobType: '',
+          description: '',
+          priority: '',
+          category: '',
+          estimatedManHours: 0,
+          estimatedPrice: 0,
+          numberOfWorkers: 1,
+          itemStatus: 'pending',
+
+          workers: [],
+          machine: [],
+          consumable: []
+        };
       else if (type === 'machines') newItem = { machineType: '', description: '', estimatedPrice: 0 };
       else newItem = { name: '', quantity: 1, perPiecePrice: 0 };
       return { ...prev, [type]: [...prev[type], newItem] };
@@ -225,8 +305,8 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   const handleStatusChange = (e) => setEditFormData(prev => ({ ...prev, status: e.target.value }));
 
   const handleResetTimers = () => {
-    if (window.confirm('Are you sure you want to reset all task statuses to "stopped" for this job?')) {
-      setEditFormData(prev => ({ ...prev, items: prev.items.map(item => ({ ...item, itemStatus: 'stopped' })) }));
+    if (window.confirm('Are you sure you want to reset all task statuses to "pending" for this job?')) {
+      setEditFormData(prev => ({ ...prev, items: prev.items.map(item => ({ ...item, itemStatus: 'pending' })) }));
       alert('Task statuses reset. Save changes to apply.');
     }
   };
@@ -260,8 +340,8 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
           contact_number: editFormData.contact_number
         },
 
-        jobItems: editFormData.items.map((item) => ({
-          numberOfWorkers: item.numberOfWorkers || 1,
+        jobItems: editFormData.items.map(item => ({
+          _id: item._id || item.itemId,
 
           itemData: {
             job_type: item.jobType || "",
@@ -270,37 +350,16 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
           },
 
           estimatedPrice: item.estimatedPrice || 0,
-          category: item.category || "",
-          estimatedManHours: item.estimatedManHours || 0,
 
-          // ✅ FIXED: MACHINE AS ARRAY
-          machine: Array.isArray(item.machine)
-            ? item.machine.map(m => ({
-              machineRequired: m.machineRequired?._id || null,
-              startTime: m.startTime || null,
-              endTime: m.endTime || null,
-              actualDuration: m.actualDuration || null
-            }))
-            : [],
-
-          // ✅ FIXED: WORKERS AS ARRAY
-          workers: Array.isArray(item.workers)
-            ? item.workers.map(w => ({
-              workerAssigned: w.workerAssigned || null,
-              startTime: w.startTime || null,
-              endTime: w.endTime || null,
-              actualDuration: w.actualDuration || null
-            }))
-            : [],
-
-          // ✅ FIXED: CONSUMABLES AS ARRAY
-          consumable: Array.isArray(item.consumable)
-            ? item.consumable.map(c => ({
-              name: c.name || "",
-              price: c.price || 0,
-              available: c.available ?? true
-            }))
-            : [],
+          allowedWorkers: [
+            {
+              category: item.category || "",
+              estimatedManHours: item.estimatedManHours || 0,
+              numberOfWorkers: item.numberOfWorkers || 1,
+              hourlyRate:
+                categories.find(c => c.name === item.category)?.hourlyRate || 0
+            }
+          ],
 
           status: item.itemStatus || "pending"
         })),
@@ -332,77 +391,136 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
   };
 
 
-
-
-
-
   const calculateTotal = () => {
     if (!editFormData || !editFormData.items) return 0;
 
-    console.log("Calculating total for items:", editFormData.items);
-
     return editFormData.items.reduce((total, item) => {
-      // Base item price (from estimatedPrice field directly)
+      // Base item price (Labor/Service)
       const itemPrice = item.estimatedPrice || 0;
 
-      // Consumables cost - sum all consumables
+      // Consumables cost
       const consumablesCost = Array.isArray(item.consumable)
         ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0)
         : 0;
 
-      return total + itemPrice + consumablesCost;
+      // Machine cost
+      const machineCost = Array.isArray(item.machine)
+        ? item.machine.reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
+        : 0;
+
+      return total + itemPrice + consumablesCost + machineCost;
     }, 0);
   };
 
   if (!isOpen) return null;
 
   const handleJobTypeSelect = (index, serviceId) => {
-    const selectedService = services.find(service => service._id === serviceId);
+    const selectedService = services.find(
+      service => String(service._id) === String(serviceId)
+    );
+
+    if (!selectedService) return;
+
     setEditFormData(prev => {
       const updatedItems = [...prev.items];
       updatedItems[index] = {
         ...updatedItems[index],
-        jobType: selectedService?.name || '',
-        description: selectedService?.description || '',
-        estimatedPrice: selectedService?.price || 0
+        jobTypeId: selectedService._id,
+        jobType: selectedService.name,
+        description: selectedService.description || '',
+        estimatedPrice: selectedService.price || 0
       };
+
       return { ...prev, items: updatedItems };
     });
   };
 
+  const handleRemoveConsumable = async (jobId, jobItemId, consumableId, itemIndex) => {
+    try {
+      await axios.delete(
+        `/jobs/remove-consumable/${jobId}/${jobItemId}/${consumableId}`
+      );
 
-  const handleConsumableSelect = (itemIndex, consIndex, selectedName) => {
-    const selected = consumables.find(c => c.name === selectedName);
-    const selectedPrice = selected?.price || 0;
+      setEditFormData(prev => {
+        const updatedItems = [...prev.items];
+        updatedItems[itemIndex].consumable =
+          updatedItems[itemIndex].consumable.filter(
+            c => c.consumableRef !== consumableId
+          );
+        return { ...prev, items: updatedItems };
+      });
 
-    setEditFormData(prev => {
-      const updatedItems = [...prev.items];
-      const updatedConsumables = [...(updatedItems[itemIndex].consumable || [])];
-      updatedConsumables[consIndex] = { name: selectedName, price: selectedPrice };
-      updatedItems[itemIndex].consumable = updatedConsumables;
-      return { ...prev, items: updatedItems };
-    });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove consumable");
+    }
   };
 
-  const addConsumable = (itemIndex) => {
+  const handleAddConsumable = async (itemIndex, consumableId) => {
+    const selected = consumables.find(
+      c => String(c._id) === String(consumableId)
+    );
+    if (!selected) return;
+
+    const jobItemId = editFormData.items[itemIndex].itemId;
+
+    const res = await axios.put(
+      `/jobs/assign-consumable/${editFormData.id}/${jobItemId}`,
+      { consumableId },
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const saved = res.data.consumable;
+
     setEditFormData(prev => {
       const updatedItems = [...prev.items];
-      updatedItems[itemIndex].consumable = [
-        ...(updatedItems[itemIndex].consumable || []),
-        { name: '', price: 0 },
+      const item = { ...updatedItems[itemIndex] };
+
+      item.consumable = [
+        ...(item.consumable || []),
+        {
+          consumableRef: saved.consumableRef,
+          name: saved.name,
+          price: saved.price,
+          numberOfUsed: saved.numberOfUsed,
+          available: saved.available
+        }
       ];
+
+      updatedItems[itemIndex] = item;
       return { ...prev, items: updatedItems };
     });
   };
 
-  const removeConsumable = (itemIndex, consIndex) => {
+  const updateConsumableLocal = (itemIndex, consIndex, value) => {
+    const qty = parseInt(value, 10) || 0;
+
     setEditFormData(prev => {
       const updatedItems = [...prev.items];
-      const updatedConsumables = [...(updatedItems[itemIndex].consumable || [])];
-      updatedConsumables.splice(consIndex, 1);
-      updatedItems[itemIndex].consumable = updatedConsumables;
+      updatedItems[itemIndex].consumable[consIndex].numberOfUsed = qty;
       return { ...prev, items: updatedItems };
     });
+  };
+
+  const submitConsumableQuantity = async (
+    jobId,
+    jobItemId,
+    consumableId,
+    quantity
+  ) => {
+    try {
+      await axios.put(
+        `/jobs/update-consumable-qty/${jobId}/${jobItemId}/${consumableId}`,
+        { quantity }
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update consumable quantity");
+    }
   };
 
 
@@ -447,6 +565,23 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
       };
     });
   };
+
+  const handleNumberOfWorkersChange = async (index, workers) => {
+    const numberOfWorkers = parseFloat(workers) || 0;
+
+    setEditFormData(prev => {
+      const updatedItems = [...prev.items];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        numberOfWorkers,
+      };
+      return {
+        ...prev,
+        items: updatedItems,
+      };
+    });
+  };
+
   const handleMachineHoursChange = async (itemIndex, machineIndex, hours) => {
     const machineHours = parseFloat(hours) || 0;
 
@@ -490,7 +625,49 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     });
   };
 
+  const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
+    if (!employeeId || !jobId) return;
 
+    setEditFormData(prev => {
+      const updatedItems = [...prev.items];
+      const item = { ...updatedItems[itemIndex] };
+
+      const maxWorkers = item.numberOfWorkers || 1;
+      const currentWorkers = Array.isArray(item.workers) ? item.workers.length : 0;
+
+      if (currentWorkers >= maxWorkers) {
+        alert(`Only ${maxWorkers} worker(s) allowed for this task`);
+        return prev;
+      }
+
+      item.workers = [
+        ...(item.workers || []),
+        {
+          workerAssigned: employeeId,
+          startTime: null,
+          endTime: null,
+          actualDuration: null,
+        }
+      ];
+
+      item.itemStatus = 'pending';
+      updatedItems[itemIndex] = item;
+
+      return {
+        ...prev,
+        items: updatedItems
+      };
+    });
+
+    try {
+      await axios.put(
+        `/jobs/assign-worker/${employeeId}/${jobId}/${editFormData.items[itemIndex].itemId}`
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign worker");
+    }
+  };
 
   const handleMachineRequiredChange = (itemIndex, machineIndex, machineId) => {
     const selectedMachine = machines.find(m => m._id === machineId);
@@ -557,7 +734,106 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     });
   };
 
+  const handleRemoveWorker = async (jobId, jobItemId, workerId) => {
+    try {
+      await axios.delete(
+        `/jobs/remove-worker/${jobId}/${jobItemId}/${workerId}`
+      );
 
+      // update UI immediately
+      setEditFormData(prev => {
+        const updatedItems = prev.items.map(item => {
+          if (item.itemId !== jobItemId) return item;
+
+          return {
+            ...item,
+            workers: item.workers.filter(
+              w => String(w.workerAssigned) !== String(workerId)
+            )
+          };
+        });
+
+        return { ...prev, items: updatedItems };
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove worker");
+    }
+  };
+
+  const handleRemoveMachine = async (jobId, jobItemId, machineId) => {
+    try {
+      await axios.delete(
+        `/jobs/remove-machine/${jobId}/${jobItemId}/${machineId}`
+      );
+
+      // update UI immediately
+      setEditFormData(prev => {
+        const updatedItems = prev.items.map(item => {
+          if (item.itemId !== jobItemId) return item;
+
+          return {
+            ...item,
+            machine: item.machine.filter(
+              m => String(m.machineRequired?._id) !== String(machineId)
+            )
+          };
+        });
+
+        return { ...prev, items: updatedItems };
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove machine");
+    }
+  };
+
+  const handleMachineSelect = async (jobId, itemIndex, machineId) => {
+    if (!machineId) return;
+
+    const jobItemId = editFormData.items[itemIndex].itemId;
+
+    try {
+      await axios.put(
+        `/jobs/assign-machine/${machineId}/${jobId}/${jobItemId}`
+      );
+
+      // update UI immediately
+      setEditFormData(prev => {
+        const updatedItems = [...prev.items];
+        const item = { ...updatedItems[itemIndex] };
+
+        item.machine = [
+          ...(item.machine || []),
+          {
+            machineRequired: machines.find(m => m._id === machineId),
+            startTime: null,
+            endTime: null,
+            actualDuration: 0
+          }
+        ];
+
+        updatedItems[itemIndex] = item;
+        return { ...prev, items: updatedItems };
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign machine");
+    }
+  };
+
+  const StatusLabelMap = {
+    waiting: "Waiting",
+    pending: "Pending",
+    "in_progress": "In Progress",
+    completed: "Completed",
+    approved: "Approved",
+    rejected: "Rejected",
+    supapproved: "Supervisor Approved",
+  };
 
   return (
 
@@ -572,13 +848,65 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
 
           {!initialJobData && !editFormData && (
             <div className="job-selection-step">
-              <p className="form-subtitle">Please select a job to edit:</p>
-              <div className="form-group">
-                <label>Select Job ID</label>
-                <select className="employee-select" value={selectedJobIdInternal} onChange={(e) => handleJobSelect(e.target.value)}>
-                  <option value="">-- Select a Job --</option>
-                  {jobs.map(job => (<option key={job.id} value={job.id}>{`Job-${job.jobCardNumber?.split("-").pop()}`} - {job.customer_name} ({job.vehicle_number})</option>))}
+              <p className="form-subtitle">Search and select a job to edit:</p>
+
+              <div className="search-filter-container">
+                <input
+                  type="text"
+                  placeholder="Search by Customer, Job No, or Vehicle..."
+                  className="sdsearch-input"
+                  value={modalSearchQuery}
+                  onChange={(e) => setModalSearchQuery(e.target.value)}
+                />
+
+                <select
+                  className="modal-employee-select"
+                  value={modalStatusFilter}
+                  onChange={(e) => setModalStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="waiting">Waiting</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="supapproved">Sup Approved</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
                 </select>
+              </div>
+
+              {/* Search Results List */}
+              <div className="search-results-list">
+                {filteredModalJobs.slice(0, 5).map(job => (
+                  <div
+                    key={job.id}
+                    className="search-result-item"
+                    onClick={() => handleJobSelect(job.id)}
+                  >
+                    <div className="search-result-item-content">
+                      <div className="modal-search-title">
+                        {`Job-${job.jobCardNumber?.split("-").pop()}`} — {job.customer_name}
+                      </div>
+                      <div className="modal-search-meta">
+                        {new Date(job.createdAt || Date.now()).toLocaleDateString()} • {job.vehicle_number}
+                      </div>
+                    </div>
+                    <div className="search-result-item-meta">
+                      <span className={`status-badge status-${job.status}`}>
+                        {StatusLabelMap[job.status]}
+                      </span>
+                      <div className="modal-search-amount">
+                        ${job.totalEstimatedAmount?.toFixed(2) || '0.00'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredModalJobs.length === 0 && (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#a0aec0' }}>
+                    No jobs found matching filters
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -590,62 +918,34 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
               <div className="form-row">
                 <div className="form-group">
                   <label>Customer Name</label>
-
-                  <select
-                    value={selectedCustomerId}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setSelectedCustomerId(value);
-
-                      if (value === "__add_new__") {
-                        setShowCustomerPopup(true);
-                        return;
-                      }
-
-                      const selectedCustomer = customers.find(c => c._id === value);
-
-                      if (selectedCustomer) {
-                        setEditFormData(prev => ({
-                          ...prev,
-                          customer_name: selectedCustomer.name || "",
-                          contact_number: selectedCustomer.phone || "",
-                          vehicle_number: selectedCustomer.productId || "",
-                          vehicle_model: selectedCustomer.productModel || "",
-                          engine_number: selectedCustomer.productIdentification || ""
-                        }));
-                        console.log("Selected customer data:", editFormData);
-                      }
-                    }}
-                  >
-                    <option value="">-- Select Customer (Name + Phone) --</option>
-
-                    {customers.map(c => (
-                      <option key={c._id} value={c._id}>
-                        {c.name} — {c.phone}
-                      </option>
-                    ))}
-
-                    <option value="__add_new__">➕ Add New Customer</option>
-                  </select>
+                  <input type="text" value={editFormData.customer_name} disabled />
                 </div>
                 <div className="form-group">
-                  <label>Contact Number *</label>
-                  <input type="tel" value={editFormData.contact_number || ''} onChange={(e) => handleFormChange('contact_number', e.target.value)} required />
+                  <label>Contact Number</label>
+                  <input type="tel" value={editFormData.contact_number || ''} disabled />
                 </div>
               </div>
+
               <div className="form-row">
                 <div className="form-group">
-                  <label>Vehicle Number *</label>
-                  <input type="text" value={editFormData.vehicle_number || ''} onChange={(e) => handleFormChange('vehicle_number', e.target.value)} required />
+                  <label>Product ID</label>
+                  <input type="text" value={editFormData.vehicle_number || ''} disabled />
                 </div>
                 <div className="form-group">
-                  <label>Vehicle Model</label>
-                  <input type="text" value={editFormData.vehicle_model || ''} onChange={(e) => handleFormChange('vehicle_model', e.target.value)} />
+                  <label>Product Model</label>
+                  <input type="text" value={editFormData.vehicle_model || ''} disabled />
                 </div>
               </div>
-              <div className="form-group">
-                <label>Engine Number</label>
-                <input type="text" value={editFormData.engine_number || ''} onChange={(e) => handleFormChange('engine_number', e.target.value)} />
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Serial Number</label>
+                  <input type="text" value={editFormData.engine_number || ''} disabled />
+                </div>
+                <div className="form-group">
+                  <label>Customer ID</label>
+                  <input type="text" value={editFormData.customerIDNumber} disabled />
+                </div>
               </div>
 
               <div className="job-items-section supervisor-actions">
@@ -653,14 +953,14 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                 <div className="form-row">
                   <div className="form-group">
                     <label>Job Status</label>
-                    <select className="employee-select" value={editFormData.status} onChange={handleStatusChange}>
+                    <select className="super-action-employee-select" value={editFormData.status} onChange={handleStatusChange}>
                       <option value={editFormData.status}>{editFormData.status}</option>
                       <option value="waiting">Not Assigned</option>
                       <option value="pending">Assigned</option>
                       <option value="in_progress">In Progress</option>
                       <option value="completed">Completed</option>
                       <option value="approved">Approved</option>
-                      <option value="rejected">Reejcted</option>
+                      <option value="rejected">Rejected</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -670,177 +970,406 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                 </div>
               </div>
 
-
               <div className="job-items-section">
                 <div className="section-title">
                   <h4>Job Tasks</h4>
-                  <button type="button" className="btn-add-job" onClick={() => addItem('items')}>+ Add Task</button>
                 </div>
 
-
-
                 {editFormData.items?.map((item, index) => (
-
                   <div key={index} className="job-item-row">
-                    <div className="form-group">
-                      <label>Man Power Category</label>
-                      <select
-                        value={item.category || ''}
-                        onChange={(e) => handleJobCategorySelect(index, e.target.value)}
-                      >
-                        <option value="">-- Select Category --</option>
-                        {categories.map(category => (
-                          <option key={category._id} value={category.name}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                     <div className="job-item-field">
                       <label>Task #{index + 1}</label>
                     </div>
 
-                    <div className="form-group">
-                      <label>Job Type</label>
-                      <select
-                        value={item.jobType || ""}
-                        onChange={(e) => handleJobTypeSelect(index, e.target.value)}
-                      >
-                        <option value="">Select Job Type</option>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Job Type</label>
+                        <select
+                          value={item.jobTypeId || ""}
+                          onChange={(e) => handleJobTypeSelect(index, e.target.value)}
+                        >
+                          <option value="">Select Job Type</option>
 
-                        {services.map(service => (
-                          <option key={service._id} value={service.name}>
-                            {service.name}
+                          {services.map(service => (
+                            <option key={service._id} value={service._id}>
+                              {service.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Man Power Category</label>
+                        <select
+                          value={item.category || ''}
+                          onChange={(e) => handleJobCategorySelect(index, e.target.value)}
+                        >
+                          <option value="">-- Select Category --</option>
+                          {categories.map(category => (
+                            <option key={category._id} value={category.name}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Estimated Man Hours</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.estimatedManHours ?? ""}
+                          placeholder="Estimated Man Hours"
+                          onChange={(e) =>
+                            handleManHoursChange(index, e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Number of Workers</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.numberOfWorkers ?? ""}
+                          placeholder="Number of Workers"
+                          onChange={(e) =>
+                            handleNumberOfWorkersChange(index, e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Description</label>
+                        <input
+                          type="text"
+                          value={item.description || ''}
+                          onChange={(e) => handleItemChange(index, 'description', e.target.value, 'items')}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Priority</label>
+                        <select
+                          value={item.priority || ''}
+                          onChange={(e) => handleItemChange(index, 'priority', e.target.value, 'items')}
+                        >
+                          <option value="">Select Priority</option>
+                          <option value="Low">Low</option>
+                          <option value="Medium">Medium</option>
+                          <option value="High">High</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* --- WORKERS TABLE --- */}
+                    <div className="table-section-title">
+                      <div className="breaker-btw-section"></div>
+                      <span>Workers Assigned</span>
+                    </div>
+                    {Array.isArray(item.workers) && item.workers.length > 0 ? (
+                      <div className="worker-table-wrapper">
+                        <table className="worker-table">
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Worker ID</th>
+                              <th>Start Time</th>
+                              <th>End Time</th>
+                              <th>Duration</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                            {item.workers.map((w, wi) => {
+                              const employee = employees.find(
+                                e => String(e._id) === String(w.workerAssigned)
+                              );
+
+                              return (
+                                <WorkerSupTimer
+                                  key={w._id || wi}
+                                  worker={w}
+                                  employee={employee}
+                                  jobId={editFormData.id}
+                                  itemIndex={index}
+                                  selectedJobStatus={editFormData.status}
+                                  onRemoveWorker={(workerId) =>
+                                    handleRemoveWorker(editFormData.id, item.itemId, workerId)
+                                  }
+                                />
+                              );
+                            })}
+                          </tbody>
+                        </table>
+
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666' }}>
+                        No workers assigned yet for this task
+                      </p>
+                    )}
+                    <select
+                      className="edit-modal-employee-select"
+                      value=""
+                      onChange={(e) => {
+                        const selectedEmployeeId = e.target.value;
+                        if (selectedEmployeeId) {
+                          handleEmployeeSelect(editFormData.id, index, selectedEmployeeId);
+                        }
+                      }}
+                      disabled={
+                        item.itemStatus === 'completed' ||
+                        item.itemStatus === 'approved' ||
+                        editFormData.status === 'approved' ||
+                        editFormData.status === 'waiting' ||
+                        editFormData.status === 'completed' ||
+                        (
+                          editFormData.status !== 'rejected' &&
+                          Array.isArray(item.workers) &&
+                          item.workers.length >= (item.numberOfWorkers || 1)
+                        )
+                      }
+                    >
+                      <option value="">Select Employee</option>
+
+                      {employees
+                        .filter(emp => emp.specialization === item.category)
+                        .filter(emp =>
+                          !Array.isArray(item.workers) ||
+                          !item.workers.some(w => String(w.workerAssigned) === String(emp._id))
+                        )
+                        .map(emp => (
+                          <option key={emp._id} value={emp._id}>
+                            {emp.name} {emp.employeeNumber} — {emp.specialization}
                           </option>
                         ))}
-                      </select>
-                    </div>
+                    </select>
 
-                    <div className="form-group">
-                      <label>Description</label>
-                      <input
-                        type="text"
-                        value={item.description || ''}
-                        onChange={(e) => handleItemChange(index, 'description', e.target.value, 'items')}
-                      />
-                    </div>
+                    {/* --- MACHINES TABLE --- */}
+                    <div className="breaker-btw-section"></div>
+                    <strong className="job-items-title">Machines:</strong>
+                    {Array.isArray(item.machine) && item.machine.length > 0 ? (
+                      <div className="job-items-container-ed">
+                        <div className="machine-table-wrapper">
+                          <table className="machine-table">
+                            <thead>
+                              <tr>
+                                <th>Machine Name</th>
+                                <th>Machine ID</th>
+                                <th>Usage Time</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
 
-                    <div className="form-group">
-                      <label>Estimated Man Hours</label>
-                      <input
-                        type="number"
-                        value={item.estimatedManHours || ''}
-                        placeholder={item.estimatedManHours}
-                        onChange={(e) => handleManHoursChange(index, e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Machines Required</label>
-
-                      {item.machine.map((m, machineIndex) => (
-                        <div key={machineIndex} style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
-
-                          <select
-                            value={m.machineRequired?._id || ""}
-                            onChange={(e) =>
-                              handleMachineRequiredChange(index, machineIndex, e.target.value)
-                            }
-                          >
-                            <option value="">
-                              {m.machineRequired?.name || m.machineRequired}
-                            </option>
-
-                            {machines.map(machine => (
-                              <option key={machine._id} value={machine._id}>
-                                {machine.name}
-                              </option>
-                            ))}
-                          </select>
-
-                          <input
-                            type="number"
-                            placeholder="Hours"
-
-                            onChange={(e) =>
-                              handleMachineHoursChange(index, machineIndex, e.target.value)
-                            }
-                          />
-
+                            <tbody>
+                              {item.machine.map((m, mi) => (
+                                <MachineSupTimer
+                                  key={m.machineRequired?._id || mi}
+                                  machine={m}
+                                  selectedJobStatus={editFormData.status}
+                                  onRemoveMachine={(machineId) =>
+                                    handleRemoveMachine(
+                                      editFormData.id,
+                                      item.itemId,
+                                      machineId
+                                    )
+                                  }
+                                />
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      ))}
-
-                      <button
-                        type="button"
-                        className="btn-add-machine"
-                        onClick={() => addMachineToItem(index)}
-                        style={{ marginTop: "6px" }}
-                      >
-                        ➕ Add Another Machine
-                      </button>
-                    </div>
-
-
-
-
-                    <div className="form-group">
-                      <label>Consumables</label>
-                      {item.consumable?.map((cons, ci) => (
-                        <div key={ci} className="consumable-row">
-                          <select
-                            value={cons.name}
-                            onChange={(e) => handleConsumableSelect(index, ci, e.target.value)}
-                          >
-                            <option value="">-- Select Consumable --</option>
-                            {consumables.map(c => (
-                              <option key={c._id} value={c.name}>
-                                {c.name} — ${c.price}
-                              </option>
-                            ))}
-                          </select>
-                          <span className="consumable-price">
-                            {cons.price ? `$${cons.price}` : '—'}
-                          </span>
-                          <button
-                            type="button"
-                            className="btn-remove"
-                            onClick={() => removeConsumable(index, ci)}
-                          >
-                            ❌
-                          </button>
-                        </div>
-                      ))}
-
-                      <button
-                        type="button"
-                        className="btn-add-job"
-                        onClick={() => addConsumable(index)}
-                      >
-                        + Add Consumable
-                      </button>
-                    </div>
-
-
-
-
-                    <div className="form-group">
-                      {/* <label>Estimated Price ($)</label> */}
-                      <label>Estimated Price</label>
-                      <input
-                        type="number"
-                        value={item.estimatedPrice || ''}
-                        onChange={(e) => handleItemChange(index, 'estimatedPrice', parseFloat(e.target.value) || 0, 'items')}
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      className="btn-remove"
-                      onClick={() => removeItem(index, 'items')}
-                      disabled={editFormData.items.length === 1}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666' }}>
+                        No machines in this task
+                      </p>
+                    )}
+                    <select
+                      className="edit-modal-employee-select"
+                      value=""
+                      onChange={(e) => {
+                        const selectedMachineId = e.target.value;
+                        if (selectedMachineId) {
+                          handleMachineSelect(editFormData.id, index, selectedMachineId);
+                        }
+                      }}
+                      disabled={
+                        item.itemStatus === 'completed' ||
+                        item.itemStatus === 'approved' ||
+                        editFormData.status === 'approved' ||
+                        editFormData.status === 'completed'
+                      }
                     >
-                      ✕
-                    </button>
+                      <option value="">Add Machine</option>
+
+                      {machines
+                        .filter(mac =>
+                          !Array.isArray(item.machine) ||
+                          !item.machine.some(
+                            m => String(m.machineRequired?._id) === String(mac._id)
+                          )
+                        )
+                        .map(mac => (
+                          <option key={mac._id} value={mac._id}>
+                            {mac.name} — {mac.type}
+                          </option>
+                        ))}
+                    </select>
+
+
+                    {/* --- CONSUMABLES TABLE --- */}
+                    <div className="job-items-container-ed">
+                      <div className="breaker-btw-section"></div>
+                      <strong className="job-items-title">Consumables:</strong>
+
+                      {Array.isArray(item.consumable) && item.consumable.length > 0 ? (
+                        <div className="sdconsumable-table-wrapper">
+                          <table className="consumable-table">
+                            <thead>
+                              <tr>
+                                <th>Sl No.</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Used</th>
+                                <th>Action</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              {item.consumable.map((c, ci) => (
+                                <tr key={ci}>
+                                  <td>{ci + 1}</td>
+                                  <td>{c.name}</td>
+                                  <td>${c.price}</td>
+                                  <td>{c.numberOfUsed || 0}</td>
+                                  <td>
+                                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={c.numberOfUsed || 0}
+                                        onChange={(e) =>
+                                          updateConsumableLocal(index, ci, e.target.value)
+                                        }
+                                      />
+
+                                      <button
+                                        type="button"
+                                        className="worker-btn"
+                                        onClick={() =>
+                                          submitConsumableQuantity(
+                                            editFormData.id,
+                                            item.itemId,
+                                            c.consumableRef,
+                                            c.numberOfUsed
+                                          )
+                                        }
+                                      >
+                                        Save
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        className="worker-btn stop"
+                                        onClick={() =>
+                                          handleRemoveConsumable(
+                                            editFormData.id,
+                                            item.itemId,
+                                            c.consumableRef,
+                                            index
+                                          )
+                                        }
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '13px', color: '#a0aec0', fontStyle: 'italic' }}>
+                          No consumables added.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* ADD CONSUMABLE SELECT */}
+                    <select
+                      className="edit-modal-employee-select"
+                      defaultValue=""
+                      onChange={(e) => {
+                        const consumableId = e.target.value;
+                        if (consumableId) {
+                          handleAddConsumable(index, consumableId);
+                          e.target.value = "";
+                        }
+                      }}
+                      disabled={
+                        editFormData.status === 'completed' ||
+                        editFormData.status === 'approved'
+                      }
+                    >
+                      <option value="">Add Consumable</option>
+
+                      {consumables
+                        .filter(co =>
+                          !item.consumable?.some(
+                            c => String(c.consumableRef) === String(co._id)
+                          )
+                        )
+                        .map(co => (
+                          <option key={co._id} value={co._id}>
+                            {co.name} — ${co.price}
+                          </option>
+                        ))}
+                    </select>
+
+
+                    <div className="breaker-btw-section"></div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        {/* <label>Estimated Price ($)</label> */}
+                        <label>Estimated Price</label>
+                        <input
+                          type="number"
+                          value={item.estimatedPrice || ''}
+                          disabled
+                          className="readonly-input"
+                          onChange={(e) => handleItemChange(index, 'estimatedPrice', parseFloat(e.target.value) || 0, 'items')}
+                        />
+                      </div>
+                      <div className="form-group">
+                        {/* Implement the system to calculate the actual price with the actual data from the database*/}
+                        <label>Actual Price(To Be implemented)</label>
+                        <input
+                          type="number"
+                          value={item.estimatedPrice || ''}
+                          disabled
+                          className="readonly-input"
+                          onChange={(e) => handleItemChange(index, 'estimatedPrice', parseFloat(e.target.value) || 0, 'items')}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row-footer">
+                      <button
+                        type="button"
+                        className="btn-remove"
+                        onClick={() => removeItem(index, 'items')}
+                        disabled={editFormData.items.length === 1}
+                      >
+                        ✕
+                      </button>
+                      <button type="button" className="btn-add-job" onClick={() => addItem('items')}>+ Add Task</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -856,8 +1385,8 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
             </form>
           )}
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 
@@ -938,6 +1467,7 @@ function SupervisorDashboard({ onLogout }) {
         const transformedJobs = res.data.allJobs.map(job => ({
           id: job._id,
           jobCardNumber: job.jobCardNumber,
+          customerIDNumber: job.customerIDNumber,
           customer_name: job.formData?.customer_name || '',
           vehicle_number: job.formData?.vehicle_number || '',
           engine_number: job.formData?.engine_number || '',
@@ -955,35 +1485,35 @@ function SupervisorDashboard({ onLogout }) {
           totalEstimatedAmount: job.totalEstimatedAmount || 0,
           actualTotalAmount: job.actualTotalAmount || 0,
           items: job.jobItems?.map(item => {
-
-
-            // Determine status from backend timestamps
-            const computedStatus = item.status || 'pending';
-
+            const aw = item.allowedWorkers?.[0] || {};
             return {
               itemId: item._id,
               jobType: item.itemData?.job_type || '',
               description: item.itemData?.description || '',
               priority: item.itemData?.priority || '',
               estimatedPrice: item.estimatedPrice || 0,
-              numberOfWorkers: item.numberOfWorkers || 1,
-              category: item.category,
-              estimatedManHours: item.estimatedManHours,
-              totalEstimatedAmount: item.totalEstimatedAmount || 0,
-              actualTotalAmount: item.actualTotalAmount || 0,
-              itemStatus: computedStatus,   // but computedStatus = item.status now
 
-              machine: Array.isArray(item.machine) ?
-                item.machine.map(machine => ({
-                  machineRequired: machine.machineRequired
+              allowedWorkers: item.allowedWorkers || [],
+              category: aw.category,
+              numberOfWorkers: aw.numberOfWorkers || 1,
+              estimatedManHours: aw.estimatedManHours || 0,
+
+              itemStatus: item.status || 'pending',
+
+              machine: Array.isArray(item.machine)
+                ? item.machine.map(m => ({
+                  machineRequired: m.machineRequired
                     ? {
-                      _id: machine.machineRequired._id,
-                      name: machine.machineRequired.name
+                      _id: m.machineRequired._id,
+                      name: m.machineRequired.name
                     }
                     : null,
-                  startTime: machine.startTime || null,
-                  endTime: machine.endTime || null,
-                  actualDuration: machine.actualDuration || null
+                  startTime: m.startTime,
+                  endTime: m.endTime,
+                  actualDuration: m.actualDuration,
+                  machineHours: m.machineHours || 0,
+                  machineHourlyRate: m.machineHourlyRate || 0,
+                  machineEstimatedCost: m.machineEstimatedCost || 0
                 }))
                 : [],
 
@@ -996,16 +1526,15 @@ function SupervisorDashboard({ onLogout }) {
                 }))
                 : [],
 
-
               consumable: Array.isArray(item.consumable)
-                ? item.consumable
-                  .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
-                  .map(c => ({
-                    name: c.name.trim(),
-                    price: c.price,
-                    available: c.available,
-                  }))
-                : []
+                ? item.consumable.map(c => ({
+                  consumableRef: c.consumableRef,
+                  name: c.name,
+                  price: c.price,
+                  numberOfUsed: c.numberOfUsed || 0,
+                  available: c.available ?? true
+                }))
+                : [],
             };
           }) || []
 
@@ -1050,19 +1579,54 @@ function SupervisorDashboard({ onLogout }) {
     }
   }, [jobs, selectedJob?.id]);
 
-  const handleEmployeeSelect = (jobId, employeeId) => {
-    setJobs(prevJobs => prevJobs.map(job => {
-      if (job.id === jobId) {
-        const employee = employees.find(e => e.id === employeeId);
-        const hasRunningTask = job.items.some(item => item.itemStatus === 'running');
-        if (hasRunningTask) {
-          alert('Cannot change assigned employee while a job task is running. Please ask the employee to pause first, or use the Edit Job function to reset timers.');
-          return job;
-        }
-        return { ...job, assignedEmployee: employee, status: (job.status === 'Not Assigned' && employee) ? 'Assigned' : job.status };
+  const handleEmployeeSelect = async (jobId, itemIndex, employeeId) => {
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
+
+    const item = job.items[itemIndex];
+    if (!item) return;
+
+    const maxWorkers =
+      item.numberOfWorkers || 1;
+
+    if (item.workers.length >= maxWorkers) {
+      alert(`Only ${maxWorkers} worker(s) allowed for this task`);
+      return;
+    }
+
+    try {
+      const res = await axios.put(
+        `/jobs/assign-worker/${employeeId}/${jobId}/${item.itemId}`
+      );
+
+      if (res.data.success) {
+        setJobs(prev =>
+          prev.map(j => {
+            if (j.id !== jobId) return j;
+
+            const updatedItems = [...j.items];
+            updatedItems[itemIndex] = {
+              ...item,
+              workers: [
+                ...item.workers,
+                {
+                  workerAssigned: employeeId,
+                  startTime: null,
+                  endTime: null,
+                  actualDuration: null
+                }
+              ],
+              itemStatus: 'pending'
+            };
+
+            return { ...j, items: updatedItems };
+          })
+        );
       }
-      return job;
-    }));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to assign worker");
+    }
   };
 
   const filteredJobs = jobs.filter(job => job.id.toLowerCase().includes(searchQuery.toLowerCase()) || job.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) || job.vehicle_number.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -1202,7 +1766,25 @@ function SupervisorDashboard({ onLogout }) {
     }
   };
 
+  const StatusLabelMap = {
+    waiting: "Waiting",
+    pending: "Pending",
+    in_progress: "In Progress",
+    completed: "Completed",
+    approved: "Approved",
+    rejected: "Rejected",
+    supapproved: "Supervisor Approved",
+  };
 
+  const StatusLabelMap1 = {
+    waiting: "Waiting",
+    pending: "Pending",
+    in_progress: "Progress",
+    completed: "Completed",
+    approved: "Approved",
+    rejected: "Rejected",
+    supapproved: "Supervisor Approved",
+  };
 
 
   return (
@@ -1241,7 +1823,7 @@ function SupervisorDashboard({ onLogout }) {
                     <span className="job-number">
                       {`Job-${job.jobCardNumber?.split("-").pop()}`}
                     </span>
-                    <span className={`status-badge ${job.status === 'In Progress' ? 'status-progress' : job.status === 'Completed' ? 'status-completed' : job.status === 'Assigned' ? 'status-assigned-active' : 'status-assigned'}`}>{job.status}</span>
+                    <span className={`status-badge status-${job.status}`}>{StatusLabelMap[job.status]}</span>
                   </div>
                   <p className="job-owner">{job.customer_name}</p>
                   <div className="job-details">
@@ -1286,12 +1868,8 @@ function SupervisorDashboard({ onLogout }) {
                     <div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
                     <div>
                       <strong>Status:</strong>
-                      <span className={`status-badge ${selectedJob.status === 'in_progress' ? 'status-progress' :
-                          selectedJob.status === 'completed' ? 'status-completed' :
-                            selectedJob.status === 'Assigned' ? 'status-assigned-active' :
-                              'status-assigned'
-                        }`}>
-                        {selectedJob.status}
+                      <span className={`status-badge status-${selectedJob.status}`}>
+                        {StatusLabelMap[selectedJob.status]}
                       </span>
                     </div>
 
@@ -1312,7 +1890,7 @@ function SupervisorDashboard({ onLogout }) {
                                 <div className="item-description">{item.description}</div>
                                 <div className="item-description">Priority: {item.priority}</div>
                                 <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
-                                <div className="item-status-badge">Status: <strong>{item.itemStatus}</strong></div>
+                                <div className='item-description'>Status: <span className={`status-badge status-${item.itemStatus}`}>{StatusLabelMap1[item.itemStatus]}</span></div>
                               </div>
 
                               {/*Notes to be displayed here if Notes is not NULL*/}
@@ -1418,7 +1996,7 @@ function SupervisorDashboard({ onLogout }) {
                               onChange={(e) => {
                                 const selectedEmployeeId = e.target.value;
                                 if (selectedEmployeeId) {
-                                  handleEmployeeSelect(selectedJob.id, index, selectedEmployeeId);
+                                  handleEmployeeSelect(editFormData.id, index, selectedEmployeeId);
                                 }
                               }}
                               disabled={
@@ -1435,8 +2013,10 @@ function SupervisorDashboard({ onLogout }) {
 
                               {employees
                                 .filter(emp => emp.specialization === item.category)
-
-                                .filter(emp => !item.workers.some(w => w.workerAssigned === emp._id))
+                                .filter(emp =>
+                                  !Array.isArray(item.workers) ||
+                                  !item.workers.some(w => String(w.workerAssigned) === String(emp._id))
+                                )
                                 .map(emp => (
                                   <option key={emp._id} value={emp._id}>
                                     {emp.name} {emp.employeeNumber} — {emp.specialization}
