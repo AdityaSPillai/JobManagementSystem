@@ -8,7 +8,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     name: '',
     machineId: '',
     type: '',
-    hourlyRate:0,
+    hourlyRate: 0,
     status: 'true',  // Fixed: matches dropdown options
     purchaseDate: '',
     lastMaintenanceDate: '',
@@ -37,7 +37,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
       setFormData(prev => ({
         ...prev,
         [name]: value,
-        hourlyRate: selectedCategory?.hourlyRate || 0 
+        hourlyRate: selectedCategory?.hourlyRate || 0
       }));
     } else {
       setFormData(prev => ({
@@ -47,9 +47,9 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     }
   };
 
- const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData); 
+    onSubmit(formData);
     onClose();
     setFormData({
       name: '',
@@ -64,13 +64,13 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     });
   };
 
- if (!isVisible) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Machine</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> <span className="add-employee">Add New Machine</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -94,14 +94,14 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
 
             <div className="form-group">
               <label>Hourly Rate (auto-filled) *</label>
-              <input 
-                type="number" 
-                value={formData.hourlyRate || 0} 
-                readOnly 
+              <input
+                type="number"
+                value={formData.hourlyRate || 0}
+                readOnly
                 style={{ backgroundColor: "#f3f3f3" }}
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="machineId">Machine ID *</label>
               <input type="text" id="machineId" name="machineId" value={formData.machineId} onChange={handleChange} required />
@@ -135,66 +135,66 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
             <div className='form-group'>
               <label htmlFor="hsCode">HS Code</label>
               <input type="text" id="hsCode" name="hsCode" value={formData.hsCode} onChange={handleChange} />
-          </div>
+            </div>
             <div className='form-group'>
-                <label htmlFor="brand">Brand *</label>
-                <input type="text" id="brand" name="brand" value={formData.brand} onChange={handleChange} required />
-              </div>
+              <label htmlFor="brand">Brand *</label>
+              <input type="text" id="brand" name="brand" value={formData.brand} onChange={handleChange} required />
+            </div>
             <div className='form-group'>
               <label htmlFor="countryOfOrigin">Country of Origin *</label>
-                <input type="date" id="countryOfOrigin" name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} required />
-                </div>
-              <div className='form-group'>
-                <label htmlFor="modelNumber">Model Number *</label>
-                <input type="text" id="modelNumber" name="modelNumber" value={formData.modelNumber} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
-                <label htmlFor="modelYear">Model Year *</label>
-                <input type="date" id="modelYear" name="modelYear" value={formData.modelYear} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
-                <label htmlFor="assetType">Asset Type *</label>
-                <input type="text" id="assetType" name="assetType" value={formData.assetType} onChange={handleChange} required />
-                </div>
-              <div className='form-group'>
-                  <label htmlFor="assetValue">Asset Value *</label>
-                  <input type="number" id="assetValue" name="assetValue" value={formData.assetValue} onChange={handleChange} required />
-                </div>
-                <div className='form-group'>
-                  <label htmlFor="landedCost">Landed Cost</label>
-                  <input type="number" id="landedCost" name="landedCost" value={formData.landedCost} onChange={handleChange} />
-                  </div>
-                <div className='form-group'>
-                  <label htmlFor="installationCost">Installation Cost</label>
-                  <input type="number" id="installationCost" name="installationCost" value={formData.installationCost} onChange={handleChange} />
-                  </div>
-                <div className='form-group'>
-                    <label htmlFor="capitalizedValue">Capitalized Value</label>
-                    <input type="number" id="capitalizedValue" name="capitalizedValue" value={formData.capitalizedValue} onChange={handleChange} />
-                    </div>
-                  <div className='form-group'>
-                    <label htmlFor="limeTime">Lime Time</label>
-                    <input type="number" id="limeTime" name="limeTime" value={formData.limeTime} onChange={handleChange} />
-                    </div>
-                  <div className='form-group'>
-                    <label htmlFor="depreciationPeriod">Depreciation Period</label>
-                    <input type="number" id="depreciationPeriod" name="depreciationPeriod" value={formData.depreciationPeriod} onChange={handleChange} />
-                    </div>
-                  </div>
-                            <button type="submit" className="btn-submit">Add Machine</button>
-
-                  </form>
+              <input type="date" id="countryOfOrigin" name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="modelNumber">Model Number *</label>
+              <input type="text" id="modelNumber" name="modelNumber" value={formData.modelNumber} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="modelYear">Model Year *</label>
+              <input type="date" id="modelYear" name="modelYear" value={formData.modelYear} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="assetType">Asset Type *</label>
+              <input type="text" id="assetType" name="assetType" value={formData.assetType} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="assetValue">Asset Value *</label>
+              <input type="number" id="assetValue" name="assetValue" value={formData.assetValue} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="landedCost">Landed Cost</label>
+              <input type="number" id="landedCost" name="landedCost" value={formData.landedCost} onChange={handleChange} />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="installationCost">Installation Cost</label>
+              <input type="number" id="installationCost" name="installationCost" value={formData.installationCost} onChange={handleChange} />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="capitalizedValue">Capitalized Value</label>
+              <input type="number" id="capitalizedValue" name="capitalizedValue" value={formData.capitalizedValue} onChange={handleChange} />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="limeTime">Lime Time</label>
+              <input type="number" id="limeTime" name="limeTime" value={formData.limeTime} onChange={handleChange} />
+            </div>
+            <div className='form-group'>
+              <label htmlFor="depreciationPeriod">Depreciation Period</label>
+              <input type="number" id="depreciationPeriod" name="depreciationPeriod" value={formData.depreciationPeriod} onChange={handleChange} />
+            </div>
           </div>
+          <button type="submit" className="btn-submit">Add Machine</button>
+
+        </form>
       </div>
+    </div>
   );
 }
 
 function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCategories }) {
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     machineId: '',
     type: '',
-    hourlyRate:0,
+    hourlyRate: 0,
     status: 'true',  // Fixed: matches dropdown options
     purchaseDate: '',
     lastMaintenanceDate: '',
@@ -283,7 +283,7 @@ const [formData, setFormData] = useState({
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Machine</span> </h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="add-employee">Edit Machine</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -334,55 +334,55 @@ const [formData, setFormData] = useState({
             <div className='form-group'>
               <label htmlFor="supplier">Supplier *</label>
               <input type="text" id="supplier" name="supplier" value={formData.supplier} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="hsCode">HS Code </label>
               <input type="text" id="hsCode" name="hsCode" value={formData.hsCode} onChange={handleChange} />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="brand">Brand *</label>
               <input type="text" id="brand" name="brand" value={formData.brand} onChange={handleChange} />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="countryOfOrigin">Country of Origin* </label>
               <input type="text" id="countryOfOrigin" name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="modelNumber">Model Number *</label>
               <input type="text" id="modelNumber" name="modelNumber" value={formData.modelNumber} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="modelYear">Model Year *</label>
               <input type="text" id="modelYear" name="modelYear" value={formData.modelYear} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="assetType">Asset Type *</label>
-              <input type="text" id="assetType" name="assetType" value={formData.assetType} onChange={handleChange} required/>
-              </div>
-              <div className='form-group'>
+              <input type="text" id="assetType" name="assetType" value={formData.assetType} onChange={handleChange} required />
+            </div>
+            <div className='form-group'>
               <label htmlFor="assetValue">Asset Value *</label>
               <input type="number" id="assetValue" name="assetValue" value={formData.assetValue} onChange={handleChange} required />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="landedCost">Landed Cost</label>
               <input type="number" id="landedCost" name="landedCost" value={formData.landedCost} onChange={handleChange} />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="installationCost">Installation Cost</label>
               <input type="number" id="installationCost" name="installationCost" value={formData.installationCost} onChange={handleChange} />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="capitalizedValue">Capitalized Value</label>
               <input type="number" id="capitalizedValue" name="capitalizedValue" value={formData.capitalizedValue} onChange={handleChange} />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="limeTime">Lime Time</label>
               <input type="number" id="limeTime" name="limeTime" value={formData.limeTime} onChange={handleChange} />
-              </div>
-              <div className='form-group'>
+            </div>
+            <div className='form-group'>
               <label htmlFor="depreciationPeriod">Depreciation Period</label>
               <input type="number" id="depreciationPeriod" name="depreciationPeriod" value={formData.depreciationPeriod} onChange={handleChange} />
-              </div>
+            </div>
           </div>
           <button type="submit" className="btn-submit">Save Changes</button>
         </form>
@@ -419,7 +419,7 @@ function MachinesTab() {
       if (res.data.success) {
         alert("Machine updated successfully!");
         fetchMachines();
-        
+
       } else {
         alert(res.data.message || "Failed to update machine.");
       }
@@ -472,20 +472,20 @@ function MachinesTab() {
       setError('Shop ID not found.');
       return;
     }
-    
+
     try {
       console.log('🔄 Fetching machines for shopId:', shopId);
       setLoading(true);
       setError('');
-      
+
       const res = await axios.get(`/shop/getAllMachines/${shopId}`);
-      
+
       // Debug logging
-    
-      
+
+
       if (res.data.success && Array.isArray(res.data.machines)) {
         setMachines(res.data.machines);
-        
+
         if (res.data.machines.length === 0) {
           setError('No machines found. Add your first machine!');
         }
@@ -505,8 +505,8 @@ function MachinesTab() {
     try {
       const payload = { ...machineData, userId, shopId };
       const res = await axios.post('/machine/create-machiene', payload);
-      
-      
+
+
       if (res.data.success) {
         console.log('✅ Machine added successfully');
         await fetchMachines(); // refresh list
@@ -521,7 +521,7 @@ function MachinesTab() {
 
   // Fetch machines when shopId is available
   useEffect(() => {
- 
+
     if (shopId) {
       fetchMachines();
 
@@ -553,139 +553,139 @@ function MachinesTab() {
         <p>No machines found. Click "Add New Machine" to get started!</p>
       ) : (
         <div
-  style={{
-    maxHeight: "60vh",
-    overflowY: "auto",
-    borderRadius: "12px"
-  }}
->
-  <div style={{ overflowX: "auto" }}>
-    <table className="modern-table">
-      <thead>
-        <tr>
-          <th>Machine Name</th>
-          <th>Machine ID</th>
-          <th>Category</th>
-          <th>Hourly Rate</th>
-          <th>Supplier</th>
-          <th>Brand</th>
-          <th>Status</th>
-          <th>Purchase Date</th>
-          <th>Last Maintenance</th>
-          <th>Next Maintenance</th>
-          <th>COF</th>
-          <th>Model No.</th>
-          <th>Model Year</th>
-          <th>Asset Type</th>
-          <th>Asset Value</th>
-          <th>Landed Cost</th>
-          <th>Installation Cost</th>
-          <th>Capitalized Value</th>
-          <th>Lime Time</th>
-          <th>Depreciation Period</th>
-          <th className="th-actions">Actions</th>
-        </tr>
-      </thead>
+          style={{
+            maxHeight: "60vh",
+            overflowY: "auto",
+            borderRadius: "12px"
+          }}
+        >
+          <div style={{ overflowX: "auto" }}>
+            <table className="modern-table">
+              <thead>
+                <tr>
+                  <th>Machine Name</th>
+                  <th>Machine ID</th>
+                  <th>Category</th>
+                  <th>Hourly Rate</th>
+                  <th>Supplier</th>
+                  <th>Brand</th>
+                  <th>Status</th>
+                  <th>Purchase Date</th>
+                  <th>Last Maintenance</th>
+                  <th>Next Maintenance</th>
+                  <th>COF</th>
+                  <th>Model No.</th>
+                  <th>Model Year</th>
+                  <th>Asset Type</th>
+                  <th>Asset Value</th>
+                  <th>Landed Cost</th>
+                  <th>Installation Cost</th>
+                  <th>Capitalized Value</th>
+                  <th>Lime Time</th>
+                  <th>Depreciation Period</th>
+                  <th className="th-actions">Actions</th>
+                </tr>
+              </thead>
 
-      <tbody>
-        {machines.map((machine) => (
-          <tr key={machine._id}>
-            <td>
-              <span className="table-primary-text">{machine.name}</span>
-            </td>
+              <tbody>
+                {machines.map((machine) => (
+                  <tr key={machine._id}>
+                    <td>
+                      <span className="table-primary-text">{machine.name}</span>
+                    </td>
 
-            <td>{machine.machineId || "N/A"}</td>
+                    <td>{machine.machineId || "N/A"}</td>
 
-            <td>
-              <span className="badge-rate">
-                {machine.type}
-              </span>
-            </td>
+                    <td>
+                      <span className="badge-rate">
+                        {machine.type}
+                      </span>
+                    </td>
 
-            <td>
-              <span className="badge-rate">
-                ₹{machine.hourlyRate || 0}/hr
-              </span>
-            </td>
+                    <td>
+                      <span className="badge-rate">
+                        ₹{machine.hourlyRate || 0}/hr
+                      </span>
+                    </td>
 
-            <td>{machine.supplier || "—"}</td>
+                    <td>{machine.supplier || "—"}</td>
 
-            <td>{machine.brand || "—"}</td>
+                    <td>{machine.brand || "—"}</td>
 
-            <td>
-              {machine.status ? (
-                <span
-                  className="badge-rate"
-                  style={{ background: "#c6f6d5", color: "#22543d" }}
-                >
-                  Available
-                </span>
-              ) : (
-                <span
-                  className="badge-rate"
-                  style={{ background: "#fed7d7", color: "#c53030" }}
-                >
-                  Offline
-                </span>
-              )}
-            </td>
+                    <td>
+                      {machine.status ? (
+                        <span
+                          className="badge-rate"
+                          style={{ background: "#c6f6d5", color: "#22543d" }}
+                        >
+                          Available
+                        </span>
+                      ) : (
+                        <span
+                          className="badge-rate"
+                          style={{ background: "#fed7d7", color: "#c53030" }}
+                        >
+                          Offline
+                        </span>
+                      )}
+                    </td>
 
-            <td>
-              {machine.purchaseDate
-                ? machine.purchaseDate.split("T")[0]
-                : "N/A"}
-            </td>
+                    <td>
+                      {machine.purchaseDate
+                        ? machine.purchaseDate.split("T")[0]
+                        : "N/A"}
+                    </td>
 
-            <td>
-              {machine.lastMaintenanceDate
-                ? machine.lastMaintenanceDate.split("T")[0]
-                : "N/A"}
-            </td>
+                    <td>
+                      {machine.lastMaintenanceDate
+                        ? machine.lastMaintenanceDate.split("T")[0]
+                        : "N/A"}
+                    </td>
 
-            <td>
-              {machine.nextMaintenanceDate
-                ? machine.nextMaintenanceDate.split("T")[0]
-                : "N/A"}
-            </td>
-            <td>{machine.countryOfOrigin || "—"}</td>
-            <td>{machine.modelNumber || "—"}</td>
-            <td>
-              {machine.modelYear
-                ? machine.modelYear.split("T")[0]
-                : "N/A"}
-            </td>
-            <td>{machine.assetType || "—"}</td>
-            <td>₹{machine.assetValue || 0}</td>
-            <td>₹{machine.landedCost || 0}</td>
-            <td>₹{machine.installationCost || 0}</td>
-            <td>₹{machine.capitalizedValue || 0}</td>
-            <td>{machine.limeTime || 0}</td>
-            <td>{machine.depreciationPeriod || 0}</td>
-            
+                    <td>
+                      {machine.nextMaintenanceDate
+                        ? machine.nextMaintenanceDate.split("T")[0]
+                        : "N/A"}
+                    </td>
+                    <td>{machine.countryOfOrigin || "—"}</td>
+                    <td>{machine.modelNumber || "—"}</td>
+                    <td>
+                      {machine.modelYear
+                        ? machine.modelYear.split("T")[0]
+                        : "N/A"}
+                    </td>
+                    <td>{machine.assetType || "—"}</td>
+                    <td>₹{machine.assetValue || 0}</td>
+                    <td>₹{machine.landedCost || 0}</td>
+                    <td>₹{machine.installationCost || 0}</td>
+                    <td>₹{machine.capitalizedValue || 0}</td>
+                    <td>{machine.limeTime || 0}</td>
+                    <td>{machine.depreciationPeriod || 0}</td>
 
-            <td>
-              <div className="table-actions">
-                <button
-                  className="table-cta"
-                  onClick={() => handleEditClick(machine)}
-                >
-                  Edit
-                </button>
 
-                <button
-                  className="table-cta table-cta-danger"
-                  onClick={() => handleDeleteMachine(machine._id)}
-                >
-                  Remove
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          className="table-cta"
+                          onClick={() => handleEditClick(machine)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="table-cta table-cta-danger"
+                          onClick={() => handleDeleteMachine(machine._id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
       )}
 

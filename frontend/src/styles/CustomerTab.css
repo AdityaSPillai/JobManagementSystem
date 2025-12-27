@@ -104,7 +104,7 @@
   padding: 14px;
   margin-bottom: 12px;
   cursor: pointer;
-  color:black;
+  color: black;
   transition: all 0.2s ease;
 }
 
@@ -193,8 +193,8 @@
   cursor: pointer;
 }
 
-.modal-header-h4{
-    color: #2b6cb0;
+.modal-header-h4 {
+  color: #2b6cb0;
 }
 
 /* ================================

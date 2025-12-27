@@ -362,7 +362,7 @@
 .job-details-view .form-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 2px solid #e2e8f0;
@@ -610,6 +610,7 @@
     font-size: 22px;
     font-weight: 700;
     color: #2c5aa0;
+    margin-bottom: 0;
 }
 
 .btn-icon-left {
@@ -883,7 +884,9 @@
     font-weight: 500;
     cursor: pointer;
     font-size: 14px;
-    margin-bottom: 20px;
+    margin: 20px;
+    margin-left: 0;
+    padding-left: 0;
 }
 
 .supervisor-actions {
@@ -1054,24 +1057,12 @@
     }
 }
 
-.quality-buttons {
+.sdquality-buttons {
     display: flex;
     gap: 8px;
 }
 
-.quality-buttons button {
-    padding: 8px 16px;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-}
-
-.quality-buttons button:disabled {
+.sdquality-buttons button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     background: #e2e8f0;
@@ -1079,39 +1070,59 @@
     border-color: #e2e8f0;
 }
 
-.quality-buttons button:disabled img {
+.sdquality-buttons button:disabled img {
     filter: grayscale(1);
     opacity: 0.7;
 }
 
-.btn-good {
+.btn-success {
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    font-family: inherit;
     background: #f0fff4;
-    border-color: #9ae6b4;
+    border: 2px solid #9ae6b4;
     color: #276749;
 }
 
-.btn-good:hover:not(:disabled) {
+.btn-success:hover:not(:disabled) {
     background: #c6f6d5;
+    border-color: #9ae6b4;
 }
 
-.btn-good.active {
+.btn-success.active {
     background: #48bb78;
     color: white;
     border-color: #38a169;
 }
 
-.btn-good.active img {
+.btn-success.active img {
     filter: brightness(0) invert(1);
 }
 
 .btn-needs-work {
     background: #fff5f5;
-    border-color: #feb2b2;
+    border: 2px solid #feb2b2;
     color: #c53030;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    font-family: inherit;
 }
 
 .btn-needs-work:hover:not(:disabled) {
     background: #fed7d7;
+    border-color: #feb2b2;
 }
 
 .btn-needs-work.active {
@@ -1271,7 +1282,9 @@ rejected: D62839 red
 .worker-table-wrapper {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
-    overflow: hidden;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
     background: white;
     margin-top: 8px;
     color: black;
@@ -1352,4 +1365,15 @@ rejected: D62839 red
 .form-row-footer {
     display: flex;
     justify-content: space-between;
+}
+
+.cost-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.form-header-right {
+    display: flex;
+    gap: 8px;
 }

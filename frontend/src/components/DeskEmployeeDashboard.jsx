@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import '../styles/OwnerDashboard.css';
 import Header from './Header';
 import CustomerTab from './CustomerTab';

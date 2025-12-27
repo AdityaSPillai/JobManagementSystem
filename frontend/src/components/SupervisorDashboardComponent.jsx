@@ -12,6 +12,8 @@ import tickIcon from '../assets/tick.svg';
 import axios from "../utils/axios.js"
 import WorkerSupTimer from './TimerComponent/WorkerSupTimer.jsx';
 import MachineSupTimer from './TimerComponent/MachineSupTimer.jsx';
+import MachineViewTimer from './TimerComponent/MachineViewTimer.jsx';
+import WorkerViewTimer from './TimerComponent/WorkerViewTimer.jsx';
 
 function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete }) {
   const [selectedJobIdInternal, setSelectedJobIdInternal] = useState('');
@@ -166,8 +168,8 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                   }
                   : null,
                 machineHours: m.machineHours || 0,
-                machineHourlyRate: m.machineHourlyRate || 0,
-                machineEstimatedCost: m.machineEstimatedCost || 0
+                machineRate: m.machineRate || 0,
+                estimatedMachineHours: m.estimatedMachineHours || 0
               }))
               : [],
             consumable: Array.isArray(item.consumable)
@@ -1512,8 +1514,8 @@ function SupervisorDashboard({ onLogout }) {
                   endTime: m.endTime,
                   actualDuration: m.actualDuration,
                   machineHours: m.machineHours || 0,
-                  machineHourlyRate: m.machineHourlyRate || 0,
-                  machineEstimatedCost: m.machineEstimatedCost || 0
+                  machineRate: m.machineRate || 0,
+                  estimatedMachineCost: m.estimatedMachineCost || 0
                 }))
                 : [],
 
@@ -1766,6 +1768,44 @@ function SupervisorDashboard({ onLogout }) {
     }
   };
 
+  const calculateActualCost = (job) => {
+    if (!job || !Array.isArray(job.items)) return 0;
+
+    return job.items.reduce((jobTotal, item) => {
+      const hourlyRate =
+        item.allowedWorkers?.[0]?.hourlyRate || 0;
+
+      const workersCost = Array.isArray(item.workers)
+        ? item.workers.reduce((sum, worker) => {
+          const seconds = worker.actualDuration || 0;
+          const hours = seconds / 3600;
+          return sum + hours * hourlyRate;
+        }, 0)
+        : 0;
+
+      const machineCost = Array.isArray(item.machine)
+        ? item.machine.reduce((sum, machine) => {
+          const seconds = machine.actualDuration || 0;
+          const hours = seconds / 3600;
+          const rate = machine.machineRate || 0;
+          return sum + hours * rate;
+        }, 0)
+        : 0;
+
+      const consumablesCost = Array.isArray(item.consumable)
+        ? item.consumable.reduce((sum, c) => {
+          const price = c.price || 0;
+          const qty = c.numberOfUsed || 0;
+          return sum + price * qty;
+        }, 0)
+        : 0;
+      const itemTotal =
+        workersCost + machineCost + consumablesCost;
+
+      return jobTotal + itemTotal;
+    }, 0);
+  };
+
   const StatusLabelMap = {
     waiting: "Waiting",
     pending: "Pending",
@@ -1854,12 +1894,21 @@ function SupervisorDashboard({ onLogout }) {
             {showJobDetails && selectedJob && (
               <div className="job-details-view">
                 <div className="form-header">
-                  <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
-                  <button className="btn-action" onClick={openEditModalForSelected}><img src={editIcon} alt="Edit" className="btn-icon-left" /> Edit Job</button>
+                  <div className="form-header-left">
+                    <h3><img src={clipboardIcon} alt="Details" className="inline-icon" /> Job Details</h3>
+                    <span className="job-number-title">({selectedJob.jobCardNumber})</span>
+                  </div>
+                  <div className="form-header-right">
+                    <button className="btn-action" onClick={openEditModalForSelected}><img src={editIcon} alt="Edit" className="btn-icon-left" /> Edit Job</button>
+                    <button className="close-btn" onClick={() => {
+                      setShowJobDetails(false);
+                      setSelectedJob(null);
+                    }}>✕</button>
+                  </div>
                 </div>
                 <div className="job-detail-content">
-                  <div className="job-info-grid">
-                    <div><strong>Job Number:</strong> <span>{selectedJob.jobCardNumber}</span></div>
+                  <div className="job-info-grid-ed">
+                    <div><strong>Customer ID Number:</strong> <span>{selectedJob.customerIDNumber}</span></div>
                     <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div>
                     <div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div>
                     <div><strong>Model:</strong> <span>{selectedJob.vehicle_model || 'N/A'}</span></div>
@@ -1872,9 +1921,9 @@ function SupervisorDashboard({ onLogout }) {
                         {StatusLabelMap[selectedJob.status]}
                       </span>
                     </div>
-
                   </div>
-                  <div className="job-items-container">
+                  <div className="job-items-container-ed">
+                    <div className="breaker-btw-section"></div>
                     <strong className="job-items-title">Job Tasks:</strong>
                     {selectedJob.items.map((item, index) => (
 
@@ -1882,20 +1931,28 @@ function SupervisorDashboard({ onLogout }) {
                         <div className="job-detail-item">
                           <div className="item-header-row">
                             <div className="item-info">
-                              <div className="item-title">
-                                <strong>Job #{index + 1}</strong>
-                                {item.jobType && <span className="item-type">({item.jobType})</span>}
+                              <div className="item-info-header">
+                                <div className="item-title">
+                                  <strong>Job #{index + 1}</strong>
+                                  {item.jobType && <span className="item-type">({item.jobType})</span>}
+                                </div>
                               </div>
                               <div className="item-description-container">
                                 <div className="item-description">{item.description}</div>
                                 <div className="item-description">Priority: {item.priority}</div>
-                                <div className='item-description'>Estimated Man hours  : {item.estimatedManHours}</div>
-                                <div className='item-description'>Status: <span className={`status-badge status-${item.itemStatus}`}>{StatusLabelMap1[item.itemStatus]}</span></div>
+                                <div className='item-description'>Estimated Man hours : {item.estimatedManHours}</div>
+                                <div className='item-description'>No of Workers : {item.numberOfWorkers}</div>
+                                <div className='item-description'>Man Power Category : {item.category}</div>
+                                <div className="item-description">
+                                  Status: <span className={`status-badge status-${item.itemStatus}`}>{StatusLabelMap[item.itemStatus]}</span>
+                                </div>
+
                               </div>
 
                               {/*Notes to be displayed here if Notes is not NULL*/}
                               {item.notes && item.notes.trim() !== '' && (
-                                <div className="job-items-container">
+                                <div className="job-items-container-ed">
+                                  <div className="breaker-btw-section"></div>
                                   <strong className="job-items-title">Notes:</strong>
                                   <div className="full-width">
                                     <p className="job-notes-text">{item.notes}</p>
@@ -1904,171 +1961,161 @@ function SupervisorDashboard({ onLogout }) {
                               )}
 
                               {Array.isArray(item.machine) && item.machine.length > 0 && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Machines Used:</strong>
-                                  <div className="full-width">
-                                    {item.machine.map((m, mi) => (
-                                      <p key={mi} className='machine-name'>
-                                        <strong>Machine {mi + 1}:</strong> {m.machineRequired?.name || 'N/A'}
-                                        {m.actualDuration && (
-                                          <span style={{ marginLeft: '10px', color: '#666' }}>
-                                            (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
-                                          </span>
-                                        )}
-                                      </p>
-                                    ))}
+                                <div className="job-items-container-ed">
+                                  <div className="breaker-btw-section"></div>
+                                  <strong className="job-items-title">Machines:</strong>
+
+                                  <div className="machine-table-wrapper">
+                                    <table className="machine-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Name</th>
+                                          <th>Machine ID</th>
+                                          <th>Action</th>
+                                        </tr>
+                                      </thead>
+
+                                      <tbody>
+                                        {item.machine.map((m, mi) => (
+                                          <MachineViewTimer
+                                            key={m.machineId || mi}
+                                            machine={m}
+                                            selectedJobStatus={selectedJob.status}
+                                          />
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 </div>
                               )}
 
                               {item.consumable && item.consumable.length > 0 && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Consumables Used:</strong>
-                                  <div className="full-width">
-                                    {item.consumable.map((c, i) => (
-                                      <p key={i} style={{ color: 'black' }}>
-                                        {c.name} — ${c.price} {c.available ? "(Available)" : "(Not Available)"}
-                                      </p>
-                                    ))}
+                                <div className="job-items-container-ed">
+                                  <div className="breaker-btw-section"></div>
+                                  <strong className="job-items-title">Consumables:</strong>
+
+                                  <div className="consumable-table-wrapper">
+                                    <table className="consumable-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Sl No.</th>
+                                          <th>Name</th>
+                                          <th>Price</th>
+                                          <th>Used</th>
+                                        </tr>
+                                      </thead>
+
+                                      <tbody>
+                                        {item.consumable.map((c, i) => (
+                                          <tr key={i}>
+                                            <td>{i + 1}</td>
+
+                                            <td>{c.name}</td>
+
+                                            <td>${c.price}</td>
+
+                                            <td>{c.numberOfUsed}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 </div>
                               )}
-
                             </div>
-                            <br></br>
-                            <br></br>
                             {/* Workers list & per-worker timer controls */}
 
                           </div>
-                          <div className="full-width">
-                            <p className="employee-select-label"><strong>Assign Employee for this task:</strong></p>
-
+                          <div className="job-items-container-ed">
+                            <div className="breaker-btw-section"></div>
+                            <strong className="job-items-title">Workers:</strong>
 
                             {Array.isArray(item.workers) && item.workers.length > 0 ? (
-                              item.workers.map((w, wi) => (
-                                <div key={w._id || wi} className="item-timer-section">
-                                  <div className="worker-row">
-                                    <div className="worker-info">
-                                      <strong>Worker:</strong> { /* show name if you can resolve, else id */}
-                                      {employees.find(e => e._id === w.workerAssigned)?.name || w.workerAssigned} {employees.find(e => e._id === w.workerAssigned)?.employeeNumber || ''}
-                                    </div>
+                              <div className="worker-table-wrapper">
+                                <table className="worker-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Name</th>
+                                      <th>Worker ID</th>
+                                      <th>Start Time</th>
+                                      <th>End Time</th>
+                                      <th>Duration</th>
+                                    </tr>
+                                  </thead>
 
+                                  <tbody>
+                                    {item.workers.map((w, wi) => {
+                                      const employee = employees.find(
+                                        e => e._id === w.workerAssigned
+                                      );
 
-                                    {/* show actual duration if available */}
-                                    {w?.actualDuration != null && w.actualDuration > 0 && (
-                                      <div className="job-items-container">
-                                        <strong className="job-items-title">Actual Time Used:</strong>
-                                        <div className="full-width">
-                                          <p className='time'>
-                                            ⏱ {(() => {
-                                              const hours = Math.floor(w.actualDuration / 60);
-                                              const minutes = Math.floor(w.actualDuration % 60);
-                                              const seconds = Math.floor((w.actualDuration * 60) % 60);
-                                              if (minutes == 0 && hours == 0 || w.actualDuration < 1) {
-                                                return `Less Than A minute`;
-                                              }
-                                              return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                                            })()}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))
+                                      return (
+                                        <WorkerViewTimer
+                                          key={w._id || wi}
+                                          worker={w}
+                                          employee={employee}
+                                          jobId={selectedJob.id}
+                                          itemIndex={index}
+                                          selectedJobStatus={selectedJob.status}
+                                        />
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+
+                              </div>
                             ) : (
-                              <p style={{ color: '#666' }}>No workers assigned yet for this task</p>
-                            )}
-                            <div className="item-price">
-                              <p><strong>Estimated Price:</strong>
-                                ${(
-                                  (item.estimatedPrice || 0) +
-                                  (Array.isArray(item.consumable) ? item.consumable.reduce((sum, c) => sum + (c.price || 0), 0) : 0)
-                                ).toFixed(2)}
+                              <p style={{ color: '#666' }}>
+                                No workers assigned yet for this task
                               </p>
-                            </div>
-
-
-
-                            <select
-                              className="employee-select"
-                              value={''} // leave empty so user can add multiple workers; selection does not represent a single assigned worker
-                              onChange={(e) => {
-                                const selectedEmployeeId = e.target.value;
-                                if (selectedEmployeeId) {
-                                  handleEmployeeSelect(editFormData.id, index, selectedEmployeeId);
-                                }
-                              }}
-                              disabled={
-                                selectedJob.status === 'waiting' ||
-                                item.itemStatus === 'completed' ||
-                                item.itemStatus === 'approved' ||
-                                selectedJob.status === 'approved' ||
-                                selectedJob.status === 'completed' ||
-                                (Array.isArray(item.workers) && item.workers.length >= (item.numberOfWorkers || 1))
-                              }
-
-                            >
-                              <option value="">Select Employee</option>
-
-                              {employees
-                                .filter(emp => emp.specialization === item.category)
-                                .filter(emp =>
-                                  !Array.isArray(item.workers) ||
-                                  !item.workers.some(w => String(w.workerAssigned) === String(emp._id))
-                                )
-                                .map(emp => (
-                                  <option key={emp._id} value={emp._id}>
-                                    {emp.name} {emp.employeeNumber} — {emp.specialization}
-                                  </option>
-                                ))
-                              }
-
-                            </select>
+                            )}
                           </div>
                         </div>
-                        {selectedJob.status === 'completed' && (
-                          <div className="quality-buttons">
-                            <button
-                              className="btn-good"
-                              onClick={() => handleSupervisorApprove(selectedJob.id)}
-                            >
-                              ✅ Approve & Send to QAQC
-                            </button>
-                            <button
-                              className="btn-needs-work"
-                              onClick={() =>
-                                handleQualityBad(
-                                  selectedJob.id,
-                                  userInfo.id
-                                )
-                              }
-                            >
-                              ❌ Need Rework
-                            </button>
-                          </div>
-                        )}
-
                       </div>
                     ))}
                   </div>
+                  {selectedJob.status === 'completed' && (
+                    <div className="sdquality-buttons">
+                      <button
+                        className="btn-success"
+                        onClick={() => handleSupervisorApprove(selectedJob.id)}
+                      >
+                        ✅ Approve & Send to QAQC
+                      </button>
+                      <button
+                        className="btn-needs-work"
+                        onClick={() =>
+                          handleQualityBad(
+                            selectedJob.id,
+                            userInfo.id
+                          )
+                        }
+                      >
+                        ❌ Need Rework
+                      </button>
+                    </div>
+                  )}
 
 
-                  <div className="job-detail-total">
-                    <strong className="total-label">Total Estimated Amount:</strong>
-                    <strong className="total-amount">
-                      {selectedJob.totalEstimatedAmount !== undefined ? `$${selectedJob.totalEstimatedAmount.toFixed(2)}` : 'N/A'}
-                    </strong>
-
-                    {selectedJob.status.toLowerCase() == "approved" && (
-                      <>
+                  <div className="cost-wrapper">
+                    {selectedJob.status.toLowerCase() !== "waiting" ? (
+                      <div className="job-detail-total">
                         <strong className="total-label">Actual cost:</strong>
                         <strong className="total-amount">
-                          {selectedJob.actualTotalAmount !== undefined ? `$${selectedJob.actualTotalAmount.toFixed(2)}` : 'N/A'}
+                          ${calculateActualCost(selectedJob).toFixed(2)}
                         </strong>
-                      </>
+                      </div>
+                    ) : (
+                      <div>
+                        <p></p>
+                      </div>
                     )}
-
+                    <div className="job-detail-total">
+                      <strong className="total-label">Total Estimated Amount:</strong>
+                      <strong className="total-amount">
+                        ${(selectedJob?.totalEstimatedAmount || 0).toFixed(2)}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2077,7 +2124,6 @@ function SupervisorDashboard({ onLogout }) {
         </div>
       </div>
 
-      {/* Edit Job Modal */}
       <EditJobModal isOpen={showEditJobModal} onClose={() => setShowEditJobModal(false)} jobs={jobs} initialJobData={jobToEdit} onSave={handleUpdateJob} onDelete={handleDeleteJob} />
     </div>
   );

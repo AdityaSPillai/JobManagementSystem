@@ -5,7 +5,6 @@ export const logAction = (action, infoExtractor = null) => {
   return async (req, res, next) => {
     let logged = false;
 
-    // ---- WRAP RES BEFORE ANYTHING ----
     const oldJson = res.json.bind(res);
     res.json = function (data) {
       doLog(data).finally(() => oldJson(data));
@@ -17,23 +16,18 @@ export const logAction = (action, infoExtractor = null) => {
       let parsed = data;
       try {
         if (typeof data === "string") parsed = JSON.parse(data);
-      } catch {}
+      } catch { }
       doLog(parsed).finally(() => oldSend(data));
       return res;
     };
 
-    // --------------------------
-    // DOLOG FUNCTION
-    // --------------------------
     const doLog = async (payload) => {
       if (logged) return;
       logged = true;
 
       try {
-        // Only log successful responses
         if (payload?.success === false) return;
 
-        // READ USER ID CORRECTLY
         const userId =
           req.params.userId ||
           req.body.userId ||

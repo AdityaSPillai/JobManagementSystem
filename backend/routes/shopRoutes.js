@@ -94,8 +94,8 @@ router.get("/getAllJobs/:shopId", getAllShopJobsController);
 
 
 //get all serviceCategories
-router.get('/serviceCategories/:shopId',isManager,getServiceCategory)
-router.post('/serviceCategories/:shopId',isManager,logAction("CREATE_SERVICE_CATEGORY"),createServiceCategory )
+router.get('/serviceCategories/:shopId', isManager, getServiceCategory)
+router.post('/serviceCategories/:shopId', isManager, logAction("CREATE_SERVICE_CATEGORY"), createServiceCategory)
 router.put('/serviceCategories/:shopId/:categoryId', isOwner, logAction("ADD_LOG", req => ({ body: req.body })), updateServiceCategories);
 router.delete('/serviceCategories/:shopId/:categoryId', isOwner, logAction("ADD_LOG", req => ({ body: req.body })), deleteServiceCategories);
 

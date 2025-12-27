@@ -13,7 +13,7 @@ const shopSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  
+
   contactInfo: {
     phone: {
       type: String,
@@ -25,7 +25,7 @@ const shopSchema = new mongoose.Schema({
     },
     alternatePhone: String
   },
-  
+
   address: {
     street: {
       type: String,
@@ -45,7 +45,7 @@ const shopSchema = new mongoose.Schema({
     },
     landmark: String
   },
-  
+
   businessDetails: {
     registrationNumber: String,
     gstNumber: String,
@@ -53,50 +53,51 @@ const shopSchema = new mongoose.Schema({
     taxId: String
   },
 
-  services:[{
-    name:{
-      type:String,
-      required:true
+  services: [{
+    name: {
+      type: String,
+      required: true
     },
-    serviceCategory:{
-    type:String,
-  },
-    description:String,
-    note:String,
+    serviceCategory: {
+      type: String,
+    },
+    description: String,
+    note: String,
   }],
 
-  serviceCategory:[{
-    name:{
-      type:String,
-      required:true}
+  serviceCategory: [{
+    name: {
+      type: String,
+      required: true
+    }
   },
 
-],
-  
-  categories:[{
-     name:{
-       type:String,
-       required:true
-     },
-     hourlyRate:{
-       type:Number,
-       required:true,
-     },
-    role: {
-    type: String,
-    enum: ['worker', 'customer', 'qa_qc', 'desk_employee','supervisor'],
-    required: true
-  },
-   }],
+  ],
 
-  machineCategory:[{
-    name:{
-      type:String,
-      required:true
+  categories: [{
+    name: {
+      type: String,
+      required: true
     },
-    hourlyRate:{
-      type:Number,
-      required:true
+    hourlyRate: {
+      type: Number,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ['worker', 'customer', 'qa_qc', 'desk_employee', 'supervisor'],
+      required: true
+    },
+  }],
+
+  machineCategory: [{
+    name: {
+      type: String,
+      required: true
+    },
+    hourlyRate: {
+      type: Number,
+      required: true
     }
   }],
 
@@ -114,9 +115,9 @@ const shopSchema = new mongoose.Schema({
         type: Boolean,
         default: true
       },
-      unitOfMeasure:{
-        type:String,
-        default:""
+      unitOfMeasure: {
+        type: String,
+        default: ""
       },
       quantity: {
         type: Number,
@@ -129,19 +130,19 @@ const shopSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
-  
+
   rating: {
     type: Number,
     default: 0,
     min: 0,
     max: 5
   },
-  
+
   totalReviews: {
     type: Number,
     default: 0
   },
-  
+
   isActive: {
     type: Boolean,
     default: true
@@ -151,10 +152,10 @@ const shopSchema = new mongoose.Schema({
     type: Array,
     default: []
   },
-  
+
   logLimit: {
-      type: Number,
-      default: 1000
+    type: Number,
+    default: 1000
   }
 }, {
   timestamps: true
@@ -162,6 +163,6 @@ const shopSchema = new mongoose.Schema({
 
 
 
-const ShopModel= await mongoose.model("Shop",shopSchema)
+const ShopModel = await mongoose.model("Shop", shopSchema)
 
 export default ShopModel;

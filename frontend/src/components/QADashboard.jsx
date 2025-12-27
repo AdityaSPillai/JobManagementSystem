@@ -6,7 +6,7 @@ import Header from './Header.jsx';
 import userIcon from '../assets/user.svg';
 import calendarIcon from '../assets/calendar.svg';
 
-function QADashboard({onLogout}) {
+function QADashboard({ onLogout }) {
   const { userInfo } = useAuth();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -32,64 +32,64 @@ function QADashboard({onLogout}) {
           vehicle_model: job.formData?.vehicle_model || '',
           contact_number: job.formData?.contact_number || '',
           date: new Date(job.createdAt || Date.now()).toLocaleString('en-US', {
-            month: 'short', 
-            day: 'numeric', 
+            month: 'short',
+            day: 'numeric',
             year: 'numeric',
-            hour: '2-digit', 
+            hour: '2-digit',
             minute: '2-digit'
           }),
           status: job.status || 'Not Assigned',
           notes: (job.notes || ''),
           totalEstimatedAmount: job.totalEstimatedAmount || 0,
           items: job.jobItems?.map(item => {
-            
 
-              // Determine status from backend timestamps
-             const computedStatus = item.status || 'pending';
 
-              return {
-                itemId: item._id,
-                jobType: item.itemData?.job_type || '',
-                description: item.itemData?.description || '',
-                priority: item.itemData?.priority || '',
-                estimatedPrice: item.estimatedPrice || 0,
-                numberOfWorkers:item.numberOfWorkers || 1,
-                notes: item.notes || '',
-                category: item.category,
-                estimatedManHours: item.estimatedManHours,
-                itemStatus: computedStatus,   // but computedStatus = item.status now
-                 
-                machine: Array.isArray(item.machine) ?
-                item.machine.map(machine=>({
+            // Determine status from backend timestamps
+            const computedStatus = item.status || 'pending';
+
+            return {
+              itemId: item._id,
+              jobType: item.itemData?.job_type || '',
+              description: item.itemData?.description || '',
+              priority: item.itemData?.priority || '',
+              estimatedPrice: item.estimatedPrice || 0,
+              numberOfWorkers: item.numberOfWorkers || 1,
+              notes: item.notes || '',
+              category: item.category,
+              estimatedManHours: item.estimatedManHours,
+              itemStatus: computedStatus,   // but computedStatus = item.status now
+
+              machine: Array.isArray(item.machine) ?
+                item.machine.map(machine => ({
                   machineRequired: machine.machineRequired?.name || machine.machineRequired || null,
                   machineId: machine.machineRequired?._id || null,
                   startTime: machine.startTime || null,
                   endTime: machine.endTime || null,
                   actualDuration: machine.actualDuration || null
                 }))
-                :[],
-               
-               workers: Array.isArray(item.workers)
-                    ? item.workers.map(worker => ({
-                        workerAssigned: worker.workerAssigned,
-                        startTime: worker.startTime,
-                        endTime: worker.endTime,
-                        actualDuration: worker.actualDuration,
-                      }))
-                    : [],
+                : [],
 
-                
-                consumable: Array.isArray(item.consumable)
-                  ? item.consumable
-                      .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
-                      .map(c => ({
-                        name: c.name.trim(),
-                        price: c.price,
-                        available: c.available,
-                      }))
-                  : []
-              };
-            }) || []
+              workers: Array.isArray(item.workers)
+                ? item.workers.map(worker => ({
+                  workerAssigned: worker.workerAssigned,
+                  startTime: worker.startTime,
+                  endTime: worker.endTime,
+                  actualDuration: worker.actualDuration,
+                }))
+                : [],
+
+
+              consumable: Array.isArray(item.consumable)
+                ? item.consumable
+                  .filter(c => c.name && c.name.trim() !== "" && c.price > 0)
+                  .map(c => ({
+                    name: c.name.trim(),
+                    price: c.price,
+                    available: c.available,
+                  }))
+                : []
+            };
+          }) || []
 
         }));
         setJobs(transformedJobs);
@@ -130,7 +130,7 @@ function QADashboard({onLogout}) {
   // ACTIONS
   // -----------------------------
   const approveItem = async (jobId, itemId) => {
-     if (!selectedJob || selectedJob.status !== 'supapproved') return;
+    if (!selectedJob || selectedJob.status !== 'supapproved') return;
     console.log("Marking item as Good:", jobId, itemId);
 
     try {
@@ -145,10 +145,10 @@ function QADashboard({onLogout}) {
       }
 
 
-    setJobs(prev =>
-      prev.map(job =>
-        job.id === jobId
-          ? {
+      setJobs(prev =>
+        prev.map(job =>
+          job.id === jobId
+            ? {
               ...job,
               status: 'approved',
               items: job.items.map(item =>
@@ -157,17 +157,17 @@ function QADashboard({onLogout}) {
                   : item
               )
             }
-          : job
-      )
-    );
-  } catch (error) {
+            : job
+        )
+      );
+    } catch (error) {
       console.error("Error approving item:", error);
       alert("Error approving item");
     }
   };
 
   const rejectItem = async (jobId, itemId) => {
-     if (!selectedJob || selectedJob.status !== 'supapproved') return;
+    if (!selectedJob || selectedJob.status !== 'supapproved') return;
     console.log("Marking item as Needs Work:", jobId, itemId, notes);
 
     try {
@@ -182,10 +182,10 @@ function QADashboard({onLogout}) {
         alert("Status updated successfully");
       }
 
-    setJobs(prev =>
-      prev.map(job =>
-        job.id === jobId
-          ? {
+      setJobs(prev =>
+        prev.map(job =>
+          job.id === jobId
+            ? {
               ...job,
               status: 'rejected',
               items: job.items.map(item =>
@@ -194,13 +194,13 @@ function QADashboard({onLogout}) {
                   : item
               )
             }
-          : job
-      )
-    );
-    setShowNotesPopup(null);
-    setNotes('');
-    alert('Rejected');
-  } catch (error) {
+            : job
+        )
+      );
+      setShowNotesPopup(null);
+      setNotes('');
+      alert('Rejected');
+    } catch (error) {
       console.error("Error rejecting item:", error);
       alert("Error rejecting item");
     }
@@ -271,20 +271,19 @@ function QADashboard({onLogout}) {
                         </span>
                         <span className="job-date">{job.date}</span>
                         <div className="job-details">
-                    <span><img src={userIcon} alt="Vehicle" className="inline-icon" /> {job.vehicle_number}</span>
-                    <span><img src={calendarIcon} alt="Date" className="inline-icon" /> {job.date}</span>
-                  </div>
+                          <span><img src={userIcon} alt="Vehicle" className="inline-icon" /> {job.vehicle_number}</span>
+                          <span><img src={calendarIcon} alt="Date" className="inline-icon" /> {job.date}</span>
+                        </div>
 
                         <span
-                          className={`status-badge ${
-                            job.status === 'completed'
+                          className={`status-badge ${job.status === 'completed'
                               ? 'status-completed'
                               : job.status === 'approved'
-                              ? 'status-approved'
-                              : job.status === 'rejected'
-                              ? 'status-rejected'
-                              : 'status-progress'
-                          }`}
+                                ? 'status-approved'
+                                : job.status === 'rejected'
+                                  ? 'status-rejected'
+                                  : 'status-progress'
+                            }`}
                         >
                           {job.status}
                         </span>
@@ -359,7 +358,7 @@ function QADashboard({onLogout}) {
               {/* ============== JOB DETAILS ============== */}
               {selectedJob && (
                 <div className="job-details-view">
-                 <div className="job-info-grid">
+                  <div className="job-info-grid">
                     <div><strong>Job Number:</strong> <span>{selectedJob.jobCardNumber}</span></div>
                     <div><strong>Customer:</strong> <span>{selectedJob.customer_name}</span></div>
                     <div><strong>Vehicle:</strong> <span>{selectedJob.vehicle_number}</span></div>
@@ -368,12 +367,12 @@ function QADashboard({onLogout}) {
                     <div><strong>Contact:</strong> <span>{selectedJob.contact_number}</span></div>
                     <div><strong>Date:</strong> <span>{selectedJob.date}</span></div>
                   </div>
-                  
+
                   {selectedJob.items.map(item => (
-                    
+
 
                     <div key={item.itemId} className="job-detail-item">
-                       {!item.qualityStatus && activeTab === 'pending' && (
+                      {!item.qualityStatus && activeTab === 'pending' && (
                         <div className="quality-buttons">
                           <button className="btn-good" onClick={() => approveItem(selectedJob.id, item.itemId)}>Approve</button>
                           <button className="btn-needs-work" onClick={() => setShowNotesPopup(item.itemId)}>Reject</button>
@@ -381,43 +380,43 @@ function QADashboard({onLogout}) {
                       )}
                       <p><b>{item.jobType}</b> - {item.description}</p>
 
-                     
+
 
                       {item.qualityStatus && (
                         <p>Status: {item.qualityStatus}</p>
                       )}
 
-                            {Array.isArray(item.machine) && item.machine.length > 0 && (
-                                  <div className="job-items-container">
-                                    <strong className="job-items-title">Machines Used:</strong>
-                                    <div className="full-width">
-                                      {item.machine.map((m, mi) => (
-                                        <p key={mi} className='machine-name'>
-                                          <strong>Machine {mi + 1}:</strong> {m.machineRequired || 'N/A'}
-                                          {m.actualDuration && (
-                                            <span style={{ marginLeft: '10px', color: '#666' }}>
-                                              (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
-                                            </span>
-                                          )}
-                                        </p>
-                                      ))}
-                                    </div>
-                                  </div>
+                      {Array.isArray(item.machine) && item.machine.length > 0 && (
+                        <div className="job-items-container">
+                          <strong className="job-items-title">Machines Used:</strong>
+                          <div className="full-width">
+                            {item.machine.map((m, mi) => (
+                              <p key={mi} className='machine-name'>
+                                <strong>Machine {mi + 1}:</strong> {m.machineRequired || 'N/A'}
+                                {m.actualDuration && (
+                                  <span style={{ marginLeft: '10px', color: '#666' }}>
+                                    (Duration: {(m.actualDuration / 60).toFixed(2)} hrs)
+                                  </span>
                                 )}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
 
-                                {item.consumable && item.consumable.length > 0 && (
-                                <div className="job-items-container">
-                                  <strong className="job-items-title">Consumables Used:</strong>
-                                  <div className="full-width">
-                                    {item.consumable.map((c, i) => (
-                                      <p key={i} style={{ color: 'black' }}>
-                                        {c.name} — ${c.price} {c.available ? "(Available)" : "(Not Available)"}
-                                      </p>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
+                      {item.consumable && item.consumable.length > 0 && (
+                        <div className="job-items-container">
+                          <strong className="job-items-title">Consumables Used:</strong>
+                          <div className="full-width">
+                            {item.consumable.map((c, i) => (
+                              <p key={i} style={{ color: 'black' }}>
+                                {c.name} — ${c.price} {c.available ? "(Available)" : "(Not Available)"}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
 
                       {showNotesPopup === item.itemId && (

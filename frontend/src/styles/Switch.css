@@ -37,7 +37,7 @@
   transition: 0.3s ease;
 }
 
-.custom-switch input:checked + .slider::before {
+.custom-switch input:checked+.slider::before {
   transform: translate(21px, -50%);
   background-color: var(--true);
 }

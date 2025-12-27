@@ -33,19 +33,19 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         email: Mail,
         password: password,
       });
-              console.log(response.data)
+      console.log(response.data)
       if (!response.data.success) {
         setError(response.data.message || 'Login failed. Please try again.');
         console.log('Login Error:', response.data.message);
       } else {
-        
+
         login({
           id: response.data.user._id || response.data.user.id,
           name: response.data.user.name,
           email: response.data.user.email,
           role: response.data.user.role,
           phone: response.data.user.phone,
-           ...(response.data.user?.shopId && { shopId: response.data.user.shopId }),
+          ...(response.data.user?.shopId && { shopId: response.data.user.shopId }),
           token: response.data.token
         });
 
@@ -69,7 +69,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
       setError('');
       const { name, email, password, phone } = regFormData;
 
-      if (!name || !email || !password || !phone ) {
+      if (!name || !email || !password || !phone) {
         setError('Please fill in all registration fields');
         return;
       }
@@ -81,7 +81,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         phone
       };
       const response = await axios.post('/auth/signup', ownerData);
-      
+
       if (!response.data.success) {
         setError(response.data.message || 'Registration failed. Please try again.');
         console.log('Registration Error:', response.data.message);
@@ -96,7 +96,7 @@ function LoginModal({ isOpen, onClose, onLogin }) {
         });
 
         console.log('Registered and logged in:', response.data.user);
-        
+
         if (onLogin) {
           onLogin(response.data.user.role);
         }

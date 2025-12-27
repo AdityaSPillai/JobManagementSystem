@@ -15,7 +15,7 @@
   font-weight: 600;
 }
 
-.dashboard-header-name-wrapper{
+.dashboard-header-name-wrapper {
   display: flex;
   gap: 3vw;
   align-items: center;
@@ -34,7 +34,7 @@
   font-weight: 500;
 }
 
-.container-user-btn{
+.container-user-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem

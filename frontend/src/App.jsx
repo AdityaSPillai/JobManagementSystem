@@ -10,7 +10,7 @@ import LoginPage from './components/LoginPage';
 
 const getRoleDashboard = (userInfo, onLogout) => {
   if (!userInfo?.role) {
-      return <Navigate to="/home" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   switch (userInfo.role) {
@@ -48,27 +48,27 @@ function App() {
   return (
     <div className="app">
       <Routes>
-        <Route 
-          path="/login" 
-          element={<LoginPage/>} 
+        <Route
+          path="/login"
+          element={<LoginPage />}
         />
-        
+
         <Route
           path="/home"
           element={<EstimatorDashboard />}
         />
-        
+
         <Route
           path="/dashboard"
           element={
-            isAuthenticated 
+            isAuthenticated
               ? getRoleDashboard(userInfo, handleLogout)
               : <Navigate to="/login" replace />
           }
         />
 
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
         />
         <Route path="*" element={<h1>404 Not Found</h1>} />

@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   return (
     <div style={{ width: "100%", height: "100vh", background: "white" }}>
-      <LoginModal isOpen={true} onClose={() => {}} onLogin={handleOnLogin} />
+      <LoginModal isOpen={true} onClose={() => { }} onLogin={handleOnLogin} />
     </div>
   );
 }

@@ -72,9 +72,9 @@ export const rejectedJobController = async (req, res) => {
 
 
 
-export const getRejectedJobsController= async (req, res) => {
+export const getRejectedJobsController = async (req, res) => {
   try {
-    const rejectedJobs = await RejectedJobModel.find().sort({ rejectedAt: -1 });    
+    const rejectedJobs = await RejectedJobModel.find().sort({ rejectedAt: -1 });
     res.status(200).send({
       success: true,
       message: "Rejected jobs fetched successfully",
@@ -82,33 +82,33 @@ export const getRejectedJobsController= async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching rejected jobs:", error);
-    res.status(500).send({  
-        success: false, 
-        message: "Server Error",
-        error: error.message
+    res.status(500).send({
+      success: false,
+      message: "Server Error",
+      error: error.message
     });
-    }
+  }
 };
 
 
 
-export const getAllShopRejecetedJobsController= async (req, res) => {
+export const getAllShopRejecetedJobsController = async (req, res) => {
   try {
     const { shopId } = req.params;
-    const rejectedJobs = await RejectedJobModel.find({ shopId }).sort({ rejectedAt: -1 });    
+    const rejectedJobs = await RejectedJobModel.find({ shopId }).sort({ rejectedAt: -1 });
     res.status(200).send({
-      success: true, 
+      success: true,
       message: "Rejected jobs fetched successfully",
       rejectedJobs
     });
   } catch (error) {
     console.error("Error fetching rejected jobs:", error);
     res.status(500).send({
-        success: false, 
-        message: "Server Error",
-        error: error.message
+      success: false,
+      message: "Server Error",
+      error: error.message
     });
-    }
+  }
 };
 
 export const deleteRejectedJobController = async (req, res) => {

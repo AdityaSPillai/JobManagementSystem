@@ -6,7 +6,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
     hourlyRate: '',
-    role:'',
+    role: '',
   });
 
   const handleChange = (e) => {
@@ -27,7 +27,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add New Man Power Category</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> <span className="add-employee">Add New Man Power Category</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -59,7 +59,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
               />
             </div>
             <div className="form-group">
-        <label htmlFor="role">Role</label>
+              <label htmlFor="role">Role</label>
               <select
                 id="role"
                 name="role"
@@ -90,7 +90,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
   const [formData, setFormData] = useState({
     name: '',
     hourlyRate: '',
-    role:''
+    role: ''
   });
 
   // Populate the form when category data changes
@@ -105,8 +105,8 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
   }, [manPowerData]);
 
   useEffect(() => {
-  console.log('EDIT FORM DATA:', formData);
-}, [formData]);
+    console.log('EDIT FORM DATA:', formData);
+  }, [formData]);
 
 
   const handleChange = (e) => {
@@ -114,10 +114,10 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = (e) => {
-  e.preventDefault();
-  onSubmit(formData);
-};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
 
   if (!isVisible) return null;
 
@@ -125,7 +125,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Man Power Category</span> </h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="add-employee">Edit Man Power Category</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
@@ -143,21 +143,21 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
             <div className="form-group">
               <label htmlFor="edit-role">Role</label>
               <div className="form-group">
-                  <select 
-                    id="edit-role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Role</option>
-                    <option value="worker">Worker</option>
-                    <option value="customer">Customer</option>
-                    <option value="qa_qc">QA/QC</option>
-                    <option value="desk_employee">Desk Employee</option>
-                    <option value="supervisor">Supervisor</option>
-                  </select>
-                </div>
+                <select
+                  id="edit-role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Role</option>
+                  <option value="worker">Worker</option>
+                  <option value="customer">Customer</option>
+                  <option value="qa_qc">QA/QC</option>
+                  <option value="desk_employee">Desk Employee</option>
+                  <option value="supervisor">Supervisor</option>
+                </select>
+              </div>
 
             </div>
 
@@ -197,70 +197,70 @@ function manPowerCategoryTab() {
   const fetchmanPowerCategories = async () => {
     if (!shopId) return setError('Shop ID not found.');
     try {
-        setLoading(true);
-        setError('');
-        const res = await axios.get(`/shop/allCategories/${shopId}`);
+      setLoading(true);
+      setError('');
+      const res = await axios.get(`/shop/allCategories/${shopId}`);
 
-        if (res.data.success) {
+      if (res.data.success) {
         console.log("Categories received", res.data.categories);
         setmanPowerCategory(res.data.categories || []);
         if (res.data.categories.length === 0) {
-            setError('No Man Power categories found. Add your first one!');
+          setError('No Man Power categories found. Add your first one!');
         }
-        } else {
+      } else {
         setError('Unexpected response format from server.');
-        }
+      }
     } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError(err.response?.data?.message || 'Failed to fetch categories.');
+      console.error('Error fetching categories:', err);
+      setError(err.response?.data?.message || 'Failed to fetch categories.');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
   const handleAddmanPowerCategory = async (categoryData) => {
     try {
-        const payload = { categories: [categoryData] };
-        const res = await axios.post(`/shop/addNewCategory/${shopId}`, payload);
+      const payload = { categories: [categoryData] };
+      const res = await axios.post(`/shop/addNewCategory/${shopId}`, payload);
 
-        if (res.data.success) {
+      if (res.data.success) {
         console.log('✅ Man Power category added successfully');
         await fetchmanPowerCategories();
-        } else {
+      } else {
         alert(res.data.message || 'Failed to add Man Power category.');
-        }
+      }
     } catch (err) {
-        console.error('❌ Error adding Man Power category:', err);
-        alert(err.response?.data?.message || 'Failed to add Man Power category.');
+      console.error('❌ Error adding Man Power category:', err);
+      alert(err.response?.data?.message || 'Failed to add Man Power category.');
     }
-    };
+  };
 
   const handleEditmanPowerCategory = async (categoryData) => {
     try {
-        if (!editingCategory?._id) return;
-        const payload = {
+      if (!editingCategory?._id) return;
+      const payload = {
         name: categoryData.name,
         hourlyRate: Number(categoryData.hourlyRate),
         role: categoryData.role
-        };
+      };
 
-        console.log(payload);
+      console.log(payload);
 
-        const res = await axios.put(`/shop/updateCategory/${shopId}/${editingCategory._id}`, payload);
+      const res = await axios.put(`/shop/updateCategory/${shopId}/${editingCategory._id}`, payload);
 
-        if (res.data.success) {
+      if (res.data.success) {
         console.log('✅ Man Power category updated successfully');
         await fetchmanPowerCategories();
-          setIsEditModalOpen(false);
-          setEditingCategory(null);
-        } else {
+        setIsEditModalOpen(false);
+        setEditingCategory(null);
+      } else {
         alert(res.data.message || 'Failed to update Man Power category.');
-        }
+      }
     } catch (err) {
-        console.error('❌ Error updating category:', err);
-        alert(err.response?.data?.message || 'Failed to update Man Power category.');
+      console.error('❌ Error updating category:', err);
+      alert(err.response?.data?.message || 'Failed to update Man Power category.');
     }
-    };
+  };
 
   const openEditModal = (manPower) => {
     setEditingCategory(manPower);
@@ -270,18 +270,18 @@ function manPowerCategoryTab() {
   const handleDeletemanPowerCategory = async (categoryId) => {
     if (!window.confirm('Are you sure you want to delete this Man Power category?')) return;
     try {
-        const res = await axios.delete(`/shop/deleteCategory/${shopId}/${categoryId}`);
-        if (res.data.success) {
+      const res = await axios.delete(`/shop/deleteCategory/${shopId}/${categoryId}`);
+      if (res.data.success) {
         console.log('🗑️ Man Power category deleted');
         await fetchmanPowerCategories();
-        } else {
+      } else {
         alert(res.data.message || 'Failed to delete Man Power category.');
-        }
+      }
     } catch (err) {
-        console.error('❌ Error deleting category:', err);
-        alert(err.response?.data?.message || 'Failed to delete Man Power category.');
+      console.error('❌ Error deleting category:', err);
+      alert(err.response?.data?.message || 'Failed to delete Man Power category.');
     }
-    };
+  };
 
   useEffect(() => {
     if (shopId) fetchmanPowerCategories();

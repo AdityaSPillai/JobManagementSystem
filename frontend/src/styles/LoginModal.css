@@ -23,7 +23,7 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   position: relative;
   animation: modalFadeIn 0.3s ease;
-  
+
   /* Added to support scrolling on small screens if form is long */
   max-height: 90vh;
   overflow-y: auto;
@@ -34,6 +34,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -72,11 +73,11 @@
   text-align: center;
 }
 
-.modal-title-login{
+.modal-title-login {
   display: flex;
   align-items: center;
   justify-content: center;
-  color:#536068;
+  color: #536068;
 }
 
 /* Role Tabs */
@@ -106,8 +107,8 @@
   color: #333;
 }
 
-.role-tab:focus{
-    outline: none;
+.role-tab:focus {
+  outline: none;
 }
 
 .role-tab.active {
@@ -189,7 +190,8 @@
 .demo-hint {
   text-align: center;
   margin-top: 1.5rem;
-  margin-bottom: 0.5rem; /* Added margin */
+  margin-bottom: 0.5rem;
+  /* Added margin */
   color: #666;
   font-size: 0.9rem;
 }

@@ -92,33 +92,33 @@ function StatsTab() {
   const serviceNames = (services && services.length > 0)
     ? services.map(s => s.name)
     : Array.from(
-        new Set(
-            jobs.flatMap(job =>
-            (job.jobItems || [])
-                .map(item => item?.itemData?.job_type)
-                .filter(name => typeof name === "string" && name.trim() !== "")
-            )
+      new Set(
+        jobs.flatMap(job =>
+          (job.jobItems || [])
+            .map(item => item?.itemData?.job_type)
+            .filter(name => typeof name === "string" && name.trim() !== "")
         )
-        );
+      )
+    );
 
-    // 2) Build stats: how many job items per service name
-    const jobsPerService = serviceNames.map(name => {
+  // 2) Build stats: how many job items per service name
+  const jobsPerService = serviceNames.map(name => {
     let count = 0;
 
     jobs.forEach(job => {
-        (job.jobItems || []).forEach(item => {
+      (job.jobItems || []).forEach(item => {
         const jt = item?.itemData?.job_type;
         if (
-            typeof jt === "string" &&
-            jt.trim().toLowerCase() === name.trim().toLowerCase()
+          typeof jt === "string" &&
+          jt.trim().toLowerCase() === name.trim().toLowerCase()
         ) {
-            count += 1;
+          count += 1;
         }
-        });
+      });
     });
 
     return { name, value: count };
-    });
+  });
 
 
   const employeesPerCategory = categories.map(c => ({
@@ -167,79 +167,79 @@ function StatsTab() {
       {/* JOBS PER SERVICE TYPE */}
       <div className="chart-card-wrapper">
         <div className="chart-card">
-            <h3>Jobs Per Service Type</h3>
-            <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={jobsPerService}>
-                    <XAxis dataKey="name" stroke="#111" />
-                    <YAxis stroke="#111" />
-                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
-                    <Bar dataKey="value">
-                    {jobsPerService.map((entry, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                    </Bar>
-                </BarChart>
-                </ResponsiveContainer>
+          <h3>Jobs Per Service Type</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={jobsPerService}>
+              <XAxis dataKey="name" stroke="#111" />
+              <YAxis stroke="#111" />
+              <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
+              <Bar dataKey="value">
+                {jobsPerService.map((entry, index) => (
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
         {/* EMPLOYEES PER CATEGORY */}
         <div className="chart-card">
-            <h3>Employees Per Category</h3>
-            <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                    <Pie
-                    data={employeesPerCategory}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={120}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    labelStyle={{ fill: "#111" }}
-                    >
-                    {employeesPerCategory.map((entry, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
-                    <Legend />
-                </PieChart>
-            </ResponsiveContainer>
+          <h3>Employees Per Category</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={employeesPerCategory}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={120}
+                label={({ name, value }) => `${name}: ${value}`}
+                labelStyle={{ fill: "#111" }}
+              >
+                {employeesPerCategory.map((entry, index) => (
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
 
         {/* MACHINES PER CATEGORY */}
         <div className="chart-card">
-            <h3>Machines Per Category</h3>
-            <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={machinesPerCategory}>
-                    <XAxis dataKey="name" stroke="#111" />
-                    <YAxis stroke="#111" />
-                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
-                    <Bar dataKey="value">
-                    {machinesPerCategory.map((entry, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
+          <h3>Machines Per Category</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={machinesPerCategory}>
+              <XAxis dataKey="name" stroke="#111" />
+              <YAxis stroke="#111" />
+              <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
+              <Bar dataKey="value">
+                {machinesPerCategory.map((entry, index) => (
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
         {/* MONTHLY JOB TREND */}
         <div className="chart-card">
-            <h3>Monthly Jobs Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyJobs}>
-                    <XAxis dataKey="month" stroke="#111" />
-                    <YAxis stroke="#111" />
-                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
-                    <Legend />
-                    <Line 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="#3B82F6" 
-                    strokeWidth={3} 
-                    dot={{ r: 5, stroke: "#1e3a8a", strokeWidth: 2 }}
-                    />
-                </LineChart>
-            </ResponsiveContainer>
+          <h3>Monthly Jobs Trend</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={monthlyJobs}>
+              <XAxis dataKey="month" stroke="#111" />
+              <YAxis stroke="#111" />
+              <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ccc" }} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#3B82F6"
+                strokeWidth={3}
+                dot={{ r: 5, stroke: "#1e3a8a", strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

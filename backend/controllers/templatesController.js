@@ -1,9 +1,9 @@
 import FormTemplateModel from "../schema/formTemplateSchema.js";
 
-export const saveTemplateController= async(req,res)=>{
-    try {
+export const saveTemplateController = async (req, res) => {
+  try {
     const { templateId, templateData } = req.body;
-    
+
     let template;
     if (templateId) {
       // Update existing template
@@ -16,7 +16,7 @@ export const saveTemplateController= async(req,res)=>{
       // Create new template
       template = await FormTemplateModel.create(templateData);
     }
-    
+
     res.status(200).json({
       success: true,
       message: "Template saved successfully",
@@ -31,10 +31,10 @@ export const saveTemplateController= async(req,res)=>{
 };
 
 
-export const getAllTemplates= async(req,res)=>{
+export const getAllTemplates = async (req, res) => {
   try {
-    const templates= await FormTemplateModel.find();
-     if(templates.length === 0) {
+    const templates = await FormTemplateModel.find();
+    if (templates.length === 0) {
       return res.status(404).send({
         success: false,
         message: "No templates found"
@@ -52,7 +52,7 @@ export const getAllTemplates= async(req,res)=>{
       success: false,
       message: "Unable to fetch templates",
       error: error.message
-    }) 
+    })
   }
 }
 
@@ -61,14 +61,14 @@ export const getAllTemplates= async(req,res)=>{
 export const getActiveTemplate = async (req, res) => {
   try {
     const template = await FormTemplateModel.findOne({ isActive: true });
-    
+
     if (!template) {
       return res.status(404).json({
         success: false,
         message: "No active template found"
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: template
@@ -89,17 +89,17 @@ export const getActiveTemplate = async (req, res) => {
 export const setActiveTemplate = async (req, res) => {
   try {
     const { templateId } = req.params;
-    
+
     // Deactivate all templates
     await FormTemplateModel.updateMany({}, { isActive: false });
-    
+
     // Activate selected template
     const template = await FormTemplateModel.findByIdAndUpdate(
       templateId,
       { isActive: true },
       { new: true }
     );
-    
+
     res.status(200).json({
       success: true,
       message: "Template activated successfully",
@@ -115,21 +115,21 @@ export const setActiveTemplate = async (req, res) => {
 
 
 
-export  const deleteTemplate = async (req, res) => {
+export const deleteTemplate = async (req, res) => {
   try {
     const { templateId } = req.params;
-    
+
     const template = await FormTemplate.findById(templateId);
-    
+
     if (template.isActive) {
       return res.status(400).json({
         success: false,
         message: "Cannot delete active template. Please activate another template first."
       });
     }
-    
+
     await FormTemplate.findByIdAndDelete(templateId);
-    
+
     res.status(200).json({
       success: true,
       message: "Template deleted successfully"

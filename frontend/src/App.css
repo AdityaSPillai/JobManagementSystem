@@ -1,6 +1,8 @@
-html,body{
+html,
+body {
   overflow-x: hidden;
 }
+
 .app {
   width: 100vw;
   min-height: 100vh;
@@ -10,4 +12,23 @@ html,body{
 * {
   box-sizing: border-box;
   outline: none;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }

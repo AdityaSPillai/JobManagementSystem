@@ -1,18 +1,14 @@
 import express from "express"
-import { getSingleUserController, loginController, SignupController,deleteEmployeeController } from "../controllers/authController.js";
+import { getSingleUserController, loginController, SignupController, deleteEmployeeController } from "../controllers/authController.js";
 
-const router=express.Router();
+const router = express.Router();
 
-router.post('/signup',SignupController);
+router.post('/signup', SignupController);
 
+router.post('/login', loginController)
 
-router.post('/login',loginController)
+router.get('/user/:id', getSingleUserController)
 
-router.get('/user/:id',getSingleUserController)
-
-
-
-//delete user 
-router.delete('/deleteEmployee/:id',deleteEmployeeController)
+router.delete('/deleteEmployee/:id', deleteEmployeeController)
 
 export default router;

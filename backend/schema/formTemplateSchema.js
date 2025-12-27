@@ -17,7 +17,7 @@ const FormTemplateSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  
+
   // Main form fields configuration
   formFields: [{
     fieldId: {
@@ -56,7 +56,7 @@ const FormTemplateSchema = new mongoose.Schema({
       default: 'half'
     }
   }],
-  
+
   // Job items configuration
   jobItemsConfig: {
     enabled: {
@@ -85,9 +85,9 @@ const FormTemplateSchema = new mongoose.Schema({
       default: true
     }
   },
-  isVerifiedByUser:{
-    type:Boolean,
-    default:false
+  isVerifiedByUser: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
@@ -101,6 +101,6 @@ const FormTemplateSchema = new mongoose.Schema({
 
 
 
-const FormTemplateModel= new mongoose.model("FormTemplate",FormTemplateSchema);
+const FormTemplateModel = new mongoose.model("FormTemplate", FormTemplateSchema);
 
 export default FormTemplateModel;

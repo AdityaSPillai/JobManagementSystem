@@ -707,7 +707,7 @@ export const getAllShopJobsController = async (req, res) => {
 
 
 
-export const getServiceCategory= async(req,res)=>{
+export const getServiceCategory = async (req, res) => {
   try {
     const { shopId } = req.params;
     if (!shopId) {
@@ -731,7 +731,7 @@ export const getServiceCategory= async(req,res)=>{
       serviceCategory: shop.serviceCategory
     });
 
- } catch (error) {
+  } catch (error) {
     res.status(500).send({
       success: false,
       message: "Unable to find the All Service Categories",
@@ -741,7 +741,7 @@ export const getServiceCategory= async(req,res)=>{
 }
 
 
-export const createServiceCategory= async(req,res)=>{
+export const createServiceCategory = async (req, res) => {
   try {
 
     const { shopId } = req.params;
@@ -759,7 +759,7 @@ export const createServiceCategory= async(req,res)=>{
         message: "Unable to find shop"
       })
     }
-    shop.serviceCategory.push({name});
+    shop.serviceCategory.push({ name });
     await shop.save();
 
     res.status(200).send({
@@ -778,7 +778,7 @@ export const createServiceCategory= async(req,res)=>{
 
 
 
-export const updateServiceCategories= async(req,res)=>{
+export const updateServiceCategories = async (req, res) => {
   try {
     const { shopId, categoryId } = req.params;
     const { name } = req.body;

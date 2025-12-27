@@ -184,11 +184,11 @@ export default function CustomerTab() {
                   <div className="table-actions">
                     {c.customerIDNumber && (
                       <button
-                      className="table-cta"
-                      onClick={() => openCustomerJobs(c.customerIDNumber)}
-                    >
-                      Open
-                    </button>
+                        className="table-cta"
+                        onClick={() => openCustomerJobs(c.customerIDNumber)}
+                      >
+                        Open
+                      </button>
                     )}
                     <button
                       className="table-cta"

@@ -54,7 +54,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon"/> <span className="add-employee">Add Consumable</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> <span className="add-employee">Add Consumable</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
@@ -84,7 +84,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
                 disabled={loading}
               />
             </div>
-             <div className="form-group">
+            <div className="form-group">
               <label>Unit of Measure </label>
               <input
                 type="text"
@@ -95,7 +95,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
                 disabled={loading}
               />
             </div>
-             <div className="form-group">
+            <div className="form-group">
               <label>Quanity </label>
               <input
                 type="number"
@@ -172,7 +172,7 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon"/> <span className="add-employee">Edit Consumable</span> </h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="add-employee">Edit Consumable</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 

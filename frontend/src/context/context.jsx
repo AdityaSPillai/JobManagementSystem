@@ -1,4 +1,3 @@
-// context/context.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "../utils/axios.js";
 
@@ -8,7 +7,6 @@ export const AuthProvider = ({ children }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on startup
   useEffect(() => {
     const storedUser = localStorage.getItem("userInfo");
 

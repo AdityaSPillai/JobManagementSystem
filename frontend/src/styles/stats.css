@@ -19,19 +19,20 @@
   font-size: 20px;
   font-weight: 700;
   text-align: center;
-  color: #111;          /* Dark text */
+  color: #111;
+  /* Dark text */
   border: 1px solid #d1d5db;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 /* -------------------------
    CHART CONTAINERS
 --------------------------*/
-.chart-card-wrapper{
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 20px;
+.chart-card-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .chart-card {
@@ -40,7 +41,7 @@
   border-radius: 12px;
   margin-bottom: 30px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .chart-card h3 {
@@ -59,11 +60,11 @@
   border-radius: 12px;
   margin-bottom: 30px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-.heading3-consumables{
-    color: #1f2937;
+.heading3-consumables {
+  color: #1f2937;
 }
 
 .stats-table {

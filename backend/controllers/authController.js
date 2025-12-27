@@ -2,42 +2,42 @@ import UserModel from "../schema/userSchema.js";
 import { hashPassword, comparePassword } from "../helpers/authHelper.js"
 import JWT from "jsonwebtoken"
 
-export const SignupController = async(req, res) => {
+export const SignupController = async (req, res) => {
     try {
         const {
-            name, 
-            email, 
-            password, 
-            role, 
-            shopId,  
+            name,
+            email,
+            password,
+            role,
+            shopId,
             phone,
             specialization,
             experience,
         } = req.body;
 
         // Basic validations
-        if(!name) return res.status(400).send({success: false, message: "Name is Required"});
-        if(!email) return res.status(400).send({success: false, message: "Email is Required"});
-        if(!password) return res.status(400).send({success: false, message: "Password is Required"});
-        if(!role) return res.status(400).send({success: false, message: "Role is Required"});
-        if(!phone) return res.status(400).send({success: false, message: "Phone is Required"});  // ✅ Fixed error message
+        if (!name) return res.status(400).send({ success: false, message: "Name is Required" });
+        if (!email) return res.status(400).send({ success: false, message: "Email is Required" });
+        if (!password) return res.status(400).send({ success: false, message: "Password is Required" });
+        if (!role) return res.status(400).send({ success: false, message: "Role is Required" });
+        if (!phone) return res.status(400).send({ success: false, message: "Phone is Required" });  // ✅ Fixed error message
 
         // Role-specific validations for workers, qa_qc, supervisor
-        if(['worker', 'qa_qc', 'supervisor'].includes(role)) {
-            if(!shopId) return res.status(400).send({success: false, message: "Shop ID is Required"});
-            if(!specialization) return res.status(400).send({success: false, message: "Specialization is Required"});
-            if(!experience) return res.status(400).send({success: false, message: "Experience is Required"});
+        if (['worker', 'qa_qc', 'supervisor'].includes(role)) {
+            if (!shopId) return res.status(400).send({ success: false, message: "Shop ID is Required" });
+            if (!specialization) return res.status(400).send({ success: false, message: "Specialization is Required" });
+            if (!experience) return res.status(400).send({ success: false, message: "Experience is Required" });
         }
 
         // Desk employee validation
-        if(role === 'desk_employee') {
-            if(!shopId) return res.status(400).send({success: false, message: "Shop ID is Required"});
+        if (role === 'desk_employee') {
+            if (!shopId) return res.status(400).send({ success: false, message: "Shop ID is Required" });
         }
 
         // Check if user already exists
-        const existingUser = await UserModel.findOne({email: email});
-        if(existingUser) {
-            return res.status(400).send({ 
+        const existingUser = await UserModel.findOne({ email: email });
+        if (existingUser) {
+            return res.status(400).send({
                 success: false,
                 message: "Already existing user",
             });
@@ -45,9 +45,9 @@ export const SignupController = async(req, res) => {
 
         // Hash password
         const hashedPassword = await hashPassword(password);
-        
+
         // Create user object with only relevant fields
-        const userData = { 
+        const userData = {
             name,
             email,
             password: hashedPassword,
@@ -56,27 +56,27 @@ export const SignupController = async(req, res) => {
         };
 
         // Add role-specific fields
-        if(['worker', 'qa_qc', 'supervisor', 'desk_employee'].includes(role)) {
+        if (['worker', 'qa_qc', 'supervisor', 'desk_employee'].includes(role)) {
             userData.shopId = shopId;
         }
 
-        if(['worker', 'qa_qc', 'supervisor'].includes(role)) {
+        if (['worker', 'qa_qc', 'supervisor'].includes(role)) {
             userData.specialization = specialization;
             userData.experience = experience;
         }
 
         const user = new UserModel(userData);
-        await user.save();  
+        await user.save();
 
-        res.status(201).send({  
+        res.status(201).send({
             success: true,
             message: "Successfully added new user to the database",
             user,
         });
-        
+
     } catch (error) {
         console.error(error);
-        res.status(500).send({  
+        res.status(500).send({
             success: false,
             message: "Unable to add new User",
             error: error.message,
@@ -86,63 +86,61 @@ export const SignupController = async(req, res) => {
 
 
 
-export const loginController= async(req,res)=>{
+export const loginController = async (req, res) => {
     try {
-        const{email,password} = req.body;
-        
-        if(!email || !password)
-        {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
             console.error("email and password is Requireed");
         }
 
-        const user= await UserModel.findOne({email:email});
-        if(!user)
-        {
+        const user = await UserModel.findOne({ email: email });
+        if (!user) {
             console.log("Unable to find user");
             res.status(404).send({
-                success:false,
-                message:"Unable to find the user with the given email"
+                success: false,
+                message: "Unable to find the user with the given email"
             })
             return;
         }
-        const isMatch= await comparePassword(password,user.password)
+        const isMatch = await comparePassword(password, user.password)
 
         if (!isMatch) {
-                    return res.status(401).json({
-                        success: false,
-                        message: "Invalid credentials",
-                    });
-                }
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials",
+            });
+        }
 
         const token = JWT.sign(
-            { id: user._id, role:user.role }, 
+            { id: user._id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
-        
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',  
+            secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.status(200).send({
-            success:true,
-            message:"user found succesfully",
-            user:{
-            id:user._id,
-            name:user.name,
-            email:user.email,
-            role:user.role,
-             shopname: user.shopname ,
-           ...(user?.shopId && { 
-                    shopId: user.shopId, 
+            success: true,
+            message: "user found succesfully",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                shopname: user.shopname,
+                ...(user?.shopId && {
+                    shopId: user.shopId,
                 }),
-        },
-          token
-    })
-     } catch (error) {
+            },
+            token
+        })
+    } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({
             success: false,
@@ -154,26 +152,26 @@ export const loginController= async(req,res)=>{
 
 
 
-export const getSingleUserController= async(req,res)=>{
+export const getSingleUserController = async (req, res) => {
     try {
 
-        const {id}= req.params;
-        if(!id) return res.status(400).send({success: false, message: "userId is Required"});
+        const { id } = req.params;
+        if (!id) return res.status(400).send({ success: false, message: "userId is Required" });
 
-        const user= await UserModel.findById(id);
-        if(!user) return res.status(404).send({succes:false, message:"Unable to find the requested user "});
+        const user = await UserModel.findById(id);
+        if (!user) return res.status(404).send({ succes: false, message: "Unable to find the requested user " });
 
         res.status(200).send({
-            succes:true,
-            message:"Succesfully found the user",
+            succes: true,
+            message: "Succesfully found the user",
             user
         })
-        
+
     } catch (error) {
         console.log(error);
         res.status(500).send({
-            success:false,
-            message:"Unable to get the requested user",
+            success: false,
+            message: "Unable to get the requested user",
             error
         })
     }
