@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import axios from "../utils/axios.js"
 import useAuth from "../context/context.jsx"
+import "../styles/CustomerTab.css";
 
 // ---------- Add Category Modal ----------
 function AddCategoryModal({ isVisible, onClose, onSubmit }) {
@@ -148,29 +149,44 @@ function ServiceCategoryTab() {
       {loading && <p>Loading categories...</p>}
       {error && <p className="error-text">{error}</p>}
 
-      <div className="data-grid">
-        {categories.map(cat => (
-          <div key={cat._id} className="data-card">
-            <h4>{cat.name}</h4>
-            <div className="data-card-footer">
-              <button
-                className="btn-card-action"
-                onClick={() => {
-                  setEditingCategory(cat)
-                  setEditOpen(true)
-                }}
-              >
-                Edit
-              </button>
-              <button
-                className="btn-card-action btn-danger"
-                onClick={() => deleteCategory(cat._id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="table-container">
+        <table className="modern-table">
+          <thead>
+            <tr>
+              <th>Category Name</th>
+              <th className="th-actions">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {categories.map(cat => (
+              <tr key={cat._id}>
+                <td className="table-primary-text">{cat.name}</td>
+
+                <td>
+                  <div className="table-actions">
+                    <button
+                      className="table-cta"
+                      onClick={() => {
+                        setEditingCategory(cat);
+                        setEditOpen(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="table-cta table-cta-danger"
+                      onClick={() => deleteCategory(cat._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <AddCategoryModal

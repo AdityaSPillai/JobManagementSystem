@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../utils/axios.js';
 import useAuth from '../context/context.jsx';
+import "../styles/CustomerTab.css";
 
 // --- Add Service Modal ---
 function AddServiceModal({ isVisible, onClose, onSubmit }) {
@@ -53,13 +54,13 @@ function AddServiceModal({ isVisible, onClose, onSubmit }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> <span className="add-employee">Add New Service Type</span></h3>
+          <h3 className="heading-h3"><img src="/plus.png" alt="Plus Icon" className="plus-icon" /> <span className="add-employee">Add New Service</span></h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid cols-2">
             <div className="form-group">
-              <label htmlFor="name">Service Type Name</label>
+              <label htmlFor="name">Service Name</label>
               <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div className="form-group full-width">
@@ -87,7 +88,7 @@ function AddServiceModal({ isVisible, onClose, onSubmit }) {
               </select>
             </div>
           </div>
-          <button type="submit" className="btn-submit">Add Service Type</button>
+          <button type="submit" className="btn-submit">Add Service</button>
         </form>
       </div>
     </div>
@@ -162,13 +163,13 @@ function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
     <div className="modal-overlay">
       <div className="modal-content modal-large">
         <div className="modal-header">
-          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="add-employee">Edit Service Type</span> </h3>
+          <h3 className="heading-h3"> <img src="/edit.png" alt="Edit Icon" className="edit-icon" /> <span className="add-employee">Edit Service</span> </h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid cols-2">
             <div className="form-group">
-              <label htmlFor="edit-name">Service Type Name</label>
+              <label htmlFor="edit-name">Service Name</label>
               <input
                 type="text"
                 id="edit-name"
@@ -178,7 +179,7 @@ function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
                 disabled
                 style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
               />
-              <small style={{ color: '#666', fontSize: '0.75rem' }}>Service type name cannot be changed</small>
+              <small style={{ color: '#666', fontSize: '0.75rem' }}>Service name cannot be changed</small>
             </div>
             <div className="form-group full-width">
               <label htmlFor="edit-description">Description</label>
@@ -215,7 +216,7 @@ function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
               </select>
             </div>
           </div>
-          <button type="submit" className="btn-submit">Update Service Type</button>
+          <button type="submit" className="btn-submit">Update Service</button>
         </form>
       </div>
     </div>
@@ -223,20 +224,20 @@ function EditServiceModal({ isVisible, onClose, onSubmit, serviceData }) {
 }
 
 
-// --- Main Service Type Tab ---
-function ServiceTypeTab() {
+// --- Main Service Tab ---
+function ServiceTab() {
   const { userInfo } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
-  const [serviceTypes, setServiceTypes] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const shopId = userInfo?.shopId;
 
-  // Fetch all Service types
-  const fetchServiceTypes = async () => {
+  // Fetch all Services
+  const fetchServices = async () => {
     if (!shopId) return setError('Shop ID not found.');
     try {
       setLoading(true);
@@ -246,44 +247,44 @@ function ServiceTypeTab() {
       // Handle both "success" and "succes" (typo in backend)
       if (res.data.success || res.data.succes) {
         console.log("Services received", res.data.shop.services);
-        setServiceTypes(res.data.shop.services || []);
+        setServices(res.data.shop.services || []);
         if (res.data.shop.services.length === 0) {
-          setError('No Service types found. Add your first one!');
+          setError('No Services found. Add your first one!');
         }
       } else {
         setError('Unexpected response format from server.');
       }
     } catch (err) {
-      console.error('Error fetching Service types:', err);
-      setError(err.response?.data?.message || 'Failed to fetch Service types.');
+      console.error('Error fetching Services:', err);
+      setError(err.response?.data?.message || 'Failed to fetch Services.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Add new Service type
+  // Add new Service
   const handleAddService = async (serviceData) => {
     try {
       const payload = { services: [serviceData] };
 
-      console.log('Adding Service type with payload:', payload);
+      console.log('Adding Service with payload:', payload);
       const res = await axios.post(`/shop/addNewService/${shopId}`, payload);
 
       if (res.data.success || res.data.succes) {
-        console.log('✅ Service type added successfully');
-        await fetchServiceTypes();
+        console.log('✅ Service added successfully');
+        await fetchServices();
       } else {
-        alert(res.data.message || 'Failed to add Service type.');
+        alert(res.data.message || 'Failed to add Service.');
       }
     } catch (err) {
-      console.error('❌ Error adding Service type:', err);
-      alert(err.response?.data?.message || 'Failed to add Service type.');
+      console.error('❌ Error adding Service:', err);
+      alert(err.response?.data?.message || 'Failed to add Service.');
     }
   };
 
-  // Edit Service type
+  // Edit Service
   const handleEditService = async (serviceData) => {
-    console.log('Editing Service type:', editingService._id, serviceData);
+    console.log('Editing Service:', editingService._id, serviceData);
     try {
       // Format data according to backend requirements (only description)
       const payload = {
@@ -295,14 +296,14 @@ function ServiceTypeTab() {
       const res = await axios.put(`/shop/updateShopServices/${shopId}/${editingService._id}`, payload);
 
       if (res.data.success || res.data.succes) {
-        console.log('✅ Service type updated successfully');
-        await fetchServiceTypes();
+        console.log('✅ Service updated successfully');
+        await fetchServices();
       } else {
-        alert(res.data.message || 'Failed to update Service type.');
+        alert(res.data.message || 'Failed to update Service.');
       }
     } catch (err) {
-      console.error('❌ Error updating Service type:', err);
-      alert(err.response?.data?.message || 'Failed to update Service type.');
+      console.error('❌ Error updating Service:', err);
+      alert(err.response?.data?.message || 'Failed to update Service.');
     }
   };
 
@@ -312,62 +313,84 @@ function ServiceTypeTab() {
     setIsEditModalOpen(true);
   };
 
-  // Remove Service type
+  // Remove Service
   const handleDeleteService = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this Service type?')) return;
+    if (!window.confirm('Are you sure you want to delete this Service?')) return;
     try {
       const res = await axios.delete(`/shop/deleteShopService/${shopId}/${serviceId}`);
       if (res.data.success || res.data.succes) {
-        console.log('🗑️ Service type deleted');
-        await fetchServiceTypes();
+        console.log('🗑️ Service deleted');
+        await fetchServices();
       } else {
-        alert(res.data.message || 'Failed to delete Service type.');
+        alert(res.data.message || 'Failed to delete Service.');
       }
     } catch (err) {
-      console.error('❌ Error deleting Service type:', err);
-      alert(err.response?.data?.message || 'Failed to delete Service type.');
+      console.error('❌ Error deleting Service:', err);
+      alert(err.response?.data?.message || 'Failed to delete Service.');
     }
   };
 
   useEffect(() => {
-    if (shopId) fetchServiceTypes();
+    if (shopId) fetchServices();
   }, [shopId]);
 
   return (
     <div>
       <div className="tab-header">
-        <h3 className="section-title">Service Type Management</h3>
+        <h3 className="section-title">Service Management</h3>
         <button className="btn-add-new" onClick={() => setIsModalOpen(true)}>
-          + Add Service Type
+          + Add Service
         </button>
       </div>
 
       {loading ? (
-        <p>Loading Service types...</p>
+        <p>Loading Services...</p>
       ) : error ? (
         <p className="error-text">{error}</p>
-      ) : serviceTypes.length === 0 ? (
-        <p>No Service types found. Click "Add Service Type" to get started!</p>
+      ) : services.length === 0 ? (
+        <p>No Services found. Click "Add Service" to get started!</p>
       ) : (
-        <div className="data-grid">
-          {serviceTypes.map(Service => (
-            <div key={Service._id} className="data-card">
-              <div className="data-card-header">
-                <h4>{Service.name}</h4>
-              </div>
-              <div className="data-card-body">
-                <p><strong>Description:</strong> {Service.description || 'N/A'}</p>
-                {Service.note && <p><strong>Note:</strong> {Service.note}</p>}
-              </div>
-              <div className="data-card-body">
-                <p><strong>Service Category:</strong> {Service.serviceCategory || 'N/A'}</p>
-              </div>
-              <div className="data-card-footer">
-                <button className="btn-card-action" onClick={() => openEditModal(Service)}>Edit</button>
-                <button className="btn-card-action btn-danger" onClick={() => handleDeleteService(Service._id)}>Remove</button>
-              </div>
-            </div>
-          ))}
+        <div className="table-container">
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Service Name</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Notes</th>
+                <th className="th-actions">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {services.map(service => (
+                <tr key={service._id}>
+                  <td className="table-primary-text">{service.name}</td>
+                  <td>{service.description || "—"}</td>
+                  <td>{service.serviceCategory || "—"}</td>
+                  <td>{service.note || "—"}</td>
+
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        className="table-cta"
+                        onClick={() => openEditModal(service)}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="table-cta table-cta-danger"
+                        onClick={() => handleDeleteService(service._id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -391,4 +414,4 @@ function ServiceTypeTab() {
   );
 }
 
-export default ServiceTypeTab;
+export default ServiceTab;
