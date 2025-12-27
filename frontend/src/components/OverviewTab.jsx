@@ -206,6 +206,14 @@ export function ShopCreationModal({ isVisible, onClose, onSubmit }) {
     }
   };
 
+  const CURRENCIES = [
+    { code: "INR", symbol: "₹", label: "INR (₹) - Indian Rupee" },
+    { code: "USD", symbol: "$", label: "USD ($) - US Dollar" },
+    { code: "AED", symbol: "د.إ", label: "AED (د.إ) - UAE Dirham" },
+    { code: "EUR", symbol: "€", label: "EUR (€) - Euro" },
+    { code: "GBP", symbol: "£", label: "GBP (£) - British Pound" },
+    { code: "JPY", symbol: "¥", label: "JPY (¥) - Japanese Yen" },
+  ];
 
   if (!isVisible) return null;
 
@@ -233,8 +241,19 @@ export function ShopCreationModal({ isVisible, onClose, onSubmit }) {
               <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="contact@garage.com" required />
             </div>
             <div className="form-group">
-              <label htmlFor="currency">Currency</label>
-              <input type="text" id="currency" name="currency" value={formData.currency} onChange={handleChange} placeholder=" USD | AED | INR" required />
+              <label>Currency *</label>
+              <select
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+              >
+                <option value="">Select Currency</option>
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.symbol}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
