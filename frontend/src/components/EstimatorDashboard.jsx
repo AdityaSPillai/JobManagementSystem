@@ -31,6 +31,7 @@ function EstimatorDashboard({ onLoginClick }) {
   const [consumableQty, setConsumableQty] = useState({});
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [customers, setCustomers] = useState([]);
+  const [currency, setCurrency] = useState("$");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const jobCardRef = useRef();
 
@@ -130,6 +131,17 @@ function EstimatorDashboard({ onLoginClick }) {
     }
   };
 
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
     if (!userInfo) return;
     if (!userInfo.shopId) {
@@ -143,6 +155,7 @@ function EstimatorDashboard({ onLoginClick }) {
     getAllCategory();
     getAllConsumables();
     getAllCustomers();
+    getCurrency();
   }, [userInfo]);
 
   const [jobs, setJobs] = useState([])
@@ -1820,7 +1833,7 @@ function EstimatorDashboard({ onLoginClick }) {
 
                                             <td>{c.name}</td>
 
-                                            <td>${c.price}</td>
+                                            <td>{ }{c.price}</td>
 
                                             <td>{c.numberOfUsed}</td>
 
@@ -2007,14 +2020,14 @@ function EstimatorDashboard({ onLoginClick }) {
                   <div className="job-detail-total">
                     <strong className="total-label">Total Estimated Amount:</strong>
                     <strong className="total-amount">
-                      ${(selectedJob?.totalEstimatedAmount || 0).toFixed(2)}
+                      {currency}{(selectedJob?.totalEstimatedAmount || 0).toFixed(2)}
                     </strong>
 
                     {selectedJob.status.toLowerCase() == "approved" && (
                       <>
                         <strong className="total-label">Actual cost:</strong>
                         <strong className="total-amount">
-                          ${calculateActualCost(selectedJob).toFixed(2)}
+                          {currency}{calculateActualCost(selectedJob).toFixed(2)}
                         </strong>
                       </>
                     )}
@@ -2281,7 +2294,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                 <div className="machine-right">
                                   {machine.machineHourlyRate > 0 && (
                                     <p className="machine-cost-info">
-                                      Rate: ${machine.machineHourlyRate}/hr | Cost: $
+                                      Rate: {currency}{machine.machineHourlyRate}/hr | Cost: {currency}
                                       {(machine.machineEstimatedCost || 0).toFixed(2)}
                                     </p>
                                   )}
@@ -2296,7 +2309,7 @@ function EstimatorDashboard({ onLoginClick }) {
                         {/* Leave original class name as requested */}
                         {Array.isArray(item.machine) && item.machine.length > 0 && (
                           <div className="machine-total-cost">
-                            Total Machine Cost: $
+                            Total Machine Cost: {currency}
                             {item.machine
                               .reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
                               .toFixed(2)}
@@ -2341,7 +2354,7 @@ function EstimatorDashboard({ onLoginClick }) {
                               <option value="">--Select Consumable--</option>
                               {consumables.map((cOpt) => (
                                 <option key={cOpt._id} value={cOpt._id} >
-                                  {cOpt.name} - ${cOpt.price}{(cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock'}
+                                  {cOpt.name} - {currency}{cOpt.price}{(cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock'}
                                 </option>
                               ))}
                               <option value="manual">+ Add Manual Consumable</option>
@@ -2449,7 +2462,7 @@ function EstimatorDashboard({ onLoginClick }) {
                 <div className="form-footer">
                   <div className="total-amount">
                     <span>Total Estimated Amount:</span>
-                    <span className="amount">${calculateFormTotal().toFixed(2)}</span>
+                    <span className="amount">{currency}{calculateFormTotal().toFixed(2)}</span>
                   </div>
                   <button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button>
                 </div>

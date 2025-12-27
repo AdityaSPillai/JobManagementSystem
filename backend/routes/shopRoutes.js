@@ -1,5 +1,5 @@
 import express from "express"
-import { createShop, getShop, getAllEmployees, getAllWorkers, getAllMachineController, getAllShopJobsController, allServices, addNewCategoryController, addNewService, updateShopServices, deleteShopService, updateCategoryController, deleteCategoryController, allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController, addLog, updateShopController, getShopDetails, getManPowerHourlyRateController, getServiceCategory, createServiceCategory, updateServiceCategories, deleteServiceCategories } from "../controllers/shopController.js";
+import { createShop, getShop, getAllEmployees, getAllWorkers, getAllMachineController, getAllShopJobsController, allServices, addNewCategoryController, addNewService, updateShopServices, deleteShopService, updateCategoryController, deleteCategoryController, allCategories, getAllClient, addConsumablesController, getAllConsumablesController, updateConsumableController, deleteConsumableController, addLog, updateShopController, getShopDetails, getManPowerHourlyRateController, getServiceCategory, createServiceCategory, updateServiceCategories, deleteServiceCategories, getCurrency } from "../controllers/shopController.js";
 import { isOwner, isManager } from "../middleware/middlewares.js";
 import { addMachineCategoryController, deleteMachineCategoryController, getAllMachineCategoryController, getMachineHourlyRateController, updateMachineCategoryController } from "../controllers/machineCategoryController.js";
 import { getLogs, updateLogLimit } from "../controllers/shopController.js";
@@ -103,6 +103,8 @@ router.delete('/serviceCategories/:shopId/:categoryId', isOwner, logAction("ADD_
 router.get('/allClients/:shopId', getAllClient);
 
 router.get("/logs/:shopId", isOwner, getLogs);
+
+router.get("/getCurrency/:shopId", getCurrency);
 
 router.put("/logs/limit/:shopId", isOwner, updateLogLimit);
 

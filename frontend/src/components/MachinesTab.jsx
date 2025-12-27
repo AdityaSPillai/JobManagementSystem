@@ -29,6 +29,24 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
     depreciationPeriod: 0
   });
 
+  const [currency, setCurrency] = useState("$");
+  const { userInfo } = useAuth();
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
+  useEffect(() => {
+    getCurrency();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -86,7 +104,7 @@ function AddMachineModal({ isVisible, onClose, onSubmit, machineCategories }) {
                 <option value="">-- Select Category --</option>
                 {machineCategories.map(cat => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (${cat.hourlyRate}/hr)
+                    {cat.name} ({currency}{cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>
@@ -214,6 +232,20 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
     limeTime: 0,
     depreciationPeriod: 0
   });
+
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
     if (machine) {
       setFormData({
@@ -241,6 +273,7 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
 
       });
     }
+    getCurrency();
   }, [machine]);
 
   const handleChange = (e) => {
@@ -303,7 +336,7 @@ function EditMachineModal({ isVisible, onClose, onSubmit, machine, machineCatego
                 <option value="">-- Select Category --</option>
                 {machineCategories.map((cat) => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (${cat.hourlyRate}/hr)
+                    {cat.name} ({currency}{cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>
@@ -401,6 +434,7 @@ function MachinesTab() {
   const [error, setError] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState(null);
+  const [currency, setCurrency] = useState('$');
 
   const shopId = userInfo?.shopId;
   const userId = userInfo?._id;
@@ -519,11 +553,22 @@ function MachinesTab() {
     }
   };
 
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   // Fetch machines when shopId is available
   useEffect(() => {
 
     if (shopId) {
-      fetchMachines();
+      fetchMachines(); getCurrency();
 
       console.log("Fetching machines for shopId:", machines);
     }
@@ -604,7 +649,7 @@ function MachinesTab() {
 
                     <td>
                       <span className="badge-rate">
-                        ₹{machine.hourlyRate || 0}/hr
+                        {currency}{machine.hourlyRate || 0}/hr
                       </span>
                     </td>
 
@@ -655,10 +700,10 @@ function MachinesTab() {
                         : "N/A"}
                     </td>
                     <td>{machine.assetType || "—"}</td>
-                    <td>₹{machine.assetValue || 0}</td>
-                    <td>₹{machine.landedCost || 0}</td>
-                    <td>₹{machine.installationCost || 0}</td>
-                    <td>₹{machine.capitalizedValue || 0}</td>
+                    <td>{currency}{machine.assetValue || 0}</td>
+                    <td>{currency}{machine.landedCost || 0}</td>
+                    <td>{currency}{machine.installationCost || 0}</td>
+                    <td>{currency}{machine.capitalizedValue || 0}</td>
                     <td>{machine.limeTime || 0}</td>
                     <td>{machine.depreciationPeriod || 0}</td>
 

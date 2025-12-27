@@ -1078,6 +1078,24 @@ export const getLogs = async (req, res) => {
   }
 };
 
+export const getCurrency = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+
+    const shop = await ShopModel.findById(shopId).select("currency");
+    if (!shop) {
+      return res.status(404).json({ success: false, message: "Shop not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      currency: shop.currency
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching currency" });
+  }
+};
+
 // UPDATE LOG LIMIT
 export const updateLogLimit = async (req, res) => {
   try {

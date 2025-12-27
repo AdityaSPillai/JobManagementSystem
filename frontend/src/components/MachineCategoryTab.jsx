@@ -147,7 +147,20 @@ function MachineCategoryTab() {
     }
   };
 
-  useEffect(() => { if (shopId) fetchCategories(); }, [shopId]);
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
+  useEffect(() => { if (shopId) fetchCategories(); getCurrency(); }, [shopId]);
 
   return (
     <div>
@@ -177,7 +190,7 @@ function MachineCategoryTab() {
                     <span className="table-primary-text">{mt.name}</span>
                   </td>
                   <td>
-                    <span className="badge-rate">${mt.hourlyRate}/hr</span>
+                    <span className="badge-rate">{currency}{mt.hourlyRate}/hr</span>
                   </td>
                   <td>
                     <div className="table-actions">

@@ -99,8 +99,21 @@ function QADashboard({ onLogout }) {
     }
   };
 
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
-    if (userInfo?.shopId) getAllJobs();
+    if (userInfo?.shopId) getAllJobs(); getCurrency();
   }, [userInfo]);
 
   // -----------------------------
@@ -277,12 +290,12 @@ function QADashboard({ onLogout }) {
 
                         <span
                           className={`status-badge ${job.status === 'completed'
-                              ? 'status-completed'
-                              : job.status === 'approved'
-                                ? 'status-approved'
-                                : job.status === 'rejected'
-                                  ? 'status-rejected'
-                                  : 'status-progress'
+                            ? 'status-completed'
+                            : job.status === 'approved'
+                              ? 'status-approved'
+                              : job.status === 'rejected'
+                                ? 'status-rejected'
+                                : 'status-progress'
                             }`}
                         >
                           {job.status}
@@ -411,7 +424,7 @@ function QADashboard({ onLogout }) {
                           <div className="full-width">
                             {item.consumable.map((c, i) => (
                               <p key={i} style={{ color: 'black' }}>
-                                {c.name} — ${c.price} {c.available ? "(Available)" : "(Not Available)"}
+                                {c.name} — {currency}{c.price} {c.available ? "(Available)" : "(Not Available)"}
                               </p>
                             ))}
                           </div>

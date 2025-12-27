@@ -37,9 +37,22 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
       }
     };
 
-    if (userInfo?.shopId) fetchCategories();
+    if (userInfo?.shopId) fetchCategories(); getCurrency();
 
   }, [userInfo]);
+
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -206,7 +219,7 @@ function AddEmployeeModal({ isVisible, onClose, onSubmit }) {
                 <option value="">-- Select Job Category --</option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (${cat.hourlyRate}/hr)
+                    {cat.name} ({currency}{cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>
@@ -276,9 +289,22 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState([]);
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
 
   useEffect(() => {
     setFormData(employee || {});
+    getCurrency();
   }, [employee]);
 
   useEffect(() => {
@@ -387,7 +413,7 @@ function EditEmployeeModal({ isVisible, onClose, employee, onUpdate }) {
                 <option value="">-- Select Job Category --</option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat.name}>
-                    {cat.name} (₹{cat.hourlyRate}/hr)
+                    {cat.name} ({currency}{cat.hourlyRate}/hr)
                   </option>
                 ))}
               </select>

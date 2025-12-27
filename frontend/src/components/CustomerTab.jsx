@@ -64,8 +64,21 @@ export default function CustomerTab() {
     }
   };
 
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
-    if (userInfo?.shopId) fetchCustomers();
+    if (userInfo?.shopId) fetchCustomers(); getCurrency();
   }, [userInfo]);
 
   /* ================= SEARCH ================= */
@@ -261,7 +274,7 @@ export default function CustomerTab() {
               >
                 <p><strong>Job No:</strong> {job.jobCardNumber}</p>
                 <p><strong>Status:</strong> {job.status}</p>
-                <p><strong>Amount:</strong> ₹{job.totalEstimatedAmount}</p>
+                <p><strong>Amount:</strong> {currency}{job.totalEstimatedAmount}</p>
               </div>
             ))}
           </div>
@@ -295,12 +308,12 @@ export default function CustomerTab() {
                 <p><strong>Task {i + 1}:</strong> {item.itemData?.description}</p>
                 <p>Category: {item.category}</p>
                 <p>Priority: {item.itemData?.priority}</p>
-                <p>Estimated Price: ₹{item.estimatedPrice}</p>
+                <p>Estimated Price: {currency}{item.estimatedPrice}</p>
               </div>
             ))}
 
             <hr />
-            <h4 className="modal-header-h4">Total Estimated Amount: ₹{selectedJob.totalEstimatedAmount}</h4>
+            <h4 className="modal-header-h4">Total Estimated Amount: {currency}{selectedJob.totalEstimatedAmount}</h4>
           </div>
         </div>
       )}

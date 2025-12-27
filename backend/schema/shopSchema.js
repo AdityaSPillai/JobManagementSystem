@@ -156,6 +156,11 @@ const shopSchema = new mongoose.Schema({
   logLimit: {
     type: Number,
     default: 1000
+  },
+
+  currency: {
+    type: String,
+    default: "$"
   }
 }, {
   timestamps: true

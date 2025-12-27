@@ -283,8 +283,21 @@ function manPowerCategoryTab() {
     }
   };
 
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
-    if (shopId) fetchmanPowerCategories();
+    if (shopId) fetchmanPowerCategories(); getCurrency();
   }, [shopId]);
 
   return (
@@ -320,7 +333,7 @@ function manPowerCategoryTab() {
                     <span className="table-primary-text">{cat.name}</span>
                   </td>
                   <td>
-                    <span className="badge-rate">${cat.hourlyRate}/hr</span>
+                    <span className="badge-rate">{currency}{cat.hourlyRate}/hr</span>
                   </td>
                   <td>
                     <span className="table-primary-text">{cat.role}</span>

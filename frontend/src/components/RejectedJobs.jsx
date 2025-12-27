@@ -42,8 +42,21 @@ function RejectedJobs() {
     }
   };
 
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
-    if (userInfo?.shopId) getAllRejectedJobs();
+    if (userInfo?.shopId) getAllRejectedJobs(); getCurrency();
   }, [userInfo?.shopId]);
 
   return (
@@ -134,7 +147,7 @@ function RejectedJobs() {
               <div><strong>Model:</strong> {selectedJob.formData.vehicle_model}</div>
               <div><strong>Contact:</strong> {selectedJob.formData.contact_number}</div>
               <div><strong>Status:</strong> {selectedJob.status}</div>
-              <div><strong>Total Estimation:</strong> ${selectedJob.totalEstimatedAmount}</div>
+              <div><strong>Total Estimation:</strong> {currency}{selectedJob.totalEstimatedAmount}</div>
             </div>
 
             <div className="job-items-container">
@@ -147,7 +160,7 @@ function RejectedJobs() {
                   <p>Priority: {item.itemData.priority}</p>
                   <p>Category: {item.category}</p>
                   <p>Man Hours: {item.estimatedManHours}</p>
-                  <p>Estimated Price: ${item.estimatedPrice}</p>
+                  <p>Estimated Price: {currency}{item.estimatedPrice}</p>
                 </div>
               ))}
             </div>

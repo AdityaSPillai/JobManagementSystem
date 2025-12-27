@@ -16,11 +16,24 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     setError("");
+    getCurrency();
   };
 
   const handleSubmit = async (e) => {
@@ -74,7 +87,7 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
               />
             </div>
             <div className="form-group">
-              <label>Price (₹) *</label>
+              <label>Price ({currency}) *</label>
               <input
                 type="number"
                 name="price"
@@ -133,9 +146,22 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
   const [formData, setFormData] = useState(consumable || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
 
   useEffect(() => {
     setFormData(consumable || {});
+    getCurrency();
   }, [consumable]);
 
   const handleChange = (e) => {
@@ -191,7 +217,7 @@ function EditConsumableModal({ isVisible, onClose, consumable, onUpdate }) {
               />
             </div>
             <div className="form-group">
-              <label>Price (₹) *</label>
+              <label>Price ({currency}) *</label>
               <input
                 type="number"
                 name="price"
@@ -269,8 +295,21 @@ function ConsumablesTab() {
     }
   };
 
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
+
   useEffect(() => {
-    if (userInfo?.shopId) fetchConsumables();
+    if (userInfo?.shopId) fetchConsumables(); getCurrency();
   }, [userInfo?.shopId]);
 
   const handleDelete = async (id) => {
@@ -322,7 +361,7 @@ function ConsumablesTab() {
                   </td>
 
                   <td>
-                    <span className="badge-rate">₹{item.price}</span>
+                    <span className="badge-rate">{currency}{item.price}</span>
                   </td>
 
                   <td>

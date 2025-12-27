@@ -72,6 +72,15 @@ export default function EditShopTab() {
         }
     };
 
+    const CURRENCIES = [
+        { code: "INR", symbol: "₹", label: "INR (₹) - Indian Rupee" },
+        { code: "USD", symbol: "$", label: "USD ($) - US Dollar" },
+        { code: "AED", symbol: "د.إ", label: "AED (د.إ) - UAE Dirham" },
+        { code: "EUR", symbol: "€", label: "EUR (€) - Euro" },
+        { code: "GBP", symbol: "£", label: "GBP (£) - British Pound" },
+        { code: "JPY", symbol: "¥", label: "JPY (¥) - Japanese Yen" },
+    ];
+
     if (!shop) return <p className="loading-container">Loading shop details...</p>;
 
     return (
@@ -89,7 +98,18 @@ export default function EditShopTab() {
 
                     <div className="edit-shop-form-group">
                         <label>Currency *</label>
-                        <input type="text" name="currency" value={shop.currency} onChange={handleChange} />
+                        <select
+                            name="currency"
+                            value={shop.currency}
+                            onChange={handleChange}
+                        >
+                            <option value="">Select Currency</option>
+                            {CURRENCIES.map((c) => (
+                                <option key={c.code} value={c.symbol}>
+                                    {c.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

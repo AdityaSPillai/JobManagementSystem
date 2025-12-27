@@ -115,3 +115,17 @@
   font-weight: 600;
   text-align: center;
 }
+
+.edit-shop-form-group select {
+  padding: 10px 12px;
+  color: black;
+  border-radius: 8px;
+  border: 1px solid #d0d5dd;
+  font-size: 14px;
+  background-color: #fff;
+  outline: none;
+}
+
+.edit-shop-form-group select:focus {
+  border-color: #2563eb;
+}

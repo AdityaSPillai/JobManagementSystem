@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "../utils/axios.js";
-import useAuth from "../context/context.jsx";
 import "../styles/EstimatorDashboard.css";
+import useAuth from '../context/context.jsx';
+
 
 export default function CreateJobCard({ onClose, onJobCreated }) {
   const { userInfo } = useAuth();
@@ -17,6 +18,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [consumableQty, setConsumableQty] = useState({});
+  const [currency, setCurrency] = useState("$");
 
   const [formData, setFormData] = useState({
     templateId: "68f50077a6d75c0ab83cd019",
@@ -59,6 +61,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
     axios.get(`/shop/allConsumables/${userInfo.shopId}`).then(r => setConsumables(r.data?.consumables || []));
     axios.get(`/shop/allCategories/${userInfo.shopId}`).then(r => setCategories(r.data?.categories || []));
     axios.get(`/customer/list/${userInfo.shopId}`).then(r => setCustomers(r.data?.customers || []));
+    getCurrency();
   }, [userInfo]);
 
   /* =======================
@@ -253,6 +256,17 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
       0
     );
     return itemsTotal + machineTotal + consumableTotal;
+  };
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
   };
 
   /* =======================
@@ -526,7 +540,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
                           {/* Machine Cost Display */}
                           {machine.machineHourlyRate > 0 && (
                             <p className="machine-cost-info">
-                              Rate: ${machine.machineHourlyRate}/hr | Cost: $
+                              Rate: {currency}{machine.machineHourlyRate}/hr | Cost: {currency}
                               {(machine.machineEstimatedCost || 0).toFixed(2)}
                             </p>
                           )}
@@ -548,7 +562,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
                 {/* Leave original class name as requested */}
                 {Array.isArray(item.machine) && item.machine.length > 0 && (
                   <div className="machine-total-cost">
-                    Total Machine Cost: $
+                    Total Machine Cost: {currency}
                     {item.machine
                       .reduce((sum, m) => sum + (m.machineEstimatedCost || 0), 0)
                       .toFixed(2)}
@@ -593,7 +607,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
                       <option value="">--Select Consumable--</option>
                       {consumables.map((cOpt) => (
                         <option key={cOpt._id} value={cOpt._id} >
-                          {cOpt.name} - ${cOpt.price}{(cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock'}
+                          {cOpt.name} - {currency}{cOpt.price}{(cOpt.quantity) ? ` (In Stock: )` : 'Out of Stock'}
                         </option>
                       ))}
                       <option value="manual">+ Add Manual Consumable</option>
@@ -700,7 +714,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
         <div className="form-footer">
           <div className="total-amount">
             <span>Total Estimated Amount:</span>
-            <span className="amount">${calculateFormTotal().toFixed(2)}</span>
+            <span className="amount">{currency}{calculateFormTotal().toFixed(2)}</span>
           </div>
           <button className="btn-save-job" onClick={handleSaveJob}>Save Job Card</button>
         </div>

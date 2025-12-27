@@ -133,6 +133,17 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     }
   };
 
+  const [currency, setCurrency] = useState('$');
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+    }
+  };
 
   useEffect(() => {
     if (!userInfo) return;
@@ -146,6 +157,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
     getAllWorkers();
     getAllConsumables();
     getAllCategory();
+    getCurrency();
   }, [userInfo]);
 
   useEffect(() => {
@@ -898,7 +910,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                         {StatusLabelMap[job.status]}
                       </span>
                       <div className="modal-search-amount">
-                        ${job.totalEstimatedAmount?.toFixed(2) || '0.00'}
+                        {currency}{job.totalEstimatedAmount?.toFixed(2) || '0.00'}
                       </div>
                     </div>
                   </div>
@@ -1247,7 +1259,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                                 <tr key={ci}>
                                   <td>{ci + 1}</td>
                                   <td>{c.name}</td>
-                                  <td>${c.price}</td>
+                                  <td>{currency}{c.price}</td>
                                   <td>{c.numberOfUsed || 0}</td>
                                   <td>
                                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -1329,7 +1341,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                         )
                         .map(co => (
                           <option key={co._id} value={co._id}>
-                            {co.name} — ${co.price}
+                            {co.name} — {currency}{co.price}
                           </option>
                         ))}
                     </select>
@@ -1380,7 +1392,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
               <div className="form-footer edit-footer">
                 <button type="button" className="btn-delete-job" onClick={(e) => { handleDeleteClick(editFormData.id) }}>Delete Job</button>
                 <div className="footer-right">
-                  <div className="total-amount"><span>Total Est. Amount:</span><span className="amount">${calculateTotal().toFixed(2)}</span></div>
+                  <div className="total-amount"><span>Total Est. Amount:</span><span className="amount">{currency}{calculateTotal().toFixed(2)}</span></div>
                   <button type="submit" className="btn-save-job">Save Changes</button>
                 </div>
               </div>
@@ -1716,6 +1728,17 @@ function SupervisorDashboard({ onLogout }) {
     }
   };
 
+  const [currency, setCurrency] = useState('$');
+
+  const getCurrency = async () => {
+    try {
+      const res = await axios.get('/currency');
+      setCurrency(res.data.currency);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   // Fetch names when job is selected or items change
   useEffect(() => {
     if (selectedJob?.items) {
@@ -1725,6 +1748,7 @@ function SupervisorDashboard({ onLogout }) {
         }
       });
     }
+    getCurrency();
   }, [selectedJob]);
 
 
@@ -2012,7 +2036,7 @@ function SupervisorDashboard({ onLogout }) {
 
                                             <td>{c.name}</td>
 
-                                            <td>${c.price}</td>
+                                            <td>{currency}{c.price}</td>
 
                                             <td>{c.numberOfUsed}</td>
                                           </tr>
@@ -2102,7 +2126,7 @@ function SupervisorDashboard({ onLogout }) {
                       <div className="job-detail-total">
                         <strong className="total-label">Actual cost:</strong>
                         <strong className="total-amount">
-                          ${calculateActualCost(selectedJob).toFixed(2)}
+                          {currency}{calculateActualCost(selectedJob).toFixed(2)}
                         </strong>
                       </div>
                     ) : (
@@ -2113,7 +2137,7 @@ function SupervisorDashboard({ onLogout }) {
                     <div className="job-detail-total">
                       <strong className="total-label">Total Estimated Amount:</strong>
                       <strong className="total-amount">
-                        ${(selectedJob?.totalEstimatedAmount || 0).toFixed(2)}
+                        {currency}{(selectedJob?.totalEstimatedAmount || 0).toFixed(2)}
                       </strong>
                     </div>
                   </div>
