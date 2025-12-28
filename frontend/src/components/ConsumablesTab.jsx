@@ -29,11 +29,14 @@ function AddConsumableModal({ isVisible, onClose, onSubmit }) {
     }
   };
 
+  useEffect(() => {
+    getCurrency();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     setError("");
-    getCurrency();
   };
 
   const handleSubmit = async (e) => {

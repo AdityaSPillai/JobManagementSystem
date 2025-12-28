@@ -655,7 +655,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
                         <input
                           type="number"
                           // placeholder="Price ($)"
-                          placeholder="Price"
+                          placeholder={`Price (${currency})`}
                           value={c.price || ""}
                           onChange={(e) => {
                             const updated = [...item.consumable];

@@ -927,7 +927,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
 
           {editFormData && (
             <form onSubmit={handleSubmit} onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}>
-              {!initialJobData && (<button type="button" className="btn-back" onClick={() => handleJobSelect('')}>&larr; Back to Job Selection</button>)}
+              {!initialJobData && (<button type="button" className="btn-back" onClick={() => handleJobSelect('')}>&larr; Back</button>)}
 
               <div className="form-row">
                 <div className="form-group">
@@ -1248,7 +1248,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                               <tr>
                                 <th>Sl No.</th>
                                 <th>Name</th>
-                                <th>Price</th>
+                                <th>Price ({currency})</th>
                                 <th>Used</th>
                                 <th>Action</th>
                               </tr>
@@ -1259,7 +1259,7 @@ function EditJobModal({ isOpen, onClose, jobs, initialJobData, onSave, onDelete 
                                 <tr key={ci}>
                                   <td>{ci + 1}</td>
                                   <td>{c.name}</td>
-                                  <td>{currency}{c.price}</td>
+                                  <td>{c.price}</td>
                                   <td>{c.numberOfUsed || 0}</td>
                                   <td>
                                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -1732,15 +1732,18 @@ function SupervisorDashboard({ onLogout }) {
 
   const getCurrency = async () => {
     try {
-      const res = await axios.get('/currency');
-      setCurrency(res.data.currency);
+      const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+      if (res.data?.currency) {
+        setCurrency(res.data.currency);
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching currency:", error);
     }
   };
 
   // Fetch names when job is selected or items change
   useEffect(() => {
+    getCurrency();
     if (selectedJob?.items) {
       selectedJob.items.forEach(item => {
         if (item.workers.workerAssigned && !employeeNames[item.workers.workerAssigned]) {
@@ -1748,7 +1751,6 @@ function SupervisorDashboard({ onLogout }) {
         }
       });
     }
-    getCurrency();
   }, [selectedJob]);
 
 
@@ -2024,7 +2026,7 @@ function SupervisorDashboard({ onLogout }) {
                                         <tr>
                                           <th>Sl No.</th>
                                           <th>Name</th>
-                                          <th>Price</th>
+                                          <th>Price ({currency})</th>
                                           <th>Used</th>
                                         </tr>
                                       </thead>
@@ -2036,7 +2038,7 @@ function SupervisorDashboard({ onLogout }) {
 
                                             <td>{c.name}</td>
 
-                                            <td>{currency}{c.price}</td>
+                                            <td>{c.price}</td>
 
                                             <td>{c.numberOfUsed}</td>
                                           </tr>

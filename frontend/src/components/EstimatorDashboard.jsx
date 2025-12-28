@@ -1820,7 +1820,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                         <tr>
                                           <th>Sl No.</th>
                                           <th>Name</th>
-                                          <th>Price</th>
+                                          <th>Price ({currency})</th>
                                           <th>Used</th>
                                           <th>Action</th>
                                         </tr>
@@ -2402,7 +2402,7 @@ function EstimatorDashboard({ onLoginClick }) {
                                 <input
                                   type="number"
                                   // placeholder="Price ($)"
-                                  placeholder="Price"
+                                  placeholder={`Price (${currency})`}
                                   value={c.price || ""}
                                   onChange={(e) => {
                                     const updated = [...item.consumable];

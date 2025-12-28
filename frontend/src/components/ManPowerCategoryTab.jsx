@@ -21,6 +21,20 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
     setFormData({ name: '', hourlyRate: '' });
   };
 
+  const { userInfo } = useAuth();
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+    if (res.data?.currency) {
+      setCurrency(res.data.currency);
+    }
+  };
+
+  useEffect(() => {
+    getCurrency();
+  }, []);
+
   if (!isVisible) return null;
 
   return (
@@ -47,7 +61,7 @@ function AddCategoryModal({ isVisible, onClose, onSubmit }) {
 
             <div className="form-group">
               {/* <label htmlFor="hourlyRate">Hourly Rate ($)</label> */}
-              <label htmlFor="hourlyRate">Hourly Rate</label>
+              <label htmlFor="hourlyRate">Hourly Rate ({currency}/hr)</label>
               <input
                 type="number"
                 id="hourlyRate"
@@ -92,6 +106,15 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
     hourlyRate: '',
     role: ''
   });
+  const { userInfo } = useAuth();
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+    if (res.data?.currency) {
+      setCurrency(res.data.currency);
+    }
+  };
 
   // Populate the form when category data changes
   useEffect(() => {
@@ -101,6 +124,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
         hourlyRate: manPowerData.hourlyRate || '',
         role: manPowerData.role || ''
       });
+      getCurrency();
     }
   }, [manPowerData]);
 
@@ -163,7 +187,7 @@ function EditCategoryModal({ isVisible, onClose, onSubmit, manPowerData }) {
 
             <div className="form-group">
               {/* <label htmlFor="edit-hourlyRate">Hourly Rate ($)</label> */}
-              <label htmlFor="edit-hourlyRate">Hourly Rate</label>
+              <label htmlFor="edit-hourlyRate">Hourly Rate ({currency}/hr)</label>
               <input
                 type="number"
                 id="edit-hourlyRate"

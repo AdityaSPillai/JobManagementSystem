@@ -4,6 +4,19 @@ import useAuth from '../context/context.jsx';
 
 function AddMachineCategoryModal({ isVisible, onClose, onSubmit }) {
   const [formData, setFormData] = useState({ name: '', hourlyRate: '' });
+  const { userInfo } = useAuth();
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+    if (res.data?.currency) {
+      setCurrency(res.data.currency);
+    }
+  };
+
+  useEffect(() => {
+    getCurrency();
+  }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -30,7 +43,7 @@ function AddMachineCategoryModal({ isVisible, onClose, onSubmit }) {
             </div>
             <div className="form-group">
               {/* <label>Hourly Rate ($)</label> */}
-              <label>Hourly Rate</label>
+              <label>Hourly Rate ({currency}/hr)</label>
               <input name="hourlyRate" type="number" value={formData.hourlyRate} onChange={handleChange} required />
             </div>
           </div>
@@ -43,9 +56,19 @@ function AddMachineCategoryModal({ isVisible, onClose, onSubmit }) {
 
 function EditMachineCategoryModal({ isVisible, onClose, onSubmit, categoryData }) {
   const [hourlyRate, setHourlyRate] = useState('');
+  const { userInfo } = useAuth();
+  const [currency, setCurrency] = useState("$");
+
+  const getCurrency = async () => {
+    const res = await axios.get(`/shop/getCurrency/${userInfo?.shopId}`);
+    if (res.data?.currency) {
+      setCurrency(res.data.currency);
+    }
+  };
 
   useEffect(() => {
     if (categoryData) setHourlyRate(categoryData.hourlyRate || '');
+    getCurrency();
   }, [categoryData]);
 
   const handleSubmit = (e) => {
@@ -71,7 +94,7 @@ function EditMachineCategoryModal({ isVisible, onClose, onSubmit, categoryData }
             </div>
             <div className="form-group">
               {/* <label>Hourly Rate ($)</label> */}
-              <label>Hourly Rate</label>
+              <label>Hourly Rate ({currency}/hr)</label>
               <input
                 type="number"
                 value={hourlyRate}
