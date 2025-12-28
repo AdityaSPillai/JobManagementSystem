@@ -1375,12 +1375,12 @@ export const updateActualCostController = async (req, res) => {
 export const usedConsumableController = async (req, res) => {
   try {
     const { jobId, jobItemId, consumableId } = req.params;
-    const { usedQty } = req.body;
+    const { usedQuantity = 1 } = req.body;
 
-    if (!usedQty || usedQty <= 0) {
+    if (!jobId || !jobItemId || !consumableId) {
       return res.status(400).json({
         success: false,
-        message: "Invalid used quantity"
+        message: "jobId, jobItemId and consumableId are required"
       });
     }
 
@@ -1394,33 +1394,41 @@ export const usedConsumableController = async (req, res) => {
       return res.status(404).json({ success: false, message: "Job item not found" });
     }
 
-    const consumable = jobItem.consumable.find(
-      c => String(c.consumableRef) === String(consumableId)
-    );
+    const consumable = jobItem.consumable.id(consumableId);
     if (!consumable) {
       return res.status(404).json({ success: false, message: "Consumable not found" });
     }
 
-    consumable.numberOfUsed += usedQty;
+    // ✅ Update usage
+    consumable.numberOfUsed =
+      (consumable.numberOfUsed || 0) + Number(usedQuantity);
 
-    if (consumable.numberOfUsed > 0) {
-      consumable.available = true;
+    // ✅ Availability logic
+    if (
+      consumable.estimatedUsage > 0 &&
+      consumable.numberOfUsed >= consumable.estimatedUsage
+    ) {
+      consumable.available = false;
     }
 
-    job.actualTotalAmount += consumable.price * usedQty;
+    jobItem.status = "in_progress";
+    job.status = "in_progress";
 
     await job.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Consumable usage updated",
-      consumable,
-      actualTotalAmount: job.actualTotalAmount
+      message: "Consumable usage updated successfully",
+      data: {
+        consumableId: consumable._id,
+        numberOfUsed: consumable.numberOfUsed,
+        available: consumable.available
+      }
     });
 
   } catch (error) {
-    console.error("Consumable usage error:", error);
-    res.status(500).json({
+    console.error("Used consumable error:", error);
+    return res.status(500).json({
       success: false,
       message: error.message
     });

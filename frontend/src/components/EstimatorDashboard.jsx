@@ -463,7 +463,6 @@ function EstimatorDashboard({ onLoginClick }) {
                   ? { ...m, startTime: new Date().toISOString(), endTime: null }
                   : m
               ),
-              itemStatus: 'running'
             };
           });
 
@@ -1435,7 +1434,7 @@ function EstimatorDashboard({ onLoginClick }) {
     try {
       const res = await axios.put(
         `/jobs/usedConsumable/${jobId}/${jobItemId}/${consumableId}`,
-        { usedQty: qty }
+        { usedQuantity: qty }
       );
 
       if (!res.data.success) {
