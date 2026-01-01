@@ -40,10 +40,14 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
           priority: "",
         },
         estimatedPrice: 0,
-        category: "",
-        estimatedManHours: 0,
-        numberOfWorkers: 1,
-        hourlyRate: 0,
+        allowedWorkers: [
+          {
+            category: "",
+            estimatedManHours: 0,
+            numberOfWorkers: 1,
+            hourlyRate: 0,
+          }
+        ],
         machine: [],
         consumable: [],
       },
@@ -106,10 +110,14 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
         {
           itemData: { job_type: "", description: "", priority: "" },
           estimatedPrice: 0,
-          category: "",
-          estimatedManHours: 0,
-          numberOfWorkers: 1,
-          hourlyRate: 0,
+          allowedWorkers: [
+            {
+              category: "",
+              estimatedManHours: 0,
+              numberOfWorkers: 1,
+              hourlyRate: 0,
+            }
+          ],
           machine: [],
           consumable: [],
         },
@@ -175,6 +183,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
           job_type_id: serviceId,
           description: selectedService?.description || ''
         },
+        // Base price from service, but we'll recalculate total including labor
         estimatedPrice: selectedService?.price || 0
       };
 
@@ -182,20 +191,55 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
     });
   };
 
-  const handleJobCategorySelect = (index, categoryName) => {
+  const addManPowerToItem = (index) => {
+    setFormData(prev => {
+      const items = [...prev.jobItems];
+      items[index] = {
+        ...items[index],
+        allowedWorkers: [
+          ...(items[index].allowedWorkers || []),
+          { category: "", estimatedManHours: 0, numberOfWorkers: 1, hourlyRate: 0 }
+        ]
+      };
+      return { ...prev, jobItems: items };
+    });
+  };
+
+  const removeManPowerFromItem = (itemIndex, workerIndex) => {
+    setFormData(prev => {
+      const items = [...prev.jobItems];
+      if (items[itemIndex].allowedWorkers.length === 1) return prev;
+      items[itemIndex].allowedWorkers = items[itemIndex].allowedWorkers.filter((_, i) => i !== workerIndex);
+      return { ...prev, jobItems: items };
+    });
+  };
+
+  const handleJobCategorySelect = (itemIndex, workerIndex, categoryName) => {
     const selectedCategory = categories.find(c => c.name === categoryName);
+    const hourlyRate = selectedCategory?.hourlyRate || 0;
+
     setFormData(prev => {
       const updatedJobItems = [...prev.jobItems];
-      const currentItem = updatedJobItems[index];
-      const hourlyRate = selectedCategory?.hourlyRate || 0;
-
-      updatedJobItems[index] = {
-        ...currentItem,
+      const workers = [...updatedJobItems[itemIndex].allowedWorkers];
+      workers[workerIndex] = {
+        ...workers[workerIndex],
         category: categoryName,
-        hourlyRate: hourlyRate,
-        // Recalculate price if man-hours already exist
-        estimatedPrice: (currentItem.estimatedManHours || 0) * hourlyRate
+        hourlyRate: hourlyRate
       };
+      updatedJobItems[itemIndex].allowedWorkers = workers;
+      return { ...prev, jobItems: updatedJobItems };
+    });
+  };
+
+  const handleManPowerChange = (itemIndex, workerIndex, field, value) => {
+    setFormData(prev => {
+      const updatedJobItems = [...prev.jobItems];
+      const workers = [...updatedJobItems[itemIndex].allowedWorkers];
+      workers[workerIndex] = {
+        ...workers[workerIndex],
+        [field]: field === 'category' ? value : parseFloat(value) || 0
+      };
+      updatedJobItems[itemIndex].allowedWorkers = workers;
       return { ...prev, jobItems: updatedJobItems };
     });
   };
@@ -241,7 +285,10 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
      TOTAL CALC (EXACT)
      ======================= */
   const calculateFormTotal = () => {
-    const itemsTotal = formData.jobItems.reduce((s, i) => s + (i.estimatedPrice || 0), 0);
+    const laborTotal = formData.jobItems.reduce((s, i) =>
+      s + (i.allowedWorkers || []).reduce((ws, w) => ws + (w.estimatedManHours || 0) * (w.hourlyRate || 0) * (w.numberOfWorkers || 1), 0),
+      0
+    );
     const machineTotal = formData.jobItems.reduce(
       (s, i) => s + i.machine.reduce((m, x) => m + (x.machineEstimatedCost || 0), 0),
       0
@@ -255,7 +302,7 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
         ),
       0
     );
-    return itemsTotal + machineTotal + consumableTotal;
+    return laborTotal + machineTotal + consumableTotal;
   };
 
   const getCurrency = async () => {
@@ -284,17 +331,18 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
       shopId: userInfo.shopId,
       customerIDNumber: formData.customerIDNumber,
       formData: formData.formData,
-      jobItems: formData.jobItems.map(item => ({
-        itemData: item.itemData,
-        estimatedPrice:
-          item.estimatedPrice +
-          item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0),
-        numberOfWorkers: item.numberOfWorkers,
-        category: item.category,
-        estimatedManHours: item.estimatedManHours,
-        machine: item.machine,
-        consumable: item.consumable,
-      })),
+      jobItems: formData.jobItems.map(item => {
+        const laborCost = (item.allowedWorkers || []).reduce((s, w) => s + (w.estimatedManHours || 0) * (w.hourlyRate || 0) * (w.numberOfWorkers || 1), 0);
+        const machineCost = item.machine.reduce((s, m) => s + (m.machineEstimatedCost || 0), 0);
+
+        return {
+          itemData: item.itemData,
+          estimatedPrice: laborCost + machineCost,
+          allowedWorkers: item.allowedWorkers,
+          machine: item.machine,
+          consumable: item.consumable,
+        };
+      }),
     };
 
     await axios.post("/jobs/new-job", payload);
@@ -413,38 +461,67 @@ export default function CreateJobCard({ onClose, onJobCreated }) {
                     ))}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Man Power Category</label>
-                  <select
-                    value={item.category || ''}
-                    onChange={(e) => handleJobCategorySelect(index, e.target.value)}
-                  >
-                    <option value="">-- Select Category --</option>
-                    {categories.map(category => (
-                      <option key={category._id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Estimated Man-Hours </label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={item.estimatedManHours || ''}
-                    onChange={(e) => handleJobItemChange(index, 'estimatedManHours', e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Number of Workers </label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={item.numberOfWorkers || ''}
-                    onChange={(e) => handleJobItemChange(index, 'numberOfWorkers', e.target.value)}
-                  />
+              </div>
+              <div className='form-row'>
+                <div className="form-group manpower-section-wide">
+                  <div className="form-group-machines-header">
+                    <label>Man Power Required</label>
+                    <button
+                      type="button"
+                      className="btn-add-job"
+                      onClick={() => addManPowerToItem(index)}
+                    >
+                      <span className="add-con-wrapper">
+                        <img src="/plus.png" alt="Plus Icon" className="plus-icon-con" />
+                        Add Manpower
+                      </span>
+                    </button>
+                  </div>
+                  {item.allowedWorkers.map((worker, wIndex) => (
+                    <div key={wIndex} className="manpower-entry">
+                      <div className="form-group">
+                        <label>Category</label>
+                        <select
+                          value={worker.category || ''}
+                          onChange={(e) => handleJobCategorySelect(index, wIndex, e.target.value)}
+                        >
+                          <option value="">-- Select Category --</option>
+                          {categories.map(category => (
+                            <option key={category._id} value={category.name}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Hours</label>
+                        <input
+                          type="number"
+                          placeholder="0"
+                          value={worker.estimatedManHours || ''}
+                          onChange={(e) => handleManPowerChange(index, wIndex, 'estimatedManHours', e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Workers</label>
+                        <input
+                          type="number"
+                          placeholder="0"
+                          value={worker.numberOfWorkers || ''}
+                          onChange={(e) => handleManPowerChange(index, wIndex, 'numberOfWorkers', e.target.value)}
+                        />
+                      </div>
+                      {item.allowedWorkers.length > 1 && (
+                        <button
+                          type="button"
+                          className="machine-remove-btn"
+                          onClick={() => removeManPowerFromItem(index, wIndex)}
+                        >
+                          ❌
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 

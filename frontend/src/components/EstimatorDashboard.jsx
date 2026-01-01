@@ -236,17 +236,17 @@ function EstimatorDashboard({ onLoginClick }) {
 
             // Determine status from backend timestamps
             const computedStatus = item.status || 'pending';
-            const aw = item.allowedWorkers?.[0] || {};
+            const awArray = item.allowedWorkers || [];
+            const totalRequiredWorkers = awArray.reduce((sum, w) => sum + (w.numberOfWorkers || 1), 0);
+
             return {
               itemId: item._id,
               jobType: item.itemData?.job_type || '',
               description: item.itemData?.description || '',
               priority: item.itemData?.priority || '',
               estimatedPrice: item.estimatedPrice || 0,
-              category: aw.category,
-              estimatedManHours: aw.estimatedManHours,
-              numberOfWorkers: aw.numberOfWorkers,
-              hourlyRate: aw.hourlyRate,
+              allowedWorkers: awArray,
+              numberOfWorkers: totalRequiredWorkers,
               notes: item.notes || '',
               itemStatus: computedStatus,
 
@@ -293,10 +293,9 @@ function EstimatorDashboard({ onLoginClick }) {
   };
 
   const getMaxAllowedWorkers = (item, jobStatus) => {
-    const base =
-      item.allowedWorkers?.[0]?.numberOfWorkers ||
-      item.numberOfWorkers || //remove this after database is updated
-      1;
+    const base = Array.isArray(item.allowedWorkers)
+      ? item.allowedWorkers.reduce((sum, w) => sum + (w.numberOfWorkers || 1), 0)
+      : (item.numberOfWorkers || 1);
     return jobStatus === 'rejected' ? base * 2 : base;
   };
 
@@ -824,53 +823,64 @@ function EstimatorDashboard({ onLoginClick }) {
     });
   };
 
-  const updateAllowedWorker = async (itemIndex, updates) => {
+  const addManPowerToItem = (index) => {
     setFormData(prev => {
       const items = [...prev.jobItems];
-      const item = { ...items[itemIndex] };
-
-      const current = item.allowedWorkers?.[0] || {
-        category: '',
-        estimatedManHours: 0,
-        numberOfWorkers: 1,
-        hourlyRate: 0
+      items[index] = {
+        ...items[index],
+        allowedWorkers: [
+          ...(items[index].allowedWorkers || []),
+          { category: "", estimatedManHours: 0, numberOfWorkers: 1, hourlyRate: 0 }
+        ]
       };
+      return { ...prev, jobItems: items };
+    });
+  };
 
-      item.allowedWorkers = [
-        { ...current, ...updates }
-      ];
+  const removeManPowerFromItem = (itemIndex, workerIndex) => {
+    setFormData(prev => {
+      const items = [...prev.jobItems];
+      if (items[itemIndex].allowedWorkers.length === 1) return prev;
+      items[itemIndex].allowedWorkers = items[itemIndex].allowedWorkers.filter((_, i) => i !== workerIndex);
+      return { ...prev, jobItems: items };
+    });
+  };
 
-      items[itemIndex] = item;
+  const updateAllowedWorker = async (itemIndex, workerIndex, updates) => {
+    setFormData(prev => {
+      const items = [...prev.jobItems];
+      if (!items[itemIndex]) return prev;
+      const workers = [...(items[itemIndex].allowedWorkers || [])];
+
+      if (!workers[workerIndex]) {
+        workers[workerIndex] = {
+          category: '',
+          estimatedManHours: 0,
+          numberOfWorkers: 1,
+          hourlyRate: 0
+        };
+      }
+
+      workers[workerIndex] = { ...workers[workerIndex], ...updates };
+      items[itemIndex].allowedWorkers = workers;
       return { ...prev, jobItems: items };
     });
 
     if (updates.category) {
       try {
         const { data } = await axios.get(
-          `shop/getManPowerHourlyRate/${formData.shopId}/${updates.category}`
+          `shop/getManPowerHourlyRate/${userInfo.shopId}/${updates.category}`
         );
 
         if (data?.success) {
           setFormData(prev => {
             const items = [...prev.jobItems];
-            const item = { ...items[itemIndex] };
-
-            const worker = item.allowedWorkers[0];
-
-            const updatedWorker = {
-              ...worker,
+            const workers = [...items[itemIndex].allowedWorkers];
+            workers[workerIndex] = {
+              ...workers[workerIndex],
               hourlyRate: data.rate
             };
-
-            item.allowedWorkers = [updatedWorker];
-
-            const manHours = Number(updatedWorker.estimatedManHours) || 0;
-            const workers = Number(updatedWorker.numberOfWorkers) || 1;
-            const rate = Number(updatedWorker.hourlyRate) || 0;
-
-            item.estimatedPrice = manHours * workers * rate;
-
-            items[itemIndex] = item;
+            items[itemIndex].allowedWorkers = workers;
             return { ...prev, jobItems: items };
           });
         }
@@ -941,9 +951,9 @@ function EstimatorDashboard({ onLoginClick }) {
       const laborCost = Array.isArray(item.allowedWorkers)
         ? item.allowedWorkers.reduce((sum, w) => {
           const manHours = Number(w.estimatedManHours) || 0;
+          const numWorkers = Number(w.numberOfWorkers) || 1;
           const rate = Number(w.hourlyRate) || 0;
-          console.log("Labor Hourly Rate:", rate);
-          return sum + manHours * rate;
+          return sum + (manHours * numWorkers * rate);
         }, 0)
         : 0;
 
@@ -995,16 +1005,20 @@ function EstimatorDashboard({ onLoginClick }) {
     if (!job || !job.items) return 0;
 
     return job.items.reduce((total, item) => {
-      const aw = item.allowedWorkers?.[0];
-      const hourlyRate = aw?.hourlyRate || 0;
+      const laborCost = (item.workers || []).reduce((sum, w) => {
+        const employee = employees.find(e => e._id === w.workerAssigned);
+        const specialization = employee?.specialization?.trim().toLowerCase();
 
-      // Worker actual duration in minutes from backend (already in item.worker.actualDuration)
-      const totalActualMinutes = Array.isArray(item.workers)
-        ? item.workers.reduce((s, w) => s + (w.actualDuration || 0), 0)
-        : (item.worker?.actualDuration || 0);
+        // Find matching category rate, fallback to first category's rate
+        const matchingAW = item.allowedWorkers?.find(aw => aw.category?.trim().toLowerCase() === specialization)
+          || item.allowedWorkers?.[0];
+        const hourlyRate = matchingAW?.hourlyRate || 0;
 
-      const actualHours = totalActualMinutes / 60;
-      const laborCost = actualHours * hourlyRate;
+        // Assuming actualDuration is in minutes in frontend (based on handleEndItemTimer)
+        // If it's in seconds, use / 3600
+        const actualHours = (w.actualDuration || 0) / 60;
+        return sum + (actualHours * hourlyRate);
+      }, 0);
 
       // Optional: if you want to include machine cost dynamically (if machine actualDuration is tracked)
       const machineHours = (item.machine?.actualDuration || 0) / 60;
@@ -1091,7 +1105,9 @@ function EstimatorDashboard({ onLoginClick }) {
 
         console.log("Total Consumable Cost:", totalConsumableCost);
 
-        const totalEmployeeCost = item.allowedWorkers[0].estimatedManHours * item.allowedWorkers[0].hourlyRate;
+        const totalEmployeeCost = (item.allowedWorkers || []).reduce((sum, w) => {
+          return sum + (Number(w.estimatedManHours) || 0) * (Number(w.numberOfWorkers) || 1) * (Number(w.hourlyRate) || 0);
+        }, 0);
 
         const totalCost = totalMachineCost + totalConsumableCost + totalEmployeeCost;
 
@@ -1208,18 +1224,13 @@ function EstimatorDashboard({ onLoginClick }) {
     });
   };
 
-  const handleJobCategorySelect = (index, categoryName) => {
+  const handleJobCategorySelect = (itemIndex, workerIndex, categoryName) => {
     const selectedCategory = categories.find(c => c.name === categoryName);
-    setFormData(prev => {
-      const updatedJobItems = [...prev.jobItems];
-      const currentItem = updatedJobItems[index];
-      const hourlyRate = selectedCategory?.hourlyRate || 0;
+    const hourlyRate = selectedCategory?.hourlyRate || 0;
 
-      updateAllowedWorker(index, {
-        category: categoryName,
-        hourlyRate
-      });
-      return { ...prev, jobItems: updatedJobItems };
+    updateAllowedWorker(itemIndex, workerIndex, {
+      category: categoryName,
+      hourlyRate
     });
   };
 
@@ -1739,7 +1750,18 @@ function EstimatorDashboard({ onLoginClick }) {
                                 <div className="item-description">{item.description}</div>
                                 <div className="item-description">Priority: {item.priority}</div>
 
-                                <div className='item-description'>Estimated Man hours : {item.estimatedManHours}</div>
+                                {item.allowedWorkers && item.allowedWorkers.length > 0 && (
+                                  <div className="item-description">
+                                    <strong>Manpower Required:</strong>
+                                    <ul style={{ listStyle: 'none', paddingLeft: '10px', marginTop: '5px' }}>
+                                      {item.allowedWorkers.map((aw, awIndex) => (
+                                        <li key={awIndex}>
+                                          • {aw.category}: {aw.estimatedManHours} hrs ({aw.numberOfWorkers} workers)
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                                 <div className="item-description">
                                   Status: <span className={`status-badge status-${item.itemStatus}`}>{StatusLabelMap[item.itemStatus]}</span>
                                 </div>
@@ -1995,8 +2017,13 @@ function EstimatorDashboard({ onLoginClick }) {
                               {employees
                                 .filter(emp => emp.role === 'worker' || emp.role === 'supervisor')
                                 .filter(emp =>
-                                  emp.specialization?.trim().toLowerCase() ===
-                                  item.category?.trim().toLowerCase()
+                                  Array.isArray(item.allowedWorkers)
+                                    ? item.allowedWorkers.some(aw =>
+                                      emp.specialization?.trim().toLowerCase() ===
+                                      aw.category?.trim().toLowerCase()
+                                    )
+                                    : emp.specialization?.trim().toLowerCase() ===
+                                    item.category?.trim().toLowerCase()
                                 )
                                 .filter(emp =>
                                   !item.workers.some(
@@ -2162,49 +2189,69 @@ function EstimatorDashboard({ onLoginClick }) {
                             ))}
                           </select>
                         </div>
-                        <div className="form-group">
-                          <label>Man Power Category</label>
-                          <select
-                            value={item.allowedWorkers[0].category || ""}
-                            onChange={(e) => updateAllowedWorker(index, { category: e.target.value })}
-                          >
-                            <option value="">-- Select Category --</option>
-                            {categories.map(category => (
-                              <option key={category._id} value={category.name}>
-                                {category.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="form-group">
-                          <label>Estimated Man-Hours </label>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            value={item.allowedWorkers[0].estimatedManHours}
-                            onChange={(e) =>
-                              updateAllowedWorker(index, {
-                                estimatedManHours: Number(e.target.value)
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>Number of Workers </label>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            value={item.allowedWorkers[0].numberOfWorkers}
-                            onChange={(e) =>
-                              updateAllowedWorker(index, {
-                                numberOfWorkers: Number(e.target.value)
-                              })
-                            }
-                          />
+                      </div>
+                      <div className='form-row'>
+                        <div className="form-group manpower-section-wide">
+                          <div className="form-group-machines-header">
+                            <label>Man Power Required</label>
+                            <button
+                              type="button"
+                              className="btn-add-job"
+                              onClick={() => addManPowerToItem(index)}
+                            >
+                              <span className="add-con-wrapper">
+                                <img src="/plus.png" alt="Plus Icon" className="plus-icon-con" />
+                                Add Manpower
+                              </span>
+                            </button>
+                          </div>
+                          {item.allowedWorkers.map((worker, wIndex) => (
+                            <div key={wIndex} className="manpower-entry">
+                              <div className="form-group">
+                                <label>Category</label>
+                                <select
+                                  value={worker.category || ''}
+                                  onChange={(e) => handleJobCategorySelect(index, wIndex, e.target.value)}
+                                >
+                                  <option value="">-- Select Category --</option>
+                                  {categories.map(category => (
+                                    <option key={category._id} value={category.name}>
+                                      {category.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group">
+                                <label>Hours</label>
+                                <input
+                                  type="number"
+                                  placeholder="0"
+                                  value={worker.estimatedManHours || ''}
+                                  onChange={(e) => updateAllowedWorker(index, wIndex, { estimatedManHours: Number(e.target.value) })}
+                                />
+                              </div>
+                              <div className="form-group">
+                                <label>Workers</label>
+                                <input
+                                  type="number"
+                                  placeholder="0"
+                                  value={worker.numberOfWorkers || ''}
+                                  onChange={(e) => updateAllowedWorker(index, wIndex, { numberOfWorkers: Number(e.target.value) })}
+                                />
+                              </div>
+                              {item.allowedWorkers.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="machine-remove-btn"
+                                  onClick={() => removeManPowerFromItem(index, wIndex)}
+                                >
+                                  ❌
+                                </button>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
-
                       <div className="form-row1">
                         <div className="form-group">
                           <label>Description *</label>
@@ -2469,74 +2516,76 @@ function EstimatorDashboard({ onLoginClick }) {
             )}
           </div>
         </div>
-      </div>
+      </div >
 
 
       {/* ✅ CUSTOMER ADD POPUP — ADD IT HERE */}
-      {showCustomerPopup && (
-        <div className="customer-popup-overlay">
-          <div className="customer-popup">
-            <div className="form-group">
-              <h3>Add New Customer</h3>
+      {
+        showCustomerPopup && (
+          <div className="customer-popup-overlay">
+            <div className="customer-popup">
+              <div className="form-group">
+                <h3>Add New Customer</h3>
 
-              <input
-                placeholder="Customer Name"
-                value={newCustomer.name}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))}
-              />
+                <input
+                  placeholder="Customer Name"
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, name: e.target.value }))}
+                />
 
-              <input
-                placeholder="Phone Number"
-                value={newCustomer.phone}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
-              />
+                <input
+                  placeholder="Phone Number"
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+                />
 
-              <input
-                placeholder="Email"
-                value={newCustomer.email}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
-              />
-              <input
-                placeholder="TRN Number"
-                value={newCustomer.trnNumber}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, trnNumber: e.target.value }))}
-              />
+                <input
+                  placeholder="Email"
+                  value={newCustomer.email}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+                />
+                <input
+                  placeholder="TRN Number"
+                  value={newCustomer.trnNumber}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, trnNumber: e.target.value }))}
+                />
 
-              <input
-                placeholder="Address"
-                value={newCustomer.address}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
-              />
+                <input
+                  placeholder="Address"
+                  value={newCustomer.address}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
+                />
 
-              <input
-                placeholder="Product ID"
-                value={newCustomer.productId}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, productId: e.target.value }))}
-              />
+                <input
+                  placeholder="Product ID"
+                  value={newCustomer.productId}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, productId: e.target.value }))}
+                />
 
-              <input
-                placeholder="Product Model"
-                value={newCustomer.productModel}
-                onChange={(e) => setNewCustomer(prev => ({ ...prev, productModel: e.target.value }))}
-              />
+                <input
+                  placeholder="Product Model"
+                  value={newCustomer.productModel}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, productModel: e.target.value }))}
+                />
 
-              <input
-                placeholder="Product Identification"
-                value={newCustomer.productIdentification}
-                onChange={(e) =>
-                  setNewCustomer(prev => ({ ...prev, productIdentification: e.target.value }))
-                }
-              />
+                <input
+                  placeholder="Product Identification"
+                  value={newCustomer.productIdentification}
+                  onChange={(e) =>
+                    setNewCustomer(prev => ({ ...prev, productIdentification: e.target.value }))
+                  }
+                />
 
-              <div className="popup-actions">
-                <button onClick={() => setShowCustomerPopup(false)}>Cancel</button>
-                <button onClick={handleCreateCustomer}>Save</button>
+                <div className="popup-actions">
+                  <button onClick={() => setShowCustomerPopup(false)}>Cancel</button>
+                  <button onClick={handleCreateCustomer}>Save</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
 
 
 

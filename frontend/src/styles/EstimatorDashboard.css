@@ -1740,3 +1740,28 @@
   border-radius: 12px;
   display: inline-block;
 }
+
+.manpower-section-wide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.manpower-entry {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr auto !important;
+  gap: 12px;
+  align-items: end;
+  width: 100%;
+}
+
+.manpower-entry .form-group {
+  margin-bottom: 0 !important;
+  width: 100%;
+}
+
+.manpower-entry .form-group input,
+.manpower-entry .form-group select {
+  width: 100%;
+}
